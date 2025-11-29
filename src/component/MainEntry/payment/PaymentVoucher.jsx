@@ -335,21 +335,28 @@ const handlePrint = async () => {
     printArea.style.display = "block";
 
     // Capture HTML to canvas
-    const canvas = await html2canvas(printArea, {
-      scale: 2,
-      backgroundColor: "#fff", // fixes oklch color issues
-      useCORS: true,           // allow cross-origin images
-      logging: false,
-      onclone: (clonedDoc) => {
-        // Replace any oklch colors with safe hex
-        clonedDoc.querySelectorAll("*").forEach((el) => {
-          const style = window.getComputedStyle(el);
-          if (style.color.startsWith("oklch")) el.style.color = "#000";
-          if (style.backgroundColor.startsWith("oklch"))
-            el.style.backgroundColor = "#fff";
-        });
-      },
+   const canvas = await html2canvas(printArea, {
+  scale: 2,
+  backgroundColor: "#fff",
+  useCORS: true,
+  logging: false,
+  onclone: (clonedDoc) => {
+    clonedDoc.querySelectorAll("*").forEach((el) => {
+      const style = clonedDoc.defaultView.getComputedStyle(el);
+
+      if (style.color.includes("oklch")) {
+        el.style.setProperty("color", "#000", "important");
+      }
+      if (style.backgroundColor.includes("oklch")) {
+        el.style.setProperty("background-color", "#fff", "important");
+      }
+      if (style.borderColor.includes("oklch")) {
+        el.style.setProperty("border-color", "#000", "important");
+      }
     });
+  }
+});
+
 
     const imgData = canvas.toDataURL("image/png", 1.0);
 
@@ -382,7 +389,7 @@ const handlePrint = async () => {
     pdf.save(`Payment_Voucher_${form.invoiceNo || "new"}.pdf`);
   } catch (err) {
     console.error(err);
-    setMessage("Error generating PDF: " + err.message);
+    toast.error("Error generating PDF: " + err.message);
   } finally {
     // Hide print area again
     printArea.style.display = "none";

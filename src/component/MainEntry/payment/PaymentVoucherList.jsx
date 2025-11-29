@@ -65,21 +65,21 @@ export default function PaymentVoucherListTwo() {
   }, [data]);
 
   const columns = [
-    {
-      accessorKey: "ID",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          #
-          <ArrowUpDown  />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="font-medium ml-3">{row.getValue("ID")}</div>
-      ),
-    },
+    // {
+    //   accessorKey: "ID",
+    //   header: ({ column }) => (
+    //     <Button
+    //       variant="ghost"
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //     >
+    //       #
+    //       <ArrowUpDown  />
+    //     </Button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div className="font-medium ml-3">{row.getValue("ID")}</div>
+    //   ),
+    // },
     {
       accessorKey: "VOUCHERNO",
       header: ({ column }) => (
@@ -141,10 +141,10 @@ export default function PaymentVoucherListTwo() {
       ),
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("CREDIT") || 0);
-        const formatted = new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        }).format(amount);
+       const formatted = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
         return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
