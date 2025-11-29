@@ -82,7 +82,7 @@ export default function CashTransferListTwo() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="ml-2">{row.getValue("VOUCHERNO")}</div>
+        <div className="ml-3">{row.getValue("VOUCHERNO")}</div>
       ),
     },
     {

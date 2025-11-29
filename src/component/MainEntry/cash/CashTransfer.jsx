@@ -34,6 +34,7 @@ const CashTransfer = () => {
     receive: "",
     glDate: today,
     supporting: "",
+    
   });
 
   const { data: accounts = [] } = useQuery({
