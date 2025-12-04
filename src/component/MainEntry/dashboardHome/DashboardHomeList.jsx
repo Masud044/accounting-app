@@ -102,6 +102,7 @@ const createColumns = (handleActivateVoucher) => [
       )
     },
     cell: ({ row }) => {
+     
       const type = row.getValue("VOUCHER_TYPE");
       const label = getVoucherTypeLabel(type);
       const colorClass = 
@@ -133,6 +134,7 @@ const createColumns = (handleActivateVoucher) => [
       )
     },
     cell: ({ row }) => <div  className="ml-3">{row.getValue("VOUCHERNO")}</div>,
+     cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
   },
   {
     accessorKey: "TRANS_DATE",
@@ -148,6 +150,7 @@ const createColumns = (handleActivateVoucher) => [
       )
     },
      cell: ({ row }) => <div  className="ml-3">{row.getValue("TRANS_DATE")}</div>,
+     cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
   },
   {
     accessorKey: "DESCRIPTION",
@@ -161,8 +164,10 @@ const createColumns = (handleActivateVoucher) => [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
+      
     },
     cell: ({ row }) => <div  className="ml-3">{row.getValue("DESCRIPTION")}</div>,
+     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
   },
   {
     accessorKey: "ENTRY_BY",
@@ -179,6 +184,7 @@ const createColumns = (handleActivateVoucher) => [
       
     },
      cell: ({ row }) => <div  className="ml-3">{row.getValue("ENTRY_BY")}</div>,
+     cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_BY")}</div>,
   },
 
   // ✅ ACTIONS WITH CONDITIONAL ROUTING
@@ -367,7 +373,7 @@ export function DashboardVoucherList() {
       </div>
 
       {/* Table Container */}
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden  rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map(group => (

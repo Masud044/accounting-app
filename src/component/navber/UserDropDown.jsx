@@ -19,31 +19,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/authentication/AuthProvaider";
 // import { useAuth } from "@/authentication/AuthProvider";
 // import { useNavigate } from "react-router-dom";
 
-const user = {
-  name: "User 536",
-  email: "user@font.com",
-  avatar: "https://github.com/evilrabbit.png",
-};
-console.log(user)
+// const user = {
+//   name: "User 536",
+//   email: "user@font.com",
+//   avatar: "https://github.com/evilrabbit.png",
+// };
+// console.log(user)
 
 
 export default function UserDropDown() {
-//   const { user, logout } = useAuth();
-//   console.log(user)
-//   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  console.log(user)
+  const navigate = useNavigate();
 
 
-//   const handleLogout = async () => {
-//   await logout();        // clears user & calls API
-//   navigate("/login");    // redirect to login page
+  const handleLogout = async () => {
+  await logout();        // clears user & calls API
+  navigate("/login");    // redirect to login page
 
 
-// };
+};
 
-// if (!user) return null;
+if (!user) return null;
 
 
   return (
@@ -98,7 +100,7 @@ export default function UserDropDown() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-        //   onClick={handleLogout}
+          onClick={handleLogout}
           className="text-red-600 cursor-pointer focus:text-red-700"
         >
           <LogOutIcon className="text-red-600" />
