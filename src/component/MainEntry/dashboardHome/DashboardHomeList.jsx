@@ -132,6 +132,7 @@ const createColumns = (handleActivateVoucher) => [
         </Button>
       )
     },
+    cell: ({ row }) => <div  className="ml-3">{row.getValue("VOUCHERNO")}</div>,
   },
   {
     accessorKey: "TRANS_DATE",
@@ -146,6 +147,7 @@ const createColumns = (handleActivateVoucher) => [
         </Button>
       )
     },
+     cell: ({ row }) => <div  className="ml-3">{row.getValue("TRANS_DATE")}</div>,
   },
   {
     accessorKey: "DESCRIPTION",
@@ -160,6 +162,7 @@ const createColumns = (handleActivateVoucher) => [
         </Button>
       )
     },
+    cell: ({ row }) => <div  className="ml-3">{row.getValue("DESCRIPTION")}</div>,
   },
   {
     accessorKey: "ENTRY_BY",
@@ -173,7 +176,9 @@ const createColumns = (handleActivateVoucher) => [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
+      
     },
+     cell: ({ row }) => <div  className="ml-3">{row.getValue("ENTRY_BY")}</div>,
   },
 
   // ✅ ACTIONS WITH CONDITIONAL ROUTING

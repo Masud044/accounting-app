@@ -13,9 +13,8 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  Plus,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
@@ -41,13 +40,17 @@ import {
 
 import api from "@/api/Ap";
 import { DataTablePagination } from "@/component/pagination/DataTablePagination";
-
+import { PaymentService } from "@/api/AccontingApi";
+import { toast } from "react-toastify";
 
 export default function PaymentVoucherListTwo() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
+  const [deleteModal, setDeleteModal] = useState({ show: false, id: null, voucherNo: "" });
+
+  const queryClient = useQueryClient();
 
   // Fetch unposted vouchers
   const { data, isLoading, error } = useQuery({
@@ -58,6 +61,43 @@ export default function PaymentVoucherListTwo() {
     },
   });
 
+  // ✅ Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (voucherId) => {
+      const res = await PaymentService.delete(voucherId);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (data.success === 1 || data.status === "success") {
+        toast.success("Voucher deleted successfully!");
+        queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+      } else {
+        toast.error(data.message || "Delete failed!");
+      }
+      setDeleteModal({ show: false, id: null, voucherNo: "" });
+    },
+    onError: (error) => {
+      toast.error("Error deleting voucher: " + error.message);
+      setDeleteModal({ show: false, id: null, voucherNo: "" });
+    },
+  });
+
+  // ✅ Handle Delete Click
+  const handleDeleteClick = (voucher) => {
+    setDeleteModal({
+      show: true,
+      id: voucher.ID,
+      voucherNo: voucher.VOUCHERNO,
+    });
+  };
+
+  // ✅ Confirm Delete
+  const confirmDelete = () => {
+    if (deleteModal.id) {
+      deleteMutation.mutate(deleteModal.id);
+    }
+  };
+
   // Extract and sort vouchers with useMemo to prevent infinite re-renders
   const sortedVouchers = useMemo(() => {
     const vouchers = data?.status === "success" ? data.data : [];
@@ -65,21 +105,6 @@ export default function PaymentVoucherListTwo() {
   }, [data]);
 
   const columns = [
-    // {
-    //   accessorKey: "ID",
-    //   header: ({ column }) => (
-    //     <Button
-    //       variant="ghost"
-    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    //     >
-    //       #
-    //       <ArrowUpDown  />
-    //     </Button>
-    //   ),
-    //   cell: ({ row }) => (
-    //     <div className="font-medium ml-3">{row.getValue("ID")}</div>
-    //   ),
-    // },
     {
       accessorKey: "VOUCHERNO",
       header: ({ column }) => (
@@ -88,7 +113,7 @@ export default function PaymentVoucherListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Voucher No
-          <ArrowUpDown  />
+          <ArrowUpDown />
         </Button>
       ),
       cell: ({ row }) => <div className="ml-2">{row.getValue("VOUCHERNO")}</div>,
@@ -101,7 +126,7 @@ export default function PaymentVoucherListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Transaction Date
-          <ArrowUpDown  />
+          <ArrowUpDown />
         </Button>
       ),
       cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
@@ -114,10 +139,10 @@ export default function PaymentVoucherListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           GL Date
-          <ArrowUpDown  />
+          <ArrowUpDown />
         </Button>
       ),
-      cell: ({ row }) => <div  className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
+      cell: ({ row }) => <div className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
     },
     {
       accessorKey: "DESCRIPTION",
@@ -136,15 +161,15 @@ export default function PaymentVoucherListTwo() {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Credit
-          <ArrowUpDown  />
+          <ArrowUpDown />
         </Button>
       ),
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("CREDIT") || 0);
-       const formatted = new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+        const formatted = new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(amount);
         return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
@@ -178,7 +203,10 @@ export default function PaymentVoucherListTwo() {
                   Edit Voucher
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem
+                onClick={() => handleDeleteClick(voucher)}
+                className="text-red-600"
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Voucher
               </DropdownMenuItem>
@@ -238,108 +266,139 @@ export default function PaymentVoucherListTwo() {
         <title>Dashboard | Payment Vouchers | HRMS</title>
       </Helmet>
 
-      <div className="min-h-screen ">
-        
-          
+      <div className="min-h-screen">
+        {/* Data Table */}
+        <div className="bg-card rounded-md mt-4 shadow-sm p-4">
+          <div className="space-y-4">
+            {/* Filters and Controls */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Input
+                placeholder="Search vouchers..."
+                value={globalFilter ?? ""}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="max-w-sm"
+              />
 
-          {/* Data Table */}
-          <div className="bg-card rounded-md mt-4 shadow-sm p-4 ">
-            <div className="space-y-4">
-              {/* Filters and Controls */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Input
-                  placeholder="Search vouchers..."
-                  value={globalFilter ?? ""}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="max-w-sm"
-                />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto">
+                    Columns <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id.replace(/_/g, " ")}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="ml-auto">
-                      Columns <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {table
-                      .getAllColumns()
-                      .filter((column) => column.getCanHide())
-                      .map((column) => (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) =>
-                            column.toggleVisibility(!!value)
-                          }
-                        >
-                          {column.id.replace(/_/g, " ")}
-                        </DropdownMenuCheckboxItem>
+            {/* Table */}
+            <div className="overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
                       ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    </TableRow>
+                  ))}
+                </TableHeader>
 
-              {/* Table */}
-              <div className="overflow-hidden rounded-md border">
-                <Table>
-                  <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
-                          </TableHead>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
                         ))}
                       </TableRow>
-                    ))}
-                  </TableHeader>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        <div className="flex flex-col items-center justify-center py-8">
+                          <p className="text-muted-foreground">
+                            No unposted payment vouchers found
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-                  <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                      table.getRowModel().rows.map((row) => (
-                        <TableRow
-                          key={row.id}
-                          data-state={row.getIsSelected() && "selected"}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={columns.length}
-                          className="h-24 text-center"
-                        >
-                          <div className="flex flex-col items-center justify-center py-8">
-                            <p className="text-muted-foreground">
-                              No unposted payment vouchers found
-                            </p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+            <DataTablePagination table={table} />
+          </div>
+        </div>
+      </div>
 
-              <DataTablePagination table={table} />
+      {/* ✅ Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-11/12 md:w-96 shadow-xl">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">
+              Confirm Delete
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete voucher{" "}
+              <span className="font-semibold">{deleteModal.voucherNo}</span>?
+              
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() =>
+                  setDeleteModal({ show: false, id: null, voucherNo: "" })
+                }
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
             </div>
           </div>
-        
-      </div>
+        </div>
+      )}
     </>
   );
 }

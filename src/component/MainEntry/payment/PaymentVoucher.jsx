@@ -4,6 +4,7 @@ import Select from "react-select";
 
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// import { PaymentService } from "@/api/PaymentService";
 
 
 
@@ -17,6 +18,7 @@ import { toast } from "react-toastify";
 import api from "@/api/Ap";
 import PaymentVoucherListTwo from "./PaymentVoucherList";
 import { SectionContainer } from "@/component/container/SectionContainer";
+import { PaymentService } from "@/api/AccontingApi";
 
 
 
@@ -96,7 +98,7 @@ const PaymentVoucherForm = () => {
   const { data: voucherData } = useQuery({
     queryKey: ["voucher", voucherId],
     queryFn: async () => {
-      const res = await api.get(`/pay_view.php?id=${voucherId}`);
+      const res = await PaymentService.search(voucherId);
       return res.data;
     },
     enabled: !!voucherId && accounts.length > 0,
@@ -154,8 +156,12 @@ const PaymentVoucherForm = () => {
   // ---------- MUTATION ----------
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
-      const apiUrl = isNew ? "/pay_api.php" : "/bwal_update_gl.php";
-      const res = await api.post(apiUrl, payload);
+      let res;
+    if (isNew) {
+      res = await PaymentService.insert(payload); // insert call
+    } else {
+      res = await PaymentService.update(payload); // update call
+    }
       console.log(res.data);
       return res.data;
     },
@@ -279,41 +285,89 @@ const PaymentVoucherForm = () => {
       };
     } else {
   // ✅ Build credit row for Payment Code
-  const creditRow = {
-    code: form.paymentCode,
-    debit: 0,
-    credit: Number(form.totalAmount),
-    id: form.creditId || "",
-    description: "Payment code credit",
-  };
+  // const creditRow = {
+  //   code: form.paymentCode,
+  //   debit: 0,
+  //   credit: Number(form.totalAmount),
+  //   id: form.creditId || "",
+  //   description: "Payment code credit",
+  // };
 
-  // ✅ Build debit rows from table
-  const debitRows = rows.map((r) => ({
-    code: r.accountCode,
-    debit: Number(r.amount),
-    credit: 0,
-    id: r.debitId || "",
-    description: r.particulars,
-  }));
+  // // ✅ Build debit rows from table
+  // const debitRows = rows.map((r) => ({
+  //   code: r.accountCode,
+  //   debit: Number(r.amount),
+  //   credit: 0,
+  //   id: r.debitId || "",
+  //   description: r.particulars,
+  // }));
 
-  payload = {
-    master_id: voucherId,
-    voucherno: form.invoiceNo,
-    trans_date: form.entryDate,
-    gl_date: form.glDate,
-    voucher_type: 2,
-    entry_by: 1,
-    description: form.description,
-    reference_no: form.invoiceNo || "",
-    supporting: Number(form.supporting) || 0,
-    receive: form.paymentCode || "",
-    posted: 0,
-    supplierid: form.supplier,
-    auto_invoice: "",
-    status_pay_recive: 0,
-    unit_id: 0,
-    details: [creditRow, ...debitRows], // ✅ credit + debit lines
-  };
+  // payload = {
+  //   master_id: voucherId,
+  //   voucherno: form.invoiceNo,
+  //   trans_date: form.entryDate,
+  //   gl_date: form.glDate,
+  //   voucher_type: 2,
+  //   entry_by: 1,
+  //   description: form.description,
+  //   reference_no: form.invoiceNo || "",
+  //   supporting: Number(form.supporting) || 0,
+  //   receive: form.paymentCode || "",
+  //   posted: 0,
+  //   supplierid: form.supplier,
+  //   auto_invoice: "",
+  //   status_pay_recive: 0,
+  //   unit_id: 0,
+  //   details: [creditRow, ...debitRows], // ✅ credit + debit lines
+  // };
+
+  // Build credit row
+// const creditRow = {
+//   credit_id: form.creditId || "", // credit line ID
+//   code: form.paymentCode,
+//   debit: 0,
+//   credit: Number(form.totalAmount),
+//   description: "Payment code credit",
+// };
+
+// Build debit rows
+//  const debitIds = rows.map(r => r.debitId || "");
+//     const amounts = rows.map(r => Number(r.amount));
+
+//  const debitRows = rows.map((r) => ({
+//     code: r.accountCode,
+//     debit: Number(r.amount),
+//     credit: 0,
+//     id: r.debitId || "",
+//     description: r.particulars,
+//   }));
+
+payload = {
+      
+      masterID: Number(voucherId),
+      trans_date: form.entryDate,
+      gl_date: form.glDate,
+      receive_desc: form.description,
+      pcode: form.paymentCode,
+      credit_id: form.creditId || null,
+      supplierid: form.supplier,
+      totalAmount: Number(form.totalAmount),
+      supporting: String(form.supporting),
+      DEBIT_ID: rows.map(r => r.debitId ? Number(r.debitId) : null),
+      amount2: rows.map(r => Number(r.amount)),
+      acode: rows.map(r => r.accountCode),
+      CODEDESCRIPTION: rows.map(r => r.particulars),
+      DESCRIPTION: rows.map(r => r.particulars),
+    };
+
+
+
+
+
+
+
+console.log(payload);
+
 }
 
     console.log(payload);
