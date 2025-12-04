@@ -133,6 +133,7 @@ const createColumns = (handleActivateVoucher) => [
         </Button>
       )
     },
+    cell: ({ row }) => <div  className="ml-3">{row.getValue("VOUCHERNO")}</div>,
      cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
   },
   {
@@ -148,6 +149,7 @@ const createColumns = (handleActivateVoucher) => [
         </Button>
       )
     },
+     cell: ({ row }) => <div  className="ml-3">{row.getValue("TRANS_DATE")}</div>,
      cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
   },
   {
@@ -164,6 +166,7 @@ const createColumns = (handleActivateVoucher) => [
       )
       
     },
+    cell: ({ row }) => <div  className="ml-3">{row.getValue("DESCRIPTION")}</div>,
      cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
   },
   {
@@ -178,7 +181,9 @@ const createColumns = (handleActivateVoucher) => [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
+      
     },
+     cell: ({ row }) => <div  className="ml-3">{row.getValue("ENTRY_BY")}</div>,
      cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_BY")}</div>,
   },
 
