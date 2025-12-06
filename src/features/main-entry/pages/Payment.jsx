@@ -19,7 +19,8 @@ import api from "@/api/Ap";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import { PaymentService } from "@/api/AccontingApi";
-import PaymentTable from "../components/paymentTable";
+import PaymentTable from "../components/PaymentTable";
+
 
 
 
