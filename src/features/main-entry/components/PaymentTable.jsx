@@ -39,11 +39,11 @@ import {
 } from "@/components/ui/table";
 
 import api from "@/api/Ap";
-import { DataTablePagination } from "@/component/pagination/DataTablePagination";
+import { DataTablePagination } from "@/components/DataTablePagination";
 import { PaymentService } from "@/api/AccontingApi";
 import { toast } from "react-toastify";
 
-export default function PaymentVoucherListTwo() {
+export default function PaymentTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -173,48 +173,46 @@ export default function PaymentVoucherListTwo() {
         return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const voucher = row.original;
+   {
+  id: "actions",
+  enableHiding: false,
+  header: () => <div className="text-center">Actions</div>,
+  cell: ({ row }) => {
+    const voucher = row.original;
 
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() =>
-                  navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
-                }
-              >
-                Copy Voucher No
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={`/dashboard/payment-voucher/${voucher.ID}`}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit Voucher
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleDeleteClick(voucher)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Voucher
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
+    return (
+      <div className="flex items-center justify-center gap-3">
+        {/* Edit Button */}
+        <Link
+          to={`/dashboard/payment-voucher/${voucher.ID}`}
+          className="text-blue-600 hover:text-blue-800"
+        >
+          <Pencil size={18} />
+        </Link>
+
+        {/* Copy Voucher No */}
+        {/* <button
+          onClick={() =>
+            navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
+          }
+          className="text-gray-600 hover:text-black"
+          title="Copy Voucher No"
+        >
+          📋
+        </button> */}
+
+        {/* Delete Button */}
+        <button
+          onClick={() => handleDeleteClick(voucher)}
+          className="text-red-600 hover:text-red-800"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+    );
+  },
+}
+
   ];
 
   const table = useReactTable({

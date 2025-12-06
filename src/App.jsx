@@ -11,15 +11,20 @@ import Home from "./pages/Home";
 
 
 import HomeLayout from "./layout/HomeLayout";
-import DashboardHome from "./component/MainEntry/dashboardHome/DashboardHome";
+// import DashboardHome from "./component/MainEntry/dashboardHome/DashboardHome";
 import { ToastContainer } from 'react-toastify';
-import PaymentVoucherForm from "./component/MainEntry/payment/PaymentVoucher";
-import JournalVoucher from "./component/MainEntry/journal/JournalVoucher";
-import ReceiveVoucher from "./component/MainEntry/receive/ReceiveVoucher";
-import CashTransfer from "./component/MainEntry/cash/CashTransfer";
+// import PaymentVoucherForm from "./component/MainEntry/payment/PaymentVoucher";
+// import JournalVoucher from "./component/MainEntry/journal/JournalVoucher";
+// import ReceiveVoucher from "./component/MainEntry/receive/ReceiveVoucher";
+// import CashTransfer from "./component/MainEntry/cash/CashTransfer";
 import { AuthProvider } from "./authentication/AuthProvaider";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Payment from "./features/main-entry/pages/payment";
+import Journal from "./features/main-entry/pages/Journal";
+import Receive from "./features/main-entry/pages/receive";
+import CashTransfer from "./features/main-entry/pages/CashTransfer";
+import DashboardHome from "./features/main-entry/pages/DashboardHome";
 function App() {
  
   return (
@@ -30,16 +35,16 @@ function App() {
             <Route path="/" element={<Home></Home>} />
             <Route path="/dashboard" element={<HomeLayout />}> 
              <Route index element={<DashboardHome />} />
-             <Route path="payment-voucher" element={<PaymentVoucherForm />} />
+             <Route path="payment-voucher" element={<Payment />} />
             <Route
               path="payment-voucher/:voucherId"
-              element={<PaymentVoucherForm />}
+              element={<Payment />}
             />
-            <Route path="journal-voucher" element={<JournalVoucher />} />
-            <Route path="journal-voucher/:voucherId" element={<JournalVoucher />} />
+            <Route path="journal-voucher" element={<Journal />} />
+            <Route path="journal-voucher/:voucherId" element={<Journal />} />
 
-            <Route path="receive-voucher" element={<ReceiveVoucher />} />
-            <Route path="receive-voucher/:voucherId" element={<ReceiveVoucher />} />
+            <Route path="receive-voucher" element={<Receive />} />
+            <Route path="receive-voucher/:voucherId" element={<Receive />} />
             <Route path="cash-voucher" element={<CashTransfer />} />
             <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
             

@@ -1,4 +1,4 @@
-import { cn } from "../../lib/constants/utils";
+import { cn } from "../lib/constants/utils";
 
 
 export const SectionContainer = ({
