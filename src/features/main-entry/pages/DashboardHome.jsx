@@ -5,9 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 // import { SectionContainer } from "@/components/SectionContainer";
 // import api from "../../../api/Ap";
 
-import { SectionContainer } from "@/component/container/SectionContainer";
-import { DashboardVoucherList } from "./DashboardHomeList";
+import { SectionContainer } from "@/components/SectionContainer";
+
 import api from "@/api/Ap";
+import { DashboardHomeTable } from "../components/DashboardHomeTable";
 
 const DashboardHome = () => {
   // Fetch Expenses
@@ -100,7 +101,7 @@ console.log(income)
       {/* Dashboard Voucher Component */}
       <div className="col-span-full mt-6">
         {/* <DashboardVoucher /> */}
-        <DashboardVoucherList></DashboardVoucherList>
+      <DashboardHomeTable></DashboardHomeTable>
       </div>
     </div>
    </SectionContainer>

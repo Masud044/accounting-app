@@ -15,10 +15,11 @@ import jsPDF from "jspdf";
 // import JournalVoucherListTwo from "./JournalVoucherListTwo";
 import { toast } from "react-toastify";
 import api from "@/api/Ap";
-import JournalVoucherListTwo from "./JournalVoucherList";
-import { SectionContainer } from "@/component/container/SectionContainer";
 
-const JournalVoucher = () => {
+import { SectionContainer } from "@/components/SectionContainer";
+import JournalTable from "../components/JournalTable";
+
+const Journal = () => {
   const { voucherId } = useParams();
 
   useEffect(() => {
@@ -632,8 +633,7 @@ const handlePrint = async () => {
           </button>
         </div>
       </div>
-      {/* <JournalVoucherList></JournalVoucherList> */}
-      <JournalVoucherListTwo />
+    <JournalTable></JournalTable>
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0  bg-black flex justify-center items-center z-50">
@@ -694,4 +694,4 @@ const handlePrint = async () => {
   );
 };
 
-export default JournalVoucher;
+export default Journal;

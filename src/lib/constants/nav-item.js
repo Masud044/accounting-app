@@ -32,20 +32,17 @@ export const NAV_ITEMS = [
     ],
   },
 
-  // {
-  //   label: "Report",
-  //   links: [
-  //     { to: "/dashboard/daily-expense", label: "Daily Expense Report", Icon: ClipboardList },
-  //     { to: "/dashboard/contraction-process", label: "Contraction Process", Icon: ClipboardList },
-  //     { to: "/dashboard/timeline", label: "Dashboard Timeline", Icon: ClipboardList },
-  //     { to: "/dashboard/shedule-header", label: "Schedule Header", Icon: ClipboardList },
-  //     { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
-  //     { to: "/dashboard/daily-income", label: "Daily Income Report", Icon: ClipboardList },
-  //     { to: "/dashboard/ledger", label: "Ledger", Icon: FileText },
-  //     { to: "/dashboard/cash-book", label: "Cash Book", Icon: FileText },
-  //     { to: "/dashboard/chart-of-account", label: "Chart of Account", Icon: ClipboardList },
-  //   ],
-  // },
+  {
+    label: "Report",
+    links: [
+      { to: "/dashboard/daily-expense", label: "Daily Expense Report", Icon: ClipboardList },
+     
+      { to: "/dashboard/daily-income", label: "Daily Income Report", Icon: ClipboardList },
+      { to: "/dashboard/ledger", label: "Ledger", Icon: FileText },
+      { to: "/dashboard/cash-book", label: "Cash Book", Icon: FileText },
+      { to: "/dashboard/chart-of-account", label: "Chart of Account", Icon: ClipboardList },
+    ],
+  },
 
 //   {
 //     label: "Users",

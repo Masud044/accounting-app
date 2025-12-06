@@ -4,26 +4,26 @@ import Select from "react-select";
 
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { PaymentService } from "@/api/PaymentService";
 
-
+// import api from "../../../api/Api";
 
 // import PageTitle from "../../RouteTitle";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 // import { SectionContainer } from "../../SectionContainer";
-// import PaymentVoucherListTwo from "./PaymentVoucherListTwo";
+
 import { toast } from "react-toastify";
 import api from "@/api/Ap";
-import PaymentVoucherListTwo from "./PaymentVoucherList";
-import { SectionContainer } from "@/component/container/SectionContainer";
-import { PaymentService } from "@/api/AccontingApi";
+
+import { SectionContainer } from "@/components/SectionContainer";
+import ReceiveTable from "../components/ReceiveTable";
 
 
 
-const PaymentVoucherForm = () => {
+const Receive= () => {
   const { voucherId } = useParams();
+
   useEffect(() => {
   window.scrollTo({
     top: 80,
@@ -54,7 +54,7 @@ const PaymentVoucherForm = () => {
     invoiceNo: "",
     supporting: "",
     description: "",
-    supplier: "",
+    customer: "",
     glDate: today,
     paymentCode: "",
     accountId: "",
@@ -64,16 +64,16 @@ const PaymentVoucherForm = () => {
   });
 
   // ---------- FETCH HELPERS ----------
-  const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers"],
     queryFn: async () => {
-      const res = await api.get("/supplier.php");
+      const res = await api.get("/customer.php");
       return res.data.data || [];
     },
   });
 
-  const { data: PaymentCodes = [] } = useQuery({
-    queryKey: ["paymentCodes"],
+  const { data: ReceiveCodes = [] } = useQuery({
+    queryKey: ["ReceiveCodes"],
     queryFn: async () => {
       const res = await api.get("/receive_code.php");
       return res.data.success === 1 ? res.data.data || [] : [];
@@ -83,7 +83,7 @@ const PaymentVoucherForm = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/rec_account_code.php");
+      const res = await api.get("/account_code.php");
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
@@ -98,89 +98,88 @@ const PaymentVoucherForm = () => {
   const { data: voucherData } = useQuery({
     queryKey: ["voucher", voucherId],
     queryFn: async () => {
-      const res = await PaymentService.search(voucherId);
+      const res = await api.get(`/receive_view.php?insertID=${voucherId}`);
       return res.data;
     },
     enabled: !!voucherId && accounts.length > 0,
   });
   console.log(voucherData);
-  useEffect(() => {
-    if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
-      const master = voucherData.master || {};
-      const details = voucherData.details || [];
-       console.log(master, details);
+useEffect(() => {
+  if (voucherId && voucherData?.success && accounts.length > 0) {
+    const master = voucherData.gl_master || {};
+    const details = voucherData.gl_details || [];
 
-      // Filter out rows that should not appear in editable table
-      const mappedRows = details
-         .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
-        .map((d, i) => {
-          const account = accounts.find((acc) => acc.value === d.code);
-          return {
-            id: d.id || `${d.code}-${i}`,
-            accountCode: d.code,
-            particulars: account ? account.label : "",
-            amount: parseFloat(d.debit),
-            debitId: d.id,
-            creditId: null,
-          };
-        });
+    const mappedRows = details
+    .filter((d) => d.CREDIT && Number(d.CREDIT) > 0)
+    .map((d, i) => {
+      const account = accounts.find((acc) => acc.value === d.CODE);
+      return {
+        id: d.ID || `${d.CODE}-${i}`,
+        accountCode: d.CODE,
+        particulars: d.ACCOUNT_NAME || (account ? account.label : ""),
+        amount: parseFloat(d.DEBIT || d.CREDIT || 0),
+        debitId: d.DEBIT ? d.ID : null,
+        creditId: d.CREDIT ? d.ID : null,
+      };
+    });
 
-      const total = mappedRows.reduce(
-        (sum, r) => sum + Number(r.amount || 0),
-        0
-      );
+    const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
-      setForm((prev) => ({
-        ...prev,
-        entryDate: master.TRANS_DATE
-          ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        glDate: master.GL_ENTRY_DATE
-          ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        invoiceNo: master.VOUCHERNO || "",
-        supporting: master.SUPPORTING || "",
-        description: master.DESCRIPTION || "",
-        supplier: master.CUSTOMER_ID || "",
-        paymentCode: master.CASHACCOUNT || "",
-        accountId: "",
-        particular: "",
-        amount: "",
-        totalAmount: total,
-      }));
+    // ✅ Only set mappedRows from GL details
+    setRows(mappedRows);
 
-      setRows(mappedRows); // only rows with debit > 0
-    }
-  }, [voucherData, accounts, voucherId]);
+    // Set form fields
+    setForm({
+      entryDate: master.TRANS_DATE
+        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+        : today,
+      glDate: master.GL_ENTRY_DATE
+        ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+        : today,
+      invoiceNo: master.VOUCHERNO || "",
+      supporting: master.SUPPORTING || "",
+      description: master.DESCRIPTION || "",
+     customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
+      ReceiveCode: master.CASHACCOUNT || "",
+      accountId: "", // ✅ clear accountId
+      particular: "", // ✅ clear particular
+      amount: "", // ✅ clear amount
+      totalAmount: total,
+    });
+  }
+}, [voucherData, accounts, voucherId]);
 
   // ---------- MUTATION ----------
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
-      let res;
-    if (isNew) {
-      res = await PaymentService.insert(payload); // insert call
-    } else {
-      res = await PaymentService.update(payload); // update call
-    }
+      const apiUrl = isNew ? "/addReceive.php" : "/ediRecive.php";
+      const res = await api.post(apiUrl, payload);
       console.log(res.data);
       return res.data;
     },
     onSuccess: (data, variables) => {
-      if (data.status === "success") {
-        toast.success(
-          variables.isNew
+      if(data.status === "success"){
+      toast.success(
+         variables.isNew
             ? "Voucher created successfully!"
             : "Voucher updated successfully!"
-        );
+      )
+    
+      // if (data.status === "success") {
+      //   setMessage(
+      //     variables.isNew
+      //       ? "Voucher created successfully!"
+      //       : "Voucher updated successfully!"
+      //   );
 
         setForm({
           entryDate: today,
           invoiceNo: "",
           supporting: "",
           description: "",
-          supplier: "",
+          customer: "",
           glDate: today,
-          paymentCode: "",
+          ReceiveCode: "",
           accountId: "",
           particular: "",
           amount: "",
@@ -189,11 +188,13 @@ const PaymentVoucherForm = () => {
         setRows([]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
-        toast.error("Error processing voucher.");
+        toast.error("Error processing voucher")
+        
       }
     },
     onError: () => {
-      toast.error("Error submitting voucher. Please try again.");
+        toast.error("Error submitting voucher. Please try again.")
+      
     },
     onSettled: () => {
       setShowModal(false);
@@ -201,17 +202,19 @@ const PaymentVoucherForm = () => {
   });
 
   // ---------- HANDLERS ----------
-  const addRow = () => {
-    if (!form.accountId || !form.amount) return;
-    const newRow = {
-      id: Date.now(),
-      accountCode: form.accountId,
-      particulars: form.particular,
-      amount: parseFloat(form.amount),
-      debitId: null,
-      creditId: null,
-    };
-    let updatedRows;
+ const addRow = () => {
+  if (!form.accountId || !form.amount) return;
+
+  const newRow = {
+    id: Date.now(),
+    accountCode: form.accountId,
+    particulars: form.particular,
+    amount: parseFloat(form.amount),
+    debitId: null,
+    creditId: null,
+  };
+
+  let updatedRows;
     if (rows.length === 1 && rows[0].id === "dummy") {
       // replace dummy row with actual row
       updatedRows = [newRow];
@@ -223,14 +226,16 @@ const PaymentVoucherForm = () => {
     const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
 
     setRows(updatedRows);
-    setForm({
-      ...form,
-      accountId: "",
-      particular: "",
-      amount: "",
-      totalAmount: total,
-    });
-  };
+
+  setForm({
+    ...form,
+    accountId: "", 
+    particular: "",
+    amount: "",
+    totalAmount: total,
+  });
+};
+
 
   const removeRow = (id) => {
     const updatedRows = rows.filter((r) => r.id !== id);
@@ -243,136 +248,70 @@ const PaymentVoucherForm = () => {
   };
 
   const handleSubmit = () => {
-    setMessage("");
-    const isNew = !voucherId;
+  setMessage("");
+  const isNew = !voucherId;
 
-    if (
-      isNew &&
-      (!form.entryDate ||
-        !form.glDate ||
-         !form.description ||
-       
-        !form.paymentCode ||
-        !form.supplier ||
-        rows.length === 0)
-    ) {
-      toast.error("Please fill all required fields and add at least one row.");
-      return;
-    }
-    const invalidRow = rows.some(
+  // ✅ New Voucher Validation
+  if (
+    isNew &&
+    (!form.entryDate ||
+      !form.glDate ||
+      !form.description ||
+      !form.ReceiveCode ||
+      !form.customer ||
+      rows.length === 0)
+  ) {
+    toast.error("Please fill all required fields and add at least one row.")
+    
+    return;
+  }
+  const invalidRow = rows.some(
     (row) =>
       !row.accountCode || !row.particulars
   );
 
   if (invalidRow) {
-    toast.error("Each row must have Account Code, Particular filled.");
+     toast.error("Each row must have Account Code, Particular filled.")
+    
     return;
   }
 
-    let payload = {};
-    if (isNew) {
-      payload = {
-        trans_date: form.entryDate,
-        gl_date: form.glDate,
-        receive_desc: form.description,
-        supporting: String(form.supporting),
-        receive: form.paymentCode,
-        supplierid: form.supplier,
-        user_id: "1",
-        totalAmount: String(form.totalAmount),
-        accountID: rows.map((r) => r.accountCode),
-        amount2: rows.map((r) => String(r.amount || 0)),
-      };
-    } else {
-  // ✅ Build credit row for Payment Code
-  // const creditRow = {
-  //   code: form.paymentCode,
-  //   debit: 0,
-  //   credit: Number(form.totalAmount),
-  //   id: form.creditId || "",
-  //   description: "Payment code credit",
-  // };
-
-  // // ✅ Build debit rows from table
-  // const debitRows = rows.map((r) => ({
-  //   code: r.accountCode,
-  //   debit: Number(r.amount),
-  //   credit: 0,
-  //   id: r.debitId || "",
-  //   description: r.particulars,
-  // }));
-
-  // payload = {
-  //   master_id: voucherId,
-  //   voucherno: form.invoiceNo,
-  //   trans_date: form.entryDate,
-  //   gl_date: form.glDate,
-  //   voucher_type: 2,
-  //   entry_by: 1,
-  //   description: form.description,
-  //   reference_no: form.invoiceNo || "",
-  //   supporting: Number(form.supporting) || 0,
-  //   receive: form.paymentCode || "",
-  //   posted: 0,
-  //   supplierid: form.supplier,
-  //   auto_invoice: "",
-  //   status_pay_recive: 0,
-  //   unit_id: 0,
-  //   details: [creditRow, ...debitRows], // ✅ credit + debit lines
-  // };
-
-  // Build credit row
-// const creditRow = {
-//   credit_id: form.creditId || "", // credit line ID
-//   code: form.paymentCode,
-//   debit: 0,
-//   credit: Number(form.totalAmount),
-//   description: "Payment code credit",
-// };
-
-// Build debit rows
-//  const debitIds = rows.map(r => r.debitId || "");
-//     const amounts = rows.map(r => Number(r.amount));
-
-//  const debitRows = rows.map((r) => ({
-//     code: r.accountCode,
-//     debit: Number(r.amount),
-//     credit: 0,
-//     id: r.debitId || "",
-//     description: r.particulars,
-//   }));
-
-payload = {
-      
-      masterID: Number(voucherId),
+  let payload = {};
+  if (isNew) {
+    // ✅ CREATE VOUCHER PAYLOAD
+    payload = {
       trans_date: form.entryDate,
       gl_date: form.glDate,
       receive_desc: form.description,
-      pcode: form.paymentCode,
-      credit_id: form.creditId || null,
-      supplierid: form.supplier,
-      totalAmount: Number(form.totalAmount),
       supporting: String(form.supporting),
-      DEBIT_ID: rows.map(r => r.debitId ? Number(r.debitId) : null),
-      amount2: rows.map(r => Number(r.amount)),
-      acode: rows.map(r => r.accountCode),
-      CODEDESCRIPTION: rows.map(r => r.particulars),
-      DESCRIPTION: rows.map(r => r.particulars),
+      receive: form.ReceiveCode,
+      customer_id: String(form.customer), 
+      totalAmount: String(form.totalAmount),
+      accountID: rows.map((r) => r.accountCode),
+      amount2: rows.map((r) => String(r.amount || 0)),
     };
+  } else {
+    // ✅ UPDATE VOUCHER PAYLOAD
+    payload = {
+      trans_date: form.entryDate,
+      gl_date: form.glDate,
+      receive_desc: form.description,
+      supporting: String(form.supporting),
+      customer_id: String(form.customer), 
+      tempdata: voucherId, // master id
+      credit_id: rows.find((r) => r.creditId)?.creditId || form.creditId || "",
 
+      totalAmount: Number(form.totalAmount),
+      accountID: rows.map((r) => r.accountCode),
+      DEBIT_ID: rows.map((r) => r.debitId || ""),
+      amount2: rows.map((r) => Number(r.amount)),
+    };
+  }
 
+  console.log("📤 Final Payload =>", payload);
+  mutation.mutate({ isNew, payload });
+};
 
-
-
-
-
-console.log(payload);
-
-}
-
-    console.log(payload);
-    mutation.mutate({ isNew, payload });
-  };
 
 // ---------- PRINT HANDLER ----------
 
@@ -389,28 +328,27 @@ const handlePrint = async () => {
     printArea.style.display = "block";
 
     // Capture HTML to canvas
-   const canvas = await html2canvas(printArea, {
-  scale: 2,
-  backgroundColor: "#fff",
-  useCORS: true,
-  logging: false,
-  onclone: (clonedDoc) => {
-    clonedDoc.querySelectorAll("*").forEach((el) => {
-      const style = clonedDoc.defaultView.getComputedStyle(el);
-
-      if (style.color.includes("oklch")) {
-        el.style.setProperty("color", "#000", "important");
-      }
-      if (style.backgroundColor.includes("oklch")) {
-        el.style.setProperty("background-color", "#fff", "important");
-      }
-      if (style.borderColor.includes("oklch")) {
-        el.style.setProperty("border-color", "#000", "important");
-      }
-    });
-  }
-});
-
+    const canvas = await html2canvas(printArea, {
+     scale: 2,
+     backgroundColor: "#fff",
+     useCORS: true,
+     logging: false,
+     onclone: (clonedDoc) => {
+       clonedDoc.querySelectorAll("*").forEach((el) => {
+         const style = clonedDoc.defaultView.getComputedStyle(el);
+   
+         if (style.color.includes("oklch")) {
+           el.style.setProperty("color", "#000", "important");
+         }
+         if (style.backgroundColor.includes("oklch")) {
+           el.style.setProperty("background-color", "#fff", "important");
+         }
+         if (style.borderColor.includes("oklch")) {
+           el.style.setProperty("border-color", "#000", "important");
+         }
+       });
+     }
+   });
 
     const imgData = canvas.toDataURL("image/png", 1.0);
 
@@ -440,7 +378,7 @@ const handlePrint = async () => {
     window.open(blobUrl, "_blank");
 
     // ✅ Optionally trigger download
-    pdf.save(`Payment_Voucher_${form.invoiceNo || "new"}.pdf`);
+    pdf.save(`Receive_Voucher_${form.invoiceNo || "new"}.pdf`);
   } catch (err) {
     console.error(err);
     toast.error("Error generating PDF: " + err.message);
@@ -450,19 +388,10 @@ const handlePrint = async () => {
   }
 };
 
-
-
-
-
-
-
-
-
   return (
-  <SectionContainer>
+    <SectionContainer>
       <div className="">
-     
-
+      
       {/* Top Form */}
       <div className=" p-6 space-y-6 bg-white rounded-lg shadow-md">
         {message && (
@@ -482,17 +411,17 @@ const handlePrint = async () => {
           <div className="">
             <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
               <label className="font-medium block text-xs  text-foreground">
-                Supplier
+                customer
               </label>
               <select
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+                value={form.customer}
+                onChange={(e) => setForm({ ...form, customer: e.target.value })}
                 className="col-span-2 w-full border rounded py-1 h-8  bg-white "
               >
-                <option value="">Select Supplier</option>
-                {suppliers.map((sup) => (
-                  <option key={sup.SUPPLIER_ID} value={sup.SUPPLIER_ID}>
-                    {sup.SUPPLIER_NAME}
+                <option value="">Select customer</option>
+                {customers.map((cus) => (
+                  <option key={cus.CUSTOMER_ID} value={String(cus.CUSTOMER_ID)}>
+                    {cus.CUSTOMER_NAME}
                   </option>
                 ))}
               </select>
@@ -556,17 +485,17 @@ const handlePrint = async () => {
             </div>
             <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
               <label className="font-medium block text-sm  text-foreground">
-                Payment Code
+                Receive Code
               </label>
               <select
-                value={form.paymentCode}
+                value={form.ReceiveCode}
                 onChange={(e) =>
-                  setForm({ ...form, paymentCode: e.target.value })
+                  setForm({ ...form, ReceiveCode: e.target.value })
                 }
                 className="col-span-2 w-full rounded py-1 border  bg-white "
               >
-                <option value="">Select payment</option>
-                {PaymentCodes.map((code) => (
+                <option value="">Select Receive</option>
+                {ReceiveCodes.map((code) => (
                   <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
                     {code.ACCOUNT_NAME}
                   </option>
@@ -712,17 +641,18 @@ const handlePrint = async () => {
             </tbody>
           </table>
         </div>
-        {/* Printable PDF Section */}
+
+         {/* Printable PDF Section */}
 <div id="print-area"  className="hidden print:block p-8 bg-white text-black">
-  <h1 className="text-xl font-bold text-center mb-2">PAYMENT VOUCHER</h1>
+  <h1 className="text-xl font-bold text-center mb-2">RECEIVE VOUCHER</h1>
   <div className="border p-3 mb-4 text-sm space-y-1">
     <p><strong>Voucher No:</strong> {form.invoiceNo}</p>
     <p><strong>Date:</strong> {form.entryDate}</p>
    <p>
-                <strong>Supplier:</strong>{" "}
+                <strong>Customer:</strong>{" "}
                 {
-                  suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
-                    ?.SUPPLIER_NAME
+                  customers.find((s) => s.CUSTOMER_ID === form.customer)
+                    ?.CUSTOMER_NAME
                 }
               </p>
     <p><strong>Description:</strong> {form.description}</p>
@@ -759,12 +689,11 @@ const handlePrint = async () => {
   </p>
 </div>
 
-
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <button
             type="button"
             onClick={handlePrint}
-            className="w-full md:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg"
+            className="w-full md:w-auto bg-green-500 text-white px-6 py-2 rounded-lg"
           >
             print
           </button>
@@ -781,9 +710,7 @@ const handlePrint = async () => {
           </button>
         </div>
       </div>
-
-       {/* <PaymentVoucherList showTitle={false} />  */}
-       <PaymentVoucherListTwo />
+    <ReceiveTable></ReceiveTable>
 
       {/* Modal */}
       {showModal && (
@@ -807,17 +734,17 @@ const handlePrint = async () => {
                 <strong>Description:</strong> {form.description}
               </p>
               <p>
-                <strong>Supplier:</strong>{" "}
+                <strong>customer:</strong>{" "}
                 {
-                  suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
-                    ?.SUPPLIER_NAME
+                  customers.find((s) => s.CUSTOMER_ID === form.customer)
+                    ?.CUSTOMER_NAME
                 }
               </p>
               <p>
                 <strong>GL Date:</strong> {form.glDate}
               </p>
               <p>
-                <strong>Payment Code:</strong> {form.paymentCode}
+                <strong>Receive Code:</strong> {form.ReceiveCode}
               </p>
 
               <h3 className="font-semibold mt-2">Accounts:</h3>
@@ -853,8 +780,8 @@ const handlePrint = async () => {
         </div>
       )}
     </div>
-  </SectionContainer>
+    </SectionContainer>
   );
 };
 
-export default PaymentVoucherForm;
+export default Receive;

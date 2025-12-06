@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 
 import { Helmet } from "react-helmet";
-import Navbar from "@/component/navber/Navber";
+import Navbar from "@/components/Navber";
 
 
 
@@ -9,7 +9,7 @@ const HomeLayout = () => {
   return (
     <>
       <Helmet>
-        <title>Dashboard|HRMS</title>
+        <title>Dashboard|Accounting</title>
       </Helmet>
       <div className="flex flex-col  w-full min-h-screen bg-gray-50">
         {/* <Sidebar /> */}
