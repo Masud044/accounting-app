@@ -11,20 +11,18 @@ import Home from "./pages/Home";
 
 
 import HomeLayout from "./layout/HomeLayout";
-// import DashboardHome from "./component/MainEntry/dashboardHome/DashboardHome";
+
 import { ToastContainer } from 'react-toastify';
-// import PaymentVoucherForm from "./component/MainEntry/payment/PaymentVoucher";
-// import JournalVoucher from "./component/MainEntry/journal/JournalVoucher";
-// import ReceiveVoucher from "./component/MainEntry/receive/ReceiveVoucher";
-// import CashTransfer from "./component/MainEntry/cash/CashTransfer";
+
 import { AuthProvider } from "./authentication/AuthProvaider";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Payment from "./features/main-entry/pages/payment";
+import Payment from "./features/main-entry/pages/Payment";
 import Journal from "./features/main-entry/pages/Journal";
-import Receive from "./features/main-entry/pages/receive";
+import Receive from "./features/main-entry/pages/Receive";
 import CashTransfer from "./features/main-entry/pages/CashTransfer";
 import DashboardHome from "./features/main-entry/pages/DashboardHome";
+
 function App() {
  
   return (
