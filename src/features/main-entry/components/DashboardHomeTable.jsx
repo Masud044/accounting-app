@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/table"
 // import { DataTablePagination } from "@/components/DataTablePagination"
 import api from "@/api/Ap"
-import { DataTablePagination } from "@/component/pagination/DataTablePagination"
+import { DataTablePagination } from "@/components/DataTablePagination"
 
 // Helper function to get voucher type label
 const getVoucherTypeLabel = (type) => {
@@ -134,7 +134,7 @@ const createColumns = (handleActivateVoucher) => [
       )
     },
     cell: ({ row }) => <div  className="ml-3">{row.getValue("VOUCHERNO")}</div>,
-   
+    
   },
   {
     accessorKey: "TRANS_DATE",
@@ -150,7 +150,7 @@ const createColumns = (handleActivateVoucher) => [
       )
     },
      cell: ({ row }) => <div  className="ml-3">{row.getValue("TRANS_DATE")}</div>,
-     
+    
   },
   {
     accessorKey: "DESCRIPTION",
@@ -167,7 +167,7 @@ const createColumns = (handleActivateVoucher) => [
       
     },
     cell: ({ row }) => <div  className="ml-3">{row.getValue("DESCRIPTION")}</div>,
-    
+  
   },
   {
     accessorKey: "ENTRY_BY",
@@ -184,7 +184,7 @@ const createColumns = (handleActivateVoucher) => [
       
     },
      cell: ({ row }) => <div  className="ml-3">{row.getValue("ENTRY_BY")}</div>,
-     
+   
   },
 
   // ✅ ACTIONS WITH CONDITIONAL ROUTING
@@ -264,7 +264,7 @@ const createColumns = (handleActivateVoucher) => [
   },
 ];
 
-export function DashboardVoucherList() {
+export function DashboardHomeTable() {
 
     const queryClient = useQueryClient();
   // ⭐ Fetch API Using React Query

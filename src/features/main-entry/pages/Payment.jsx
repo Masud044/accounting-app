@@ -16,13 +16,15 @@ import html2canvas from "html2canvas";
 // import PaymentVoucherListTwo from "./PaymentVoucherListTwo";
 import { toast } from "react-toastify";
 import api from "@/api/Ap";
-import PaymentVoucherListTwo from "./PaymentVoucherList";
-import { SectionContainer } from "@/component/container/SectionContainer";
+
+import { SectionContainer } from "@/components/SectionContainer";
 import { PaymentService } from "@/api/AccontingApi";
+import PaymentTable from "../components/PaymentTable";
 
 
 
-const PaymentVoucherForm = () => {
+
+const Payment = () => {
   const { voucherId } = useParams();
   useEffect(() => {
   window.scrollTo({
@@ -782,8 +784,7 @@ const handlePrint = async () => {
         </div>
       </div>
 
-       {/* <PaymentVoucherList showTitle={false} />  */}
-       <PaymentVoucherListTwo />
+   <PaymentTable></PaymentTable>
 
       {/* Modal */}
       {showModal && (
@@ -857,4 +858,4 @@ const handlePrint = async () => {
   );
 };
 
-export default PaymentVoucherForm;
+export default Payment;

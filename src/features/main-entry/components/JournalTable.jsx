@@ -7,8 +7,16 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Plus,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +24,9 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -28,12 +39,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-// import api from "../../../api/Api";
-// import { SectionContainer } from "@/components/SectionContainer";
 import api from "@/api/Ap";
-import { DataTablePagination } from "@/component/pagination/DataTablePagination";
+import { DataTablePagination } from "@/components/DataTablePagination";
+// import api from "../../../api/Api";
 
-export default function CashTransferListTwo() {
+export default function JournalTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -43,7 +53,7 @@ export default function CashTransferListTwo() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
-      const res = await api.get("/cash_all_unposted.php");
+      const res = await api.get("/GL_all_unposted.php");
       return res.data;
     },
   });
@@ -81,9 +91,7 @@ export default function CashTransferListTwo() {
           <ArrowUpDown  />
         </Button>
       ),
-      cell: ({ row }) => (
-        <div className="ml-3">{row.getValue("VOUCHERNO")}</div>
-      ),
+      cell: ({ row }) => <div className="ml-2">{row.getValue("VOUCHERNO")}</div>,
     },
     {
       accessorKey: "TRANS_DATE",
@@ -109,16 +117,13 @@ export default function CashTransferListTwo() {
           <ArrowUpDown  />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
+      cell: ({ row }) => <div  className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
     },
     {
       accessorKey: "DESCRIPTION",
       header: "Description",
       cell: ({ row }) => (
-        <div
-          className="max-w-[200px] truncate"
-          title={row.getValue("DESCRIPTION")}
-        >
+        <div className="max-w-[200px] truncate" title={row.getValue("DESCRIPTION")}>
           {row.getValue("DESCRIPTION")}
         </div>
       ),
@@ -161,6 +166,45 @@ export default function CashTransferListTwo() {
       maximumFractionDigits: 2,
     }).format(amount);
         return <div className="font-medium ml-3">{formatted}</div>;
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const voucher = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() =>
+                  navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
+                }
+              >
+                Copy Voucher No
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to={`/dashboard/journal-voucher/${voucher.ID}`}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Voucher
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Voucher
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
       },
     },
   ];
@@ -211,15 +255,15 @@ export default function CashTransferListTwo() {
   return (
     <>
       <Helmet>
-        <title>Dashboard | Cash Transfer List | HRMS</title>
+        <title>Dashboard | Journal Vouchers | HRMS</title>
       </Helmet>
 
       <div className="min-h-screen ">
-       
-          
-          
+        
+         
+
           {/* Data Table */}
-          <div className="bg-card rounded-md mt-4 shadow-sm p-4">
+          <div className="bg-card rounded-md mt-4 shadow-sm p-4 ">
             <div className="space-y-4">
               {/* Filters and Controls */}
               <div className="flex flex-col sm:flex-row gap-4">
@@ -301,7 +345,7 @@ export default function CashTransferListTwo() {
                         >
                           <div className="flex flex-col items-center justify-center py-8">
                             <p className="text-muted-foreground">
-                              No cash transfer records found
+                              No unposted vouchers found
                             </p>
                           </div>
                         </TableCell>

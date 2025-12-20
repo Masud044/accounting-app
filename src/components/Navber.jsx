@@ -18,8 +18,8 @@ import {
 // import { useIsMobile } from "@/hooks/useMobile";
 // import UserDropDown from "./UserDropDown";
 // import MobileNav from "./MobileNav";
-import { NAV_ITEMS } from "../../lib/constants/nav-item";
-import { useIsMobile } from "../../hooks/useMobile";
+import { NAV_ITEMS } from "../lib/constants/nav-item";
+import { useIsMobile } from "../hooks/useMobile";
 import UserDropDown from "./UserDropDown";
 import MobileNav from "./MobileNav";
 import {  NavigationMenu,

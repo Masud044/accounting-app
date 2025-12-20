@@ -41,9 +41,9 @@ import {
 
 
 import api from "@/api/Ap";
-import { DataTablePagination } from "@/component/pagination/DataTablePagination";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
-export default function ReceiveListTwo() {
+export default function ReceiveTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});

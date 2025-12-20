@@ -15,12 +15,13 @@ import html2canvas from "html2canvas";
 
 import { toast } from "react-toastify";
 import api from "@/api/Ap";
-import ReceiveListTwo from "./ReceiveVoucherList";
-import { SectionContainer } from "@/component/container/SectionContainer";
+
+import { SectionContainer } from "@/components/SectionContainer";
+import ReceiveTable from "../components/ReceiveTable";
 
 
 
-const ReceiveVoucher= () => {
+const Receive= () => {
   const { voucherId } = useParams();
 
   useEffect(() => {
@@ -709,9 +710,7 @@ const handlePrint = async () => {
           </button>
         </div>
       </div>
-    {/* <ReceiveList></ReceiveList> */}
-    <ReceiveListTwo />
-
+    <ReceiveTable></ReceiveTable>
 
       {/* Modal */}
       {showModal && (
@@ -785,4 +784,4 @@ const handlePrint = async () => {
   );
 };
 
-export default ReceiveVoucher;
+export default Receive;

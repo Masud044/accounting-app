@@ -14,8 +14,9 @@ import html2canvas from "html2canvas";
 
 import { toast } from "react-toastify";
 import api from "@/api/Ap";
-import CashTransferListTwo from "./CashTransferList";
-import { SectionContainer } from "@/component/container/SectionContainer";
+
+import { SectionContainer } from "@/components/SectionContainer";
+import CashTransferTable from "../components/CashTransferTable";
 
 const CashTransfer = () => {
   const queryClient = useQueryClient();
@@ -442,8 +443,7 @@ const CashTransfer = () => {
           </button>
         </div>
       </div>
-      {/* <CashTransferList></CashTransferList> */}
-      <CashTransferListTwo />
+     <CashTransferTable></CashTransferTable>
 
       {/* Modal */}
       {showModal && (
