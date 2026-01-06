@@ -116,7 +116,7 @@ export default function PaymentTable() {
           <ArrowUpDown />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-2">{row.getValue("VOUCHERNO")}</div>,
+      cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
     },
     {
       accessorKey: "TRANS_DATE",
