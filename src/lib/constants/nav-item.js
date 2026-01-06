@@ -27,6 +27,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },
       { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus },
       { to: "/dashboard/cash-voucher", label: "Cash Transfer", Icon: Plus },
+     
       { to: "/dashboard/account-voucher", label: "Chart of Account", Icon: Wrench },
       { to: "/dashboard/all-chart", label: "All Chart of Account", Icon: ClipboardList },
     ],

@@ -18,6 +18,7 @@ import api from "@/api/Ap";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import ReceiveTable from "../components/ReceiveTable";
+import { ReceiveService } from "@/api/AccontingApi";
 
 
 
@@ -50,18 +51,26 @@ const Receive= () => {
   const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
-    entryDate: today,
-    invoiceNo: "",
-    supporting: "",
-    description: "",
-    customer: "",
-    glDate: today,
-    paymentCode: "",
-    accountId: "",
-    particular: "",
-    amount: "",
-    totalAmount: 0,
-  });
+  entryDate: today,
+  invoiceNo: "",
+  supporting: "",
+  description: "",
+  customer: "",
+  glDate: today,
+
+  ReceiveCode: "",      // ✅ REQUIRED
+  paymentCode: "",
+  creditId: null,       // ✅ REQUIRED
+  supplier: "",
+
+  accountId: "",
+  particular: "",
+  amount: "",
+  totalAmount: 0,
+});
+
+
+ 
 
   // ---------- FETCH HELPERS ----------
   const { data: customers = [] } = useQuery({
@@ -98,64 +107,83 @@ const Receive= () => {
   const { data: voucherData } = useQuery({
     queryKey: ["voucher", voucherId],
     queryFn: async () => {
-      const res = await api.get(`/receive_view.php?insertID=${voucherId}`);
+      const res = await ReceiveService.search(voucherId)
+      // const res = await api.get(`/receive_view.php?insertID=${voucherId}`);
       return res.data;
     },
     enabled: !!voucherId && accounts.length > 0,
   });
   console.log(voucherData);
-useEffect(() => {
-  if (voucherId && voucherData?.success && accounts.length > 0) {
-    const master = voucherData.gl_master || {};
-    const details = voucherData.gl_details || [];
 
-    const mappedRows = details
-    .filter((d) => d.CREDIT && Number(d.CREDIT) > 0)
+
+useEffect(() => {
+  if (!voucherId || voucherData?.status !== "success") return;
+
+  const master = voucherData.master || {};
+  const details = voucherData.details || [];
+
+      const mappedRows = details
+    .filter((d) => d.credit && Number(d.credit) > 0)
     .map((d, i) => {
-      const account = accounts.find((acc) => acc.value === d.CODE);
+       const account = accounts.find((acc) => acc.value === d.code);
       return {
-        id: d.ID || `${d.CODE}-${i}`,
-        accountCode: d.CODE,
-        particulars: d.ACCOUNT_NAME || (account ? account.label : ""),
-        amount: parseFloat(d.DEBIT || d.CREDIT || 0),
-        debitId: d.DEBIT ? d.ID : null,
-        creditId: d.CREDIT ? d.ID : null,
+        id: d.id || `${d.code}-${i}`,
+        accountCode: d.code,
+        particulars: account ? account.label : "",
+        amount: parseFloat(d.credit),
+        debitId: null,
+        creditId: d.id,
       };
     });
 
     const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
-    // ✅ Only set mappedRows from GL details
-    setRows(mappedRows);
+ 
 
-    // Set form fields
-    setForm({
-      entryDate: master.TRANS_DATE
-        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+  setForm({
+     entryDate: master.TRANS_DATE
+         ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
         : today,
       glDate: master.GL_ENTRY_DATE
         ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
         : today,
-      invoiceNo: master.VOUCHERNO || "",
-      supporting: master.SUPPORTING || "",
-      description: master.DESCRIPTION || "",
-     customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
-      ReceiveCode: master.CASHACCOUNT || "",
-      accountId: "", // ✅ clear accountId
-      particular: "", // ✅ clear particular
-      amount: "", // ✅ clear amount
-      totalAmount: total,
-    });
-  }
-}, [voucherData, accounts, voucherId]);
+   
 
-  // ---------- MUTATION ----------
+    invoiceNo: master.VOUCHERNO || "",
+    supporting: master.SUPPORTING || "",
+    description: master.DESCRIPTION || "",
+
+    customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
+    ReceiveCode: master.CASHACCOUNT || "",
+
+    paymentCode: master.CASHACCOUNT || "",
+    // creditId: details.find(d => Number(d.debit) > 0)?.id || null,
+
+    accountId: "",
+    particular: "",
+    amount: "",
+    totalAmount: total,
+  });
+
+   setRows(mappedRows);
+
+}, [voucherId, voucherData, accounts]);
+
+
+
+  
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
-      const apiUrl = isNew ? "/addReceive.php" : "/ediRecive.php";
-      const res = await api.post(apiUrl, payload);
-      console.log(res.data);
-      return res.data;
+      
+
+       let res;
+          if (isNew) {
+            res = await ReceiveService.insert(payload); // insert call
+          } else {
+            res = await ReceiveService.update(payload); // update call
+          }
+            console.log(res.data);
+            return res.data;
     },
     onSuccess: (data, variables) => {
       if(data.status === "success"){
@@ -165,12 +193,7 @@ useEffect(() => {
             : "Voucher updated successfully!"
       )
     
-      // if (data.status === "success") {
-      //   setMessage(
-      //     variables.isNew
-      //       ? "Voucher created successfully!"
-      //       : "Voucher updated successfully!"
-      //   );
+    
 
         setForm({
           entryDate: today,
@@ -291,21 +314,31 @@ useEffect(() => {
       amount2: rows.map((r) => String(r.amount || 0)),
     };
   } else {
-    // ✅ UPDATE VOUCHER PAYLOAD
-    payload = {
-      trans_date: form.entryDate,
-      gl_date: form.glDate,
-      receive_desc: form.description,
-      supporting: String(form.supporting),
-      customer_id: String(form.customer), 
-      tempdata: voucherId, // master id
-      credit_id: rows.find((r) => r.creditId)?.creditId || form.creditId || "",
+   
 
-      totalAmount: Number(form.totalAmount),
-      accountID: rows.map((r) => r.accountCode),
-      DEBIT_ID: rows.map((r) => r.debitId || ""),
-      amount2: rows.map((r) => Number(r.amount)),
-    };
+   payload = {
+  
+  masterID: Number(voucherId),
+
+  trans_date: form.entryDate,
+  gl_date: form.glDate,
+  receive_desc: form.description,
+
+  pcode: form.paymentCode,
+  credit_id: form.creditId,
+
+  supplierid: String(form.customer),
+  totalAmount: Number(form.totalAmount),
+  supporting: String(form.supporting),
+
+  DEBIT_ID: rows.map(r => Number(r.debitId)),
+  amount2: rows.map(r => Number(r.amount)),
+  acode: rows.map(r => r.accountCode),
+  CODEDESCRIPTION: rows.map(r => r.particulars),
+  DESCRIPTION: rows.map(r => r.particulars),
+};
+
+    console.log("update",payload);
   }
 
   console.log("📤 Final Payload =>", payload);
@@ -414,8 +447,10 @@ const handlePrint = async () => {
                 customer
               </label>
               <select
+                // value={form.customer}
+                // onChange={(e) => setForm({ ...form, customer: e.target.value })}
                 value={form.customer}
-                onChange={(e) => setForm({ ...form, customer: e.target.value })}
+  onChange={(e) => setForm({ ...form, customer: e.target.value })}
                 className="col-span-2 w-full border rounded py-1 h-8  bg-white "
               >
                 <option value="">Select customer</option>

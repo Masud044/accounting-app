@@ -15,7 +15,7 @@ import {
   Trash2,
   Plus,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -42,12 +42,19 @@ import {
 
 import api from "@/api/Ap";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { ReceiveService } from "@/api/AccontingApi";
+import { toast } from "react-toastify";
+
+ 
 
 export default function ReceiveTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
+   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, voucherNo: "" });
+
+    const queryClient = useQueryClient();
 
   // Fetch unposted vouchers - simplified like working version
   const { data, isLoading, error } = useQuery({
@@ -57,6 +64,44 @@ export default function ReceiveTable() {
       return res.data;
     },
   });
+
+
+  // ✅ Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (voucherId) => {
+      const res = await ReceiveService.delete(voucherId);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (data.success === 1 || data.status === "success") {
+        toast.success("Voucher deleted successfully!");
+        queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+      } else {
+        toast.error(data.message || "Delete failed!");
+      }
+      setDeleteModal({ show: false, id: null, voucherNo: "" });
+    },
+    onError: (error) => {
+      toast.error("Error deleting voucher: " + error.message);
+      setDeleteModal({ show: false, id: null, voucherNo: "" });
+    },
+  });
+
+  // ✅ Handle Delete Click
+  const handleDeleteClick = (voucher) => {
+    setDeleteModal({
+      show: true,
+      id: voucher.ID,
+      voucherNo: voucher.VOUCHERNO,
+    });
+  };
+
+  // ✅ Confirm Delete
+  const confirmDelete = () => {
+    if (deleteModal.id) {
+      deleteMutation.mutate(deleteModal.id);
+    }
+  };
 
   // Extract and sort vouchers with useMemo to prevent infinite re-renders
   const sortedVouchers = useMemo(() => {
@@ -91,7 +136,7 @@ export default function ReceiveTable() {
           <ArrowUpDown  />
         </Button>
       ),
-      cell: ({ row }) => <div className="ml-2">{row.getValue("VOUCHERNO")}</div>,
+      cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
     },
     {
       accessorKey: "TRANS_DATE",
@@ -128,6 +173,7 @@ export default function ReceiveTable() {
           {row.getValue("DESCRIPTION")}
         </div>
       ),
+      
     },
     {
       accessorKey: "CREDIT",
@@ -149,45 +195,45 @@ export default function ReceiveTable() {
         return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const voucher = row.original;
+   {
+  id: "actions",
+  enableHiding: false,
+  header: () => <div className="text-center">Actions</div>,
+  cell: ({ row }) => {
+    const voucher = row.original;
 
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() =>
-                  navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
-                }
-              >
-                Copy Voucher No
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={`/dashboard/receive-voucher/${voucher.ID}`}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit Voucher
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Voucher
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
+    return (
+      <div className="flex items-center justify-center gap-3">
+        {/* Edit Button */}
+        <Link
+          to={`/dashboard/receive-voucher/${voucher.ID}`}
+          className="text-blue-600 hover:text-blue-800"
+        >
+          <Pencil size={18} />
+        </Link>
+
+        {/* Copy Voucher No */}
+        {/* <button
+          onClick={() =>
+            navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
+          }
+          className="text-gray-600 hover:text-black"
+          title="Copy Voucher No"
+        >
+          📋
+        </button> */}
+
+        {/* Delete Button */}
+        <button
+          onClick={() => handleDeleteClick(voucher)}
+          className="text-red-600 hover:text-red-800"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+    );
+  },
+}
   ];
 
   const table = useReactTable({
@@ -234,6 +280,8 @@ export default function ReceiveTable() {
   }
 
   return (
+
+    <>
     <div className="min-h-screen">
      
       
@@ -338,5 +386,42 @@ export default function ReceiveTable() {
         </div>
      
     </div>
+
+     {/* ✅ Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-11/12 md:w-96 shadow-xl">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">
+              Confirm Delete
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete voucher{" "}
+              <span className="font-semibold">{deleteModal.voucherNo}</span>?
+              
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() =>
+                  setDeleteModal({ show: false, id: null, voucherNo: "" })
+                }
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      </>
   );
 }
