@@ -23,7 +23,7 @@ export const NAV_ITEMS = [
     //   { to: "/dashboard/shedule-header", label: "Schedule Header", Icon: ClipboardList },
     //   { to: "/dashboard/shedule-line", label: "Schedule Line", Icon: ClipboardList },
       { to: "/dashboard", label: "Home", Icon: Home },
-      { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home },
+      { to: "/dashboard/receive-create", label: "Receive Voucher", Icon: Home },
       { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },
       { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus },
       { to: "/dashboard/cash-voucher", label: "Cash Transfer", Icon: Plus },
