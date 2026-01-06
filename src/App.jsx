@@ -22,6 +22,9 @@ import Journal from "./features/main-entry/pages/Journal";
 import Receive from "./features/main-entry/pages/Receive";
 import CashTransfer from "./features/main-entry/pages/CashTransfer";
 import DashboardHome from "./features/main-entry/pages/DashboardHome";
+import ReceiveEdit from "./features/main-entry/pages/ReceiveEdit";
+import ReceiveCreate from "./features/main-entry/pages/ReceiveCreate";
+
 
 function App() {
  
@@ -42,7 +45,11 @@ function App() {
             <Route path="journal-voucher/:voucherId" element={<Journal />} />
 
             <Route path="receive-voucher" element={<Receive />} />
-            <Route path="receive-voucher/:voucherId" element={<Receive />} />
+          
+            
+              <Route path="receive-create" element={<ReceiveCreate />} />
+               <Route path="receive-edit/:voucherId" element={<ReceiveEdit />} />
+               
             <Route path="cash-voucher" element={<CashTransfer />} />
             <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
             

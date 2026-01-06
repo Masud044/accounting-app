@@ -206,7 +206,7 @@ export default function ReceiveTable() {
       <div className="flex items-center justify-center gap-3">
         {/* Edit Button */}
         <Link
-          to={`/dashboard/receive-voucher/${voucher.ID}`}
+          to={`/dashboard/receive-edit/${voucher.ID}`}
           className="text-blue-600 hover:text-blue-800"
         >
           <Pencil size={18} />
