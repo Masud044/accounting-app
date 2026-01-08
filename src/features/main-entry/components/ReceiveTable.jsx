@@ -75,7 +75,7 @@ export default function ReceiveTable() {
     onSuccess: (data) => {
       if (data.success === 1 || data.status === "success") {
         toast.success("Voucher deleted successfully!");
-        queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+       queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
         toast.error(data.message || "Delete failed!");
       }

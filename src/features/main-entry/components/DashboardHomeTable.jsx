@@ -54,7 +54,7 @@ const getVoucherTypeLabel = (type) => {
 // Helper function to get edit route
 const getEditRoute = (type, id) => {
   switch(type) {
-    case "1": return `/dashboard/receive-voucher/${id}`;
+    case "1": return `/dashboard/receive-edit/${id}`;
     case "2": return `/dashboard/payment-voucher/${id}`;
     case "3": return `/dashboard/journal-voucher/${id}`;
     default: return `/dashboard/cash-voucher/${id}`;

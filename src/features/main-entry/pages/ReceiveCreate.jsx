@@ -191,13 +191,15 @@ const ReceiveCreate = () => {
       receive_desc: form.description,
       supporting: String(form.supporting),
       receive: form.ReceiveCode,
-      customer_id: String(form.customer),
-      totalAmount: String(form.totalAmount),
+      supplierid: String(form.customer),
+      totalAmount: Number(form.totalAmount),
       accountID: rows.map((r) => r.accountCode),
-      amount2: rows.map((r) => String(r.amount || 0)),
+      amount2: rows.map((r) => Number(r.amount || 0)),
     };
 
     mutation.mutate(payload);
+    console.log("=== PAYLOAD DEBUG ===", payload);
+   
   };
 
   const handlePrint = async () => {
@@ -277,6 +279,8 @@ const ReceiveCreate = () => {
   
 
   return (
+
+    <>
     <SectionContainer>
       <div className="p-6 space-y-6 bg-white rounded-lg shadow-md">
         <h1 className="font-semibold text-sm text-gray-800">Create Receive Voucher</h1>
@@ -570,7 +574,7 @@ const ReceiveCreate = () => {
         
       </div>
 
-      <ReceiveTable></ReceiveTable>
+      
 
       {/* Confirmation Modal */}
       {showModal && (
@@ -618,6 +622,8 @@ const ReceiveCreate = () => {
         </div>
       )}
     </SectionContainer>
+   <ReceiveTable></ReceiveTable>
+    </>
   );
 };
 
