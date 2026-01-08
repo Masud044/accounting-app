@@ -80,7 +80,16 @@ const ReceiveEdit = () => {
 
   // Populate form when data is loaded
   useEffect(() => {
-    if (!voucherId || voucherData?.status !== "success") return;
+    // if (!voucherId || voucherData?.status !== "success") return;
+    if (
+      !voucherId ||
+      voucherData?.status !== "success" ||
+      customers.length === 0 ||
+      accounts.length === 0
+    )
+      return;
+  
+   
 
     const master = voucherData.master || {};
     const details = voucherData.details || [];
@@ -111,33 +120,50 @@ const ReceiveEdit = () => {
 
     const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
-    setForm({
-      entryDate: master.TRANS_DATE
-        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-        : today,
-      glDate: master.GL_ENTRY_DATE
-        ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-        : today,
-      invoiceNo: master.VOUCHERNO || "",
-      supporting: master.SUPPORTING || "",
-      description: master.DESCRIPTION || "",
-      customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
-      ReceiveCode: master.CASHACCOUNT || "",
-      paymentCode: master.CASHACCOUNT || "",
-      accountId: "",
-      particular: "",
-      amount: "",
-      totalAmount: total,
-    });
+    // setForm({
+    //   entryDate: master.TRANS_DATE
+    //     ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+    //     : today,
+    //   glDate: master.GL_ENTRY_DATE
+    //     ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+    //     : today,
+    //   invoiceNo: master.VOUCHERNO || "",
+    //   supporting: master.SUPPORTING || "",
+    //   description: master.DESCRIPTION || "",
+    //   customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
+    //   ReceiveCode: master.CASHACCOUNT || "",
+    //   paymentCode: master.CASHACCOUNT || "",
+    //   accountId: "",
+    //   particular: "",
+    //   amount: "",
+    //   totalAmount: total,
+    // });
+
+    setForm((prev) => ({
+  ...prev,
+  entryDate: master.TRANS_DATE
+    ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+    : today,
+  glDate: master.GL_ENTRY_DATE
+    ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+    : today,
+  invoiceNo: master.VOUCHERNO || "",
+  supporting: master.SUPPORTING || "",
+  description: master.DESCRIPTION || "",
+  customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
+  ReceiveCode: master.CASHACCOUNT || "",
+  paymentCode: master.CASHACCOUNT || "",
+  totalAmount: total,
+}));
 
     setRows(mappedRows);
-  }, [voucherId, voucherData, accounts]);
+  }, [voucherId, voucherData, accounts, customers]);
 
   // Update Mutation
   const mutation = useMutation({
     mutationFn: async (payload) => {
       const res = await ReceiveService.update(payload);
-      console.log("Backend Response:", res.data);
+      console.log(res.data);
       return res.data;
     },
     onSuccess: (data) => {
@@ -262,6 +288,7 @@ const ReceiveEdit = () => {
     };
 
     mutation.mutate(payload);
+    console.log(payload);
     console.log("=== PAYLOAD DEBUG ===");
   console.log("Full Payload:", JSON.stringify(payload, null, 2));
   console.log("Rows being sent:", rows);
@@ -273,6 +300,8 @@ const ReceiveEdit = () => {
   return (
     <SectionContainer>
       <div className="p-6 space-y-6 bg-white rounded-lg shadow-md">
+       {/* Header with Back Button */}
+        <div className="flex items-center justify-between ">
         {/* Header with Back Button */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-sm text-gray-800">
