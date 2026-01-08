@@ -284,10 +284,6 @@ export default function ReceiveTable() {
     <>
     <div className="min-h-screen">
      
-      
-        
-       
-
         {/* Data Table */}
         <div className="bg-card rounded-md mt-4 shadow-sm p-4 ">
           <div className="space-y-4">

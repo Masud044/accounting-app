@@ -65,7 +65,9 @@ const ReceiveCreate = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/account_code.php");
+    //   const res = await api.get("/account_code.php");
+      const res = await api.get("/rec_account_code.php");
+      
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
