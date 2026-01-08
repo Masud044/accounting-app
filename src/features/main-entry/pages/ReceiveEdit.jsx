@@ -33,8 +33,6 @@ const ReceiveEdit = () => {
     totalAmount: 0,
   });
 
- 
-
   // Fetch customers
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
@@ -78,6 +76,7 @@ const ReceiveEdit = () => {
     },
     enabled: !!voucherId && accounts.length > 0,
   });
+  console.log(voucherData)
 
   // Populate form when data is loaded
   useEffect(() => {
@@ -94,20 +93,30 @@ const ReceiveEdit = () => {
 
     const master = voucherData.master || {};
     const details = voucherData.details || [];
+    console.log(voucherData.details);
+
 
     const mappedRows = details
       .filter((d) => d.credit && Number(d.credit) > 0)
       .map((d, i) => {
         const account = accounts.find((acc) => acc.value === d.code);
         return {
-          id: d.id || `${d.code}-${i}`,
+          id: d.id,
           accountCode: d.code,
           particulars: account ? account.label : "",
           amount: parseFloat(d.credit),
-          debitId: null,
+          debitId:  d.id,
           creditId: d.id,
         };
       });
+      console.table(
+  rows.map(r => ({
+    debitId: r.debitId,
+    account: r.accountCode,
+    amount: r.amount,
+    particulars: r.particulars,
+  }))
+);
 
     const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
@@ -186,6 +195,8 @@ const ReceiveEdit = () => {
       debitId: null,
       creditId: null,
     };
+    
+
 
     const updatedRows = [...rows, newRow];
     const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
@@ -200,13 +211,43 @@ const ReceiveEdit = () => {
     });
   };
 
+
+  const updateRow = (id, field, value) => {
+  const updatedRows = rows.map((row) =>
+    row.id === id
+      ? {
+          ...row,
+          [field]: field === "amount" ? Number(value) : value,
+        }
+      : row
+  );
+
+  const total = updatedRows.reduce(
+    (sum, r) => sum + Number(r.amount || 0),
+    0
+  );
+
+  setRows(updatedRows);
+  setForm((prev) => ({
+    ...prev,
+    totalAmount: total,
+  }));
+};
+
+
   // Remove Row Handler
   const removeRow = (id) => {
     const updatedRows = rows.filter((r) => r.id !== id);
-    const total = updatedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+    const total = updatedRows.reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
     setRows(updatedRows);
     setForm({ ...form, totalAmount: total });
   };
+
+  console.log("Rows before submit:", rows);
+
 
   // Submit Handler
   const handleSubmit = () => {
@@ -238,7 +279,8 @@ const ReceiveEdit = () => {
       supplierid: String(form.customer),
       totalAmount: Number(form.totalAmount),
       supporting: String(form.supporting),
-      DEBIT_ID: rows.map((r) => Number(r.debitId)),
+      DEBIT_ID: rows.map((r) => r.debitId || null),
+      // DEBIT_ID: rows.map((r) => Number(r.debitId)),
       amount2: rows.map((r) => Number(r.amount)),
       acode: rows.map((r) => r.accountCode),
       CODEDESCRIPTION: rows.map((r) => r.particulars),
@@ -247,6 +289,12 @@ const ReceiveEdit = () => {
 
     mutation.mutate(payload);
     console.log(payload);
+    console.log("=== PAYLOAD DEBUG ===");
+  console.log("Full Payload:", JSON.stringify(payload, null, 2));
+  console.log("Rows being sent:", rows);
+  console.log("DEBIT_IDs:", payload.DEBIT_ID);
+  console.log("Amounts:", payload.amount2);
+  console.log("Account Codes:", payload.acode);
   };
 
   return (
@@ -254,6 +302,8 @@ const ReceiveEdit = () => {
       <div className="p-6 space-y-6 bg-white rounded-lg shadow-md">
        {/* Header with Back Button */}
         <div className="flex items-center justify-between ">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-sm text-gray-800">
             Edit Receive Voucher
           </h2>
@@ -262,7 +312,6 @@ const ReceiveEdit = () => {
             Back
           </Button>
         </div>
-
 
         <div className="grid grid-cols-1 md:grid-cols-[150px_1fr_1fr] gap-4 bg-white rounded-lg">
           <div className="bg-gray-200 border-black">
@@ -297,7 +346,9 @@ const ReceiveEdit = () => {
               <input
                 type="date"
                 value={form.entryDate}
-                onChange={(e) => setForm({ ...form, entryDate: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, entryDate: e.target.value })
+                }
                 className="col-span-2 w-full border rounded py-1 bg-white"
               />
             </div>
@@ -321,7 +372,9 @@ const ReceiveEdit = () => {
               <input
                 type="number"
                 value={form.supporting}
-                onChange={(e) => setForm({ ...form, supporting: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, supporting: e.target.value })
+                }
                 className="border-collapse w-40 border rounded py-1 bg-white"
               />
             </div>
@@ -344,7 +397,9 @@ const ReceiveEdit = () => {
               </label>
               <select
                 value={form.paymentCode}
-                onChange={(e) => setForm({ ...form, paymentCode: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, paymentCode: e.target.value })
+                }
                 className="col-span-2 w-full rounded py-1 border bg-white"
               >
                 <option value="">Select Payment</option>
@@ -389,7 +444,9 @@ const ReceiveEdit = () => {
             <Select
               options={accounts}
               className="col-span-2 border w-full rounded shadow-2xl"
-              value={accounts.find((acc) => acc.value === form.accountId) || null}
+              value={
+                accounts.find((acc) => acc.value === form.accountId) || null
+              }
               onChange={(selected) =>
                 setForm({
                   ...form,
@@ -420,7 +477,7 @@ const ReceiveEdit = () => {
             <input
               type="text"
               value={form.particular}
-              readOnly
+              // readOnly
               className="col-span-2 border w-full rounded py-1 bg-white"
             />
           </div>
@@ -467,15 +524,43 @@ const ReceiveEdit = () => {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border">
-                  <td className="border px-2 md:px-4 py-2 break-words">
-                    {row.accountCode}
+                  {/* Account Code */}
+                  <td className="border px-2 md:px-4 py-2">
+                    <input
+                      type="text"
+                      value={row.accountCode}
+                      onChange={(e) =>
+                        updateRow(row.id, "accountCode", e.target.value)
+                      }
+                      className="w-full bg-transparent outline-none text-center"
+                    />
                   </td>
-                  <td className="border px-2 md:px-4 py-2 break-words">
-                    {row.particulars}
+
+                  {/* Particulars */}
+                  <td className="border px-2 md:px-4 py-2">
+                    <input
+                      type="text"
+                      value={row.particulars}
+                      onChange={(e) =>
+                        updateRow(row.id, "particulars", e.target.value)
+                      }
+                      className="w-full bg-transparent outline-none"
+                    />
                   </td>
+
+                  {/* Amount */}
                   <td className="border px-2 md:px-4 py-2 text-center">
-                    {Number(row.amount).toFixed(2)}
+                    <input
+                      type="number"
+                      value={row.amount}
+                      onChange={(e) =>
+                        updateRow(row.id, "amount", e.target.value)
+                      }
+                      className="w-full bg-transparent outline-none text-center"
+                    />
                   </td>
+
+                  {/* Delete */}
                   <td className="border px-2 md:px-4 py-2 text-center">
                     <button type="button" onClick={() => removeRow(row.id)}>
                       <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
@@ -524,16 +609,31 @@ const ReceiveEdit = () => {
           <div className="bg-white rounded-2xl p-6 w-11/12 md:w-1/2 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Confirm Voucher Update</h2>
             <div className="space-y-2">
-              <p><strong>Entry Date:</strong> {form.entryDate}</p>
-              <p><strong>Invoice No:</strong> {form.invoiceNo}</p>
-              <p><strong>No. of Supporting:</strong> {form.supporting}</p>
-              <p><strong>Description:</strong> {form.description}</p>
+              <p>
+                <strong>Entry Date:</strong> {form.entryDate}
+              </p>
+              <p>
+                <strong>Invoice No:</strong> {form.invoiceNo}
+              </p>
+              <p>
+                <strong>No. of Supporting:</strong> {form.supporting}
+              </p>
+              <p>
+                <strong>Description:</strong> {form.description}
+              </p>
               <p>
                 <strong>Customer:</strong>{" "}
-                {customers.find((s) => s.CUSTOMER_ID === form.customer)?.CUSTOMER_NAME}
+                {
+                  customers.find((s) => s.CUSTOMER_ID === form.customer)
+                    ?.CUSTOMER_NAME
+                }
               </p>
-              <p><strong>GL Date:</strong> {form.glDate}</p>
-              <p><strong>Payment Code:</strong> {form.paymentCode}</p>
+              <p>
+                <strong>GL Date:</strong> {form.glDate}
+              </p>
+              <p>
+                <strong>Payment Code:</strong> {form.paymentCode}
+              </p>
               <h3 className="font-semibold mt-2">Accounts:</h3>
               <ul className="list-disc pl-5">
                 {rows.map((row, index) => (
@@ -542,7 +642,9 @@ const ReceiveEdit = () => {
                   </li>
                 ))}
               </ul>
-              <p className="font-semibold mt-2">Total: {form.totalAmount.toFixed(2)}</p>
+              <p className="font-semibold mt-2">
+                Total: {form.totalAmount.toFixed(2)}
+              </p>
             </div>
             <div className="flex justify-end mt-4 space-x-3">
               <button
