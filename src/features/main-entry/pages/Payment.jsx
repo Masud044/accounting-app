@@ -4,16 +4,9 @@ import Select from "react-select";
 
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { PaymentService } from "@/api/PaymentService";
-
-
-
-// import PageTitle from "../../RouteTitle";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-// import { SectionContainer } from "../../SectionContainer";
-// import PaymentVoucherListTwo from "./PaymentVoucherListTwo";
 import { toast } from "react-toastify";
 import api from "@/api/Ap";
 
@@ -21,17 +14,14 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { PaymentService } from "@/api/AccontingApi";
 import PaymentTable from "../components/PaymentTable";
 
-
-
-
 const Payment = () => {
   const { voucherId } = useParams();
   useEffect(() => {
-  window.scrollTo({
-    top: 80,
-    behavior: "smooth",
-  });
-}, [voucherId]);
+    window.scrollTo({
+      top: 80,
+      behavior: "smooth",
+    });
+  }, [voucherId]);
 
   const queryClient = useQueryClient();
 
@@ -40,12 +30,13 @@ const Payment = () => {
 
   const [rows, setRows] = useState([
     {
-      id: "dummy", // dummy row id
+      id: "dummy",
       accountCode: "",
       particulars: "",
       amount: 0,
       debitId: null,
       creditId: null,
+      isNew: false, // ✅ Track if row is newly added during edit
     },
   ]);
   const [message, setMessage] = useState("");
@@ -59,6 +50,7 @@ const Payment = () => {
     supplier: "",
     glDate: today,
     paymentCode: "",
+    creditId: null,
     accountId: "",
     particular: "",
     amount: "",
@@ -85,9 +77,8 @@ const Payment = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      // const res = await api.get("/rec_account_code.php");
-        const res = await api.get("/account_code.php");
-      
+      const res = await api.get("/account_code.php");
+
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
@@ -98,6 +89,7 @@ const Payment = () => {
       return [];
     },
   });
+
   // ---------- FETCH VOUCHER IF EDIT ----------
   const { data: voucherData } = useQuery({
     queryKey: ["voucher", voucherId],
@@ -107,25 +99,35 @@ const Payment = () => {
     },
     enabled: !!voucherId && accounts.length > 0,
   });
-  console.log(voucherData);
+
+  console.log("data", voucherData);
+
   useEffect(() => {
     if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
       const master = voucherData.master || {};
       const details = voucherData.details || [];
-       console.log(master, details);
+      console.log("Master:", master);
+      console.log("Details:", details);
+      console.log("REFETCH DATA", voucherData.details)
 
-      // Filter out rows that should not appear in editable table
+
+      // ✅ Find credit entry (payment account)
+      const creditEntry = details.find((d) => d.credit && Number(d.credit) > 0);
+      console.log("Credit Entry:", creditEntry);
+
+      // ✅ Get debit entries (existing rows from database)
       const mappedRows = details
-         .filter((d) => d.debit && Number(d.debit) > 0) // only include rows with debit > 0
+        .filter((d) => d.debit && Number(d.debit) > 0)
         .map((d, i) => {
           const account = accounts.find((acc) => acc.value === d.code);
           return {
             id: d.id || `${d.code}-${i}`,
             accountCode: d.code,
-            particulars: account ? account.label : "",
+            particulars: d.codedescription || (account ? account.label : ""),
             amount: parseFloat(d.debit),
             debitId: d.id,
             creditId: null,
+            isNew: false, // ✅ Existing rows from database
           };
         });
 
@@ -133,6 +135,8 @@ const Payment = () => {
         (sum, r) => sum + Number(r.amount || 0),
         0
       );
+
+      console.log("Setting creditId:", creditEntry?.id);
 
       setForm((prev) => ({
         ...prev,
@@ -147,13 +151,14 @@ const Payment = () => {
         description: master.DESCRIPTION || "",
         supplier: master.CUSTOMER_ID || "",
         paymentCode: master.CASHACCOUNT || "",
+        creditId: creditEntry ? creditEntry.id : null,
         accountId: "",
         particular: "",
         amount: "",
         totalAmount: total,
       }));
 
-      setRows(mappedRows); // only rows with debit > 0
+      setRows(mappedRows);
     }
   }, [voucherData, accounts, voucherId]);
 
@@ -161,15 +166,15 @@ const Payment = () => {
   const mutation = useMutation({
     mutationFn: async ({ isNew, payload }) => {
       let res;
-    if (isNew) {
-      res = await PaymentService.insert(payload); // insert call
-    } else {
-      res = await PaymentService.update(payload); // update call
-    }
-      console.log(res.data);
+      if (isNew) {
+        res = await PaymentService.insert(payload);
+      } else {
+        res = await PaymentService.update(payload);
+      }
+      console.log("📤 Backend Response:", res.data);
       return res.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       if (data.status === "success") {
         toast.success(
           variables.isNew
@@ -177,26 +182,41 @@ const Payment = () => {
             : "Voucher updated successfully!"
         );
 
-        setForm({
-          entryDate: today,
-          invoiceNo: "",
-          supporting: "",
-          description: "",
-          supplier: "",
-          glDate: today,
-          paymentCode: "",
-          accountId: "",
-          particular: "",
-          amount: "",
-          totalAmount: 0,
-        });
-        setRows([]);
+        if (variables.isNew) {
+          // ✅ For new voucher, reset form
+          setForm({
+            entryDate: today,
+            invoiceNo: "",
+            supporting: "",
+            description: "",
+            supplier: "",
+            glDate: today,
+            paymentCode: "",
+            creditId: null,
+            accountId: "",
+            particular: "",
+            amount: "",
+            totalAmount: 0,
+          });
+          setRows([]);
+        } else {
+          // ✅ For update, refetch the voucher data to get updated IDs
+          console.log("🔄 Refetching voucher data...");
+          await queryClient.invalidateQueries(["voucher", voucherId]);
+          
+          // Wait a bit for the query to refetch
+          setTimeout(() => {
+            queryClient.refetchQueries(["voucher", voucherId]);
+          }, 500);
+        }
+
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
         toast.error("Error processing voucher.");
       }
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("❌ Mutation Error:", error);
       toast.error("Error submitting voucher. Please try again.");
     },
     onSettled: () => {
@@ -206,21 +226,29 @@ const Payment = () => {
 
   // ---------- HANDLERS ----------
   const addRow = () => {
-    if (!form.accountId || !form.amount) return;
+    if (!form.accountId || !form.amount) {
+      toast.error("Please select account and enter amount");
+      return;
+    }
+
+    const account = accounts.find((acc) => acc.value === form.accountId);
+    
     const newRow = {
-      id: Date.now(),
+      // id: `new-${Date.now()}`, // ✅ Temporary ID for new rows
+       id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+
       accountCode: form.accountId,
-      particulars: form.particular,
+      particulars: form.particular || (account ? account.label : ""),
       amount: parseFloat(form.amount),
-      debitId: null,
+      debitId: null, // ✅ No debitId for new rows
       creditId: null,
+      isNew: true, // ✅ Mark as new row
     };
+
     let updatedRows;
     if (rows.length === 1 && rows[0].id === "dummy") {
-      // replace dummy row with actual row
       updatedRows = [newRow];
     } else {
-      // append normally
       updatedRows = [...rows, newRow];
     }
 
@@ -234,6 +262,42 @@ const Payment = () => {
       amount: "",
       totalAmount: total,
     });
+
+    
+  };
+
+  const updateRow = (id, field, value) => {
+    const updatedRows = rows.map((row) => {
+      if (row.id === id) {
+        const updatedRow = { ...row };
+
+        if (field === "amount") {
+          updatedRow.amount = Number(value) || 0;
+        } else if (field === "accountCode") {
+          updatedRow.accountCode = value;
+          const account = accounts.find((acc) => acc.value === value);
+          if (account) {
+            updatedRow.particulars = account.label;
+          }
+        } else if (field === "particulars") {
+          updatedRow.particulars = value;
+        }
+
+        return updatedRow;
+      }
+      return row;
+    });
+
+    const total = updatedRows.reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
+
+    setRows(updatedRows);
+    setForm((prev) => ({
+      ...prev,
+      totalAmount: total,
+    }));
   };
 
   const removeRow = (id) => {
@@ -254,8 +318,7 @@ const Payment = () => {
       isNew &&
       (!form.entryDate ||
         !form.glDate ||
-         !form.description ||
-       
+        !form.description ||
         !form.paymentCode ||
         !form.supplier ||
         rows.length === 0)
@@ -263,18 +326,17 @@ const Payment = () => {
       toast.error("Please fill all required fields and add at least one row.");
       return;
     }
-    const invalidRow = rows.some(
-    (row) =>
-      !row.accountCode || !row.particulars
-  );
 
-  if (invalidRow) {
-    toast.error("Each row must have Account Code, Particular filled.");
-    return;
-  }
+    const invalidRow = rows.some((row) => !row.accountCode || !row.particulars);
+
+    if (invalidRow) {
+      toast.error("Each row must have Account Code and Particular filled.");
+      return;
+    }
 
     let payload = {};
     if (isNew) {
+      // ✅ NEW VOUCHER - All rows are new
       payload = {
         trans_date: form.entryDate,
         gl_date: form.glDate,
@@ -288,575 +350,571 @@ const Payment = () => {
         amount2: rows.map((r) => String(r.amount || 0)),
       };
     } else {
-  // ✅ Build credit row for Payment Code
-  // const creditRow = {
-  //   code: form.paymentCode,
-  //   debit: 0,
-  //   credit: Number(form.totalAmount),
-  //   id: form.creditId || "",
-  //   description: "Payment code credit",
-  // };
+      // ✅ UPDATE VOUCHER - Separate existing and new rows
+      const existingRows = rows.filter((r) => !r.isNew);
+      const newRows = rows.filter((r) => r.isNew);
 
-  // // ✅ Build debit rows from table
-  // const debitRows = rows.map((r) => ({
-  //   code: r.accountCode,
-  //   debit: Number(r.amount),
-  //   credit: 0,
-  //   id: r.debitId || "",
-  //   description: r.particulars,
-  // }));
+      console.log("🔍 All Rows:", rows);
+      console.log("🔍 Existing Rows:", existingRows);
+      console.log("🔍 New Rows:", newRows);
 
-  // payload = {
-  //   master_id: voucherId,
-  //   voucherno: form.invoiceNo,
-  //   trans_date: form.entryDate,
-  //   gl_date: form.glDate,
-  //   voucher_type: 2,
-  //   entry_by: 1,
-  //   description: form.description,
-  //   reference_no: form.invoiceNo || "",
-  //   supporting: Number(form.supporting) || 0,
-  //   receive: form.paymentCode || "",
-  //   posted: 0,
-  //   supplierid: form.supplier,
-  //   auto_invoice: "",
-  //   status_pay_recive: 0,
-  //   unit_id: 0,
-  //   details: [creditRow, ...debitRows], // ✅ credit + debit lines
-  // };
+      // ✅ Build payload with both existing and new rows
+      payload = {
+        masterID: Number(voucherId),
+        trans_date: form.entryDate,
+        gl_date: form.glDate,
+        receive_desc: form.description,
+        pcode: form.paymentCode,
+        credit_id: form.creditId,
+        supplierid: form.supplier,
+        totalAmount: Number(form.totalAmount),
+        supporting: String(form.supporting),
+      };
 
-  // Build credit row
-// const creditRow = {
-//   credit_id: form.creditId || "", // credit line ID
-//   code: form.paymentCode,
-//   debit: 0,
-//   credit: Number(form.totalAmount),
-//   description: "Payment code credit",
-// };
+      // ✅ Add existing rows data
+      if (existingRows.length > 0) {
+       payload.DEBIT_ID = existingRows.map(r => Number(r.debitId))
+payload.acode = existingRows.map(r => r.accountCode)
+payload.amount2 = existingRows.map(r => Number(r.amount))
+payload.CODEDESCRIPTION = existingRows.map(r => r.particulars)
+payload.DESCRIPTION = existingRows.map(r => r.particulars)
 
-// Build debit rows
-//  const debitIds = rows.map(r => r.debitId || "");
-//     const amounts = rows.map(r => Number(r.amount));
+      }
 
-//  const debitRows = rows.map((r) => ({
-//     code: r.accountCode,
-//     debit: Number(r.amount),
-//     credit: 0,
-//     id: r.debitId || "",
-//     description: r.particulars,
-//   }));
+      // ✅ Add new rows data (these will get new IDs from backend)
+      if (newRows.length > 0) {
+        payload.NEW_ACODE = newRows.map(r => r.accountCode)
+payload.NEW_AMOUNT = newRows.map(r => Number(r.amount))
+payload.NEW_CODEDESCRIPTION = newRows.map(r => r.particulars)
+payload.NEW_DESCRIPTION = newRows.map(r => r.particulars)
 
-payload = {
-      
-      masterID: Number(voucherId),
-      trans_date: form.entryDate,
-      gl_date: form.glDate,
-      receive_desc: form.description,
-      pcode: form.paymentCode,
-      credit_id: form.creditId || null,
-      supplierid: form.supplier,
-      totalAmount: Number(form.totalAmount),
-      supporting: String(form.supporting),
-      DEBIT_ID: rows.map(r => r.debitId ? Number(r.debitId) : null),
-      amount2: rows.map(r => Number(r.amount)),
-      acode: rows.map(r => r.accountCode),
-      CODEDESCRIPTION: rows.map(r => r.particulars),
-      DESCRIPTION: rows.map(r => r.particulars),
-    };
+      }
 
+      console.log("✅ Final Update Payload:", JSON.stringify(payload, null, 2));
+    }
 
-
-
-
-
-
-console.log(payload);
-
-}
-
-    console.log(payload);
     mutation.mutate({ isNew, payload });
   };
 
-// ---------- PRINT HANDLER ----------
+  // ---------- PRINT HANDLER ----------
+  const handlePrint = async () => {
+    const printArea = document.getElementById("print-area");
 
-const handlePrint = async () => {
-  const printArea = document.getElementById("print-area");
-
-  if (!printArea) {
-    toast.error("Print area not found!");
-    return;
-  }
-
-  try {
-    // Temporarily show hidden print area
-    printArea.style.display = "block";
-
-    // Capture HTML to canvas
-   const canvas = await html2canvas(printArea, {
-  scale: 2,
-  backgroundColor: "#fff",
-  useCORS: true,
-  logging: false,
-  onclone: (clonedDoc) => {
-    clonedDoc.querySelectorAll("*").forEach((el) => {
-      const style = clonedDoc.defaultView.getComputedStyle(el);
-
-      if (style.color.includes("oklch")) {
-        el.style.setProperty("color", "#000", "important");
-      }
-      if (style.backgroundColor.includes("oklch")) {
-        el.style.setProperty("background-color", "#fff", "important");
-      }
-      if (style.borderColor.includes("oklch")) {
-        el.style.setProperty("border-color", "#000", "important");
-      }
-    });
-  }
-});
-
-
-    const imgData = canvas.toDataURL("image/png", 1.0);
-
-    // Create PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add extra pages if content exceeds one page
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    if (!printArea) {
+      toast.error("Print area not found!");
+      return;
     }
 
-    // ✅ Automatically open PDF in a new tab
-    const pdfBlob = pdf.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl, "_blank");
+    try {
+      printArea.style.display = "block";
 
-    // ✅ Optionally trigger download
-    pdf.save(`Payment_Voucher_${form.invoiceNo || "new"}.pdf`);
-  } catch (err) {
-    console.error(err);
-    toast.error("Error generating PDF: " + err.message);
-  } finally {
-    // Hide print area again
-    printArea.style.display = "none";
-  }
-};
+      const canvas = await html2canvas(printArea, {
+        scale: 2,
+        backgroundColor: "#fff",
+        useCORS: true,
+        logging: false,
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll("*").forEach((el) => {
+            const style = clonedDoc.defaultView.getComputedStyle(el);
 
+            if (style.color.includes("oklch")) {
+              el.style.setProperty("color", "#000", "important");
+            }
+            if (style.backgroundColor.includes("oklch")) {
+              el.style.setProperty("background-color", "#fff", "important");
+            }
+            if (style.borderColor.includes("oklch")) {
+              el.style.setProperty("border-color", "#000", "important");
+            }
+          });
+        },
+      });
 
+      const imgData = canvas.toDataURL("image/png", 1.0);
 
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+      let heightLeft = imgHeight;
+      let position = 0;
 
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
 
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
 
+      const pdfBlob = pdf.output("blob");
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, "_blank");
 
+      pdf.save(`Payment_Voucher_${form.invoiceNo || "new"}.pdf`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error generating PDF: " + err.message);
+    } finally {
+      printArea.style.display = "none";
+    }
+  };
 
   return (
-  <SectionContainer>
+    <SectionContainer>
       <div className="">
-     
+        {/* Top Form */}
+        <div className=" p-6 space-y-6 bg-white rounded-lg shadow-md">
+          {message && (
+            <p className="text-center text-red-600 font-medium mt-2 mb-2">
+              {message}
+            </p>
+          )}
 
-      {/* Top Form */}
-      <div className=" p-6 space-y-6 bg-white rounded-lg shadow-md">
-        {message && (
-          <p className="text-center text-red-600 font-medium mt-2 mb-2">
-            {message}
-          </p>
-        )}
-
-        {/* Save button aligned right */}
-
-        <div className="grid grid-cols-1 md:grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
-          {/* bill system */}
-          <div className=" bg-gray-200 border-black">
-            <h1 className=" text-center py-10">this is bill</h1>
-          </div>
-          {/* suppliers */}
-          <div className="">
-            <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
-              <label className="font-medium block text-xs  text-foreground">
-                Supplier
-              </label>
-              <select
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                className="col-span-2 w-full border rounded py-1 h-8  bg-white "
-              >
-                <option value="">Select Supplier</option>
-                {suppliers.map((sup) => (
-                  <option key={sup.SUPPLIER_ID} value={sup.SUPPLIER_ID}>
-                    {sup.SUPPLIER_NAME}
-                  </option>
-                ))}
-              </select>
+          <div className="grid grid-cols-1 md:grid-cols-[150px_1fr_1fr] gap-4  bg-white  rounded-lg">
+            {/* bill system */}
+            <div className=" bg-gray-200 border-black">
+              <h1 className=" text-center py-10">this is bill</h1>
+            </div>
+            {/* suppliers */}
+            <div className="">
+              <div className="grid grid-cols-3 opacity-60  px-3 items-center py-3">
+                <label className="font-medium block text-xs  text-foreground">
+                  Supplier
+                </label>
+                <select
+                  value={form.supplier}
+                  onChange={(e) =>
+                    setForm({ ...form, supplier: e.target.value })
+                  }
+                  className="col-span-2 w-full border rounded py-1 h-8  bg-white "
+                >
+                  <option value="">Select Supplier</option>
+                  {suppliers.map((sup) => (
+                    <option key={sup.SUPPLIER_ID} value={sup.SUPPLIER_ID}>
+                      {sup.SUPPLIER_NAME}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {/* all input payment field */}
+            <div className="">
+              {/* Entry Date */}
+              <div className="grid grid-cols-3 opacity-60   px-3 items-center py-2">
+                <label className="font-medium block text-sm  text-foreground">
+                  Entry Date
+                </label>
+                <input
+                  type="date"
+                  value={form.entryDate}
+                  onChange={(e) =>
+                    setForm({ ...form, entryDate: e.target.value })
+                  }
+                  className="col-span-2 w-full border  rounded py-1   bg-white "
+                />
+              </div>
+              {/* Invoice No */}
+              <div className="grid grid-cols-3 opacity-60  px-3 items-center ">
+                <label className="font-medium block text-sm  text-foreground">
+                  Invoice No
+                </label>
+                <input
+                  type="text"
+                  value={form.invoiceNo}
+                  onChange={(e) =>
+                    setForm({ ...form, invoiceNo: e.target.value })
+                  }
+                  disabled={!voucherId}
+                  className="col-span-2 w-full border   rounded py-1  bg-white "
+                />
+              </div>
+              {/* Supporting */}
+              <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center ">
+                <label className="font-medium block text-sm  text-foreground">
+                  No. of Supporting
+                </label>
+                <input
+                  type="number"
+                  value={form.supporting}
+                  onChange={(e) =>
+                    setForm({ ...form, supporting: e.target.value })
+                  }
+                  className="border-collapse w-40 border rounded py-1   bg-white "
+                />
+              </div>
+              <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center">
+                <label className="font-medium block text-sm  text-foreground">
+                  GL Date
+                </label>
+                <input
+                  type="date"
+                  value={form.glDate}
+                  onChange={(e) => setForm({ ...form, glDate: e.target.value })}
+                  className="col-span-2 w-full border rounded py-1  bg-white "
+                />
+              </div>
+              <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
+                <label className="font-medium block text-sm  text-foreground">
+                  Payment Code
+                </label>
+                <select
+                  value={form.paymentCode}
+                  onChange={(e) =>
+                    setForm({ ...form, paymentCode: e.target.value })
+                  }
+                  className="col-span-2 w-full rounded py-1 border  bg-white "
+                >
+                  <option value="">Select payment</option>
+                  {PaymentCodes.map((code) => (
+                    <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
+                      {code.ACCOUNT_NAME}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-3 opacity-60   px-3 items-center py-3">
+                <label className="font-medium block text-sm  text-foreground">
+                  Total Amount
+                </label>
+                <input
+                  type="number"
+                  value={form.totalAmount.toFixed(2)}
+                  readOnly
+                  className="col-span-2 w-full border rounded py-1  bg-white "
+                />
+              </div>
             </div>
           </div>
-          {/* all input payment field */}
-          <div className="">
-            {/* Entry Date */}
-            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-2">
+
+          <div className="mt-4 mb-4 bg-white opacity-60">
+            <label className="block text-sm font-medium text-gray-600 mb-2  py-2 px-4 rounded-lg">
+              Description
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              className="w-full mt-1 border rounded-lg px-3 py-2"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_1fr] opacity-60 gap-4 rounded-lg justify-center items-center ">
+            <div className="grid grid-cols-3  px-3 items-center  py-1">
               <label className="font-medium block text-sm  text-foreground">
-                Entry Date
+                Account ID
               </label>
-              <input
-                type="date"
-                value={form.entryDate}
-                onChange={(e) =>
-                  setForm({ ...form, entryDate: e.target.value })
+              <Select
+                options={accounts}
+                className="col-span-2 border w-full rounded shadow-2xl"
+                value={
+                  accounts.find((acc) => acc.value === form.accountId) || null
                 }
-                className="col-span-2 w-full border  rounded py-1   bg-white "
+                onChange={(selected) =>
+                  setForm({
+                    ...form,
+                    accountId: selected ? selected.value : "",
+                    particular: selected ? selected.name : "",
+                  })
+                }
+                placeholder="Enter account..."
+                isClearable
+                isSearchable
+                menuPortalTarget={document.body}
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  menu: (base) => ({
+                    ...base,
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  }),
+                }}
               />
             </div>
-            {/* Invoice No */}
-            <div className="grid grid-cols-3 opacity-60  px-3 items-center ">
+            <div className="grid grid-cols-3   px-3 items-center py-3">
               <label className="font-medium block text-sm  text-foreground">
-                Invoice No
+                Particular
               </label>
               <input
                 type="text"
-                value={form.invoiceNo}
-                onChange={(e) =>
-                  setForm({ ...form, invoiceNo: e.target.value })
-                }
-                disabled={!voucherId}
-                className="col-span-2 w-full border   rounded py-1  bg-white "
+                value={form.particular}
+                readOnly
+                className="col-span-2 border w-full rounded py-1  bg-white"
               />
             </div>
-            {/* Supporting */}
-            <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center ">
+            <div className="grid grid-cols-3  px-3  items-center py-3">
               <label className="font-medium block text-sm  text-foreground">
-                No. of Supporting
+                Amount
               </label>
               <input
                 type="number"
-                value={form.supporting}
-                onChange={(e) =>
-                  setForm({ ...form, supporting: e.target.value })
-                }
-                className="border-collapse w-40 border rounded py-1   bg-white "
+                value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                className="col-span-1 border w-full rounded py-1  bg-white "
               />
             </div>
-            <div className="grid grid-cols-3 opacity-60 py-2  px-3 items-center">
-              <label className="font-medium block text-sm  text-foreground">
-                GL Date
-              </label>
-              <input
-                type="date"
-                value={form.glDate}
-                onChange={(e) => setForm({ ...form, glDate: e.target.value })}
-                className="col-span-2 w-full border rounded py-1  bg-white "
-              />
-            </div>
-            <div className="grid grid-cols-3 opacity-60   px-3 items-center ">
-              <label className="font-medium block text-sm  text-foreground">
-                Payment Code
-              </label>
-              <select
-                value={form.paymentCode}
-                onChange={(e) =>
-                  setForm({ ...form, paymentCode: e.target.value })
-                }
-                className="col-span-2 w-full rounded py-1 border  bg-white "
+            <div className="px-4 py-2">
+              <button
+                type="button"
+                onClick={addRow}
+                className=" text-black cursor-pointer border px-3 py-1 rounded-lg flex items-center"
               >
-                <option value="">Select payment</option>
-                {PaymentCodes.map((code) => (
-                  <option key={code.ACCOUNT_ID} value={code.ACCOUNT_ID}>
-                    {code.ACCOUNT_NAME}
-                  </option>
+                <span className="mr-1 font-extrabold">+</span>Add
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full border-collapse opacity-80 rounded-lg text-xs md:text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-2 md:px-4 py-2 text-center font-medium">
+                    Account Code
+                  </th>
+                  <th className="px-2 md:px-4 py-2 text-center font-medium">
+                    Particulars
+                  </th>
+                  <th className="px-2 md:px-4 py-2 text-center font-medium">
+                    Amount
+                  </th>
+                 
+                  <th className="px-2 md:px-4 py-2 text-center font-medium w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className={`border ${row.isNew ? 'bg-green-50' : ''}`}>
+                    <td className="border px-2 md:px-4 py-2">
+                      <input
+                        type="number"
+                        value={row.accountCode}
+                        onChange={(e) =>
+                          updateRow(row.id, "accountCode", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none"
+                        placeholder="Enter accountCode..."
+                      />
+                    </td>
+
+                    <td className="border px-2 md:px-4 py-2">
+                      <input
+                        type="text"
+                        value={row.particulars}
+                        onChange={(e) =>
+                          updateRow(row.id, "particulars", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none"
+                        placeholder="Enter particulars..."
+                      />
+                    </td>
+
+                    <td className="border px-2 md:px-4 py-2 text-center">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={row.amount}
+                        onChange={(e) =>
+                          updateRow(row.id, "amount", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none"
+                        placeholder="0.00"
+                      />
+                    </td>
+
+                    
+
+                    <td className="border px-2 md:px-4 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeRow(row.id)}
+                        className="hover:bg-red-50 p-1 rounded transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-3 opacity-60   px-3 items-center py-3">
-              <label className="font-medium block text-sm  text-foreground">
-                Total Amount
-              </label>
-              <input
-                type="number"
-                value={form.totalAmount.toFixed(2)}
-                className="col-span-2 w-full border rounded py-1  bg-white "
-              />
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-4 mb-4 bg-white opacity-60">
-          <label className="block text-sm font-medium text-gray-600 mb-2  py-2 px-4 rounded-lg">
-            Description
-          </label>
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full mt-1 border rounded-lg px-3 py-2"
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr_2fr_1fr] opacity-60 gap-4 rounded-lg justify-center items-center ">
-          <div className="grid grid-cols-3  px-3 items-center  py-1">
-            <label className="font-medium block text-sm  text-foreground">
-              Account ID
-            </label>
-            <Select
-              options={accounts}
-              className="col-span-2 border w-full rounded shadow-2xl"
-              value={
-                accounts.find((acc) => acc.value === form.accountId) || null
-              }
-              onChange={(selected) =>
-                setForm({
-                  ...form,
-                  accountId: selected ? selected.value : "",
-                  particular: selected ? selected.name : "",
-                })
-              }
-              placeholder="Enter account..."
-              isClearable
-              isSearchable
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                menu: (base) => ({
-                  ...base,
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }),
-              }}
-            />
+                {rows.length > 0 && (
+                  <tr className="font-semibold bg-gray-50">
+                    <td colSpan="2" className="p-2 text-right text-gray-600">
+                      Total
+                    </td>
+                    <td className="border p-2 text-center">
+                      {form.totalAmount.toFixed(2)}
+                    </td>
+                    <td colSpan="2"></td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <div className="grid grid-cols-3   px-3 items-center py-3">
-            <label className="font-medium block text-sm  text-foreground">
-              Particular
-            </label>
-            <input
-              type="text"
-              value={form.particular}
-              readOnly
-              className="col-span-2 border w-full rounded py-1  bg-white"
-            />
-          </div>
-          <div className="grid grid-cols-3  px-3  items-center py-3">
-            <label className="font-medium block text-sm  text-foreground">
-              Amount
-            </label>
-            <input
-              type="number"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              className="col-span-1 border w-full rounded py-1  bg-white "
-            />
-          </div>
-          <div className="px-4 py-2">
-            <button
-              type="button"
-              onClick={addRow}
-              className=" text-black cursor-pointer border px-3 py-1 rounded-lg flex items-center"
-            >
-              <span className="mr-1 font-extrabold">+</span>Add
-            </button>
-          </div>
-        </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full border-collapse opacity-80 rounded-lg text-xs md:text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-2 md:px-4 py-2 text-center font-medium">
-                  Account Code
-                </th>
-                <th className="px-2 md:px-4 py-2 text-center font-medium">
-                  Particulars
-                </th>
-                <th className="px-2 md:px-4 py-2 text-center font-medium">
-                  Amount
-                </th>
-                <th className="px-2 md:px-4 py-2 text-center font-medium w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border">
-                  <td className="border px-2 md:px-4 py-2 break-words">
-                    {row.accountCode}
-                  </td>
-                  <td className="border px-2 md:px-4 py-2 break-words">
-                    {row.particulars}
-                  </td>
-                  <td className="border px-2 md:px-4 py-2 text-center">
-                    {Number(row.amount).toFixed(2)}
-                  </td>
-                  <td className="border px-2 md:px-4 py-2 text-center">
-                    <button type="button" onClick={() => removeRow(row.id)}>
-                      <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
-              {rows.length > 0 && (
-                <tr className="font-semibold">
-                  <td colSpan="2" className="p-2 text-right text-gray-600">
-                    Total
-                  </td>
-                  <td className="border p-2 text-center">
-                    {form.totalAmount.toFixed(2)}
-                  </td>
-                  <td></td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        {/* Printable PDF Section */}
-<div id="print-area"  className="hidden print:block p-8 bg-white text-black">
-  <h1 className="text-xl font-bold text-center mb-2">PAYMENT VOUCHER</h1>
-  <div className="border p-3 mb-4 text-sm space-y-1">
-    <p><strong>Voucher No:</strong> {form.invoiceNo}</p>
-    <p><strong>Date:</strong> {form.entryDate}</p>
-   <p>
+          {/* Printable PDF Section */}
+          <div
+            id="print-area"
+            className="hidden print:block p-8 bg-white text-black"
+          >
+            <h1 className="text-xl font-bold text-center mb-2">
+              PAYMENT VOUCHER
+            </h1>
+            <div className="border p-3 mb-4 text-sm space-y-1">
+              <p>
+                <strong>Voucher No:</strong> {form.invoiceNo}
+              </p>
+              <p>
+                <strong>Date:</strong> {form.entryDate}
+              </p>
+              <p>
                 <strong>Supplier:</strong>{" "}
                 {
                   suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
                     ?.SUPPLIER_NAME
                 }
-              </p>
-    <p><strong>Description:</strong> {form.description}</p>
-    <p><strong>Total Amount:</strong> {form.totalAmount.toFixed(2)}</p>
-  </div>
-
-  <table className="w-full border-collapse border text-sm">
-    <thead>
-      <tr className="bg-gray-100">
-        <th className="border px-2 py-1 text-left">Account Code</th>
-        <th className="border px-2 py-1 text-left">Particular</th>
-        <th className="border px-2 py-1 text-right">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      {rows.map((row, i) => (
-        <tr key={i}>
-          <td className="border px-2 py-1">{row.accountCode}</td>
-          <td className="border px-2 py-1">{row.particulars}</td>
-          <td className="border px-2 py-1 text-right">{row.amount.toFixed(2)}</td>
-        </tr>
-      ))}
-      <tr className="font-semibold">
-        <td colSpan={2} className="text-right border px-2 py-1">Total</td>
-        <td className="border px-2 py-1 text-right">{form.totalAmount.toFixed(2)}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p className="mt-6 text-xs text-center border-t pt-2">
-    Prepared By ____________________ &nbsp;&nbsp;&nbsp;
-    Authorized Signatory ____________________ &nbsp;&nbsp;&nbsp;
-    Recipient Signature ____________________
-  </p>
-</div>
-
-
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="w-full md:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg"
-          >
-            print
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
-          >
-            {mutation.isPending
-              ? "Submitting..."
-              : voucherId
-              ? "Update"
-              : "Save"}
-          </button>
-        </div>
-      </div>
-
-   <PaymentTable></PaymentTable>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0  bg-black flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-11/12 md:w-1/2 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
-              Confirm Voucher Submission
-            </h2>
-
-            <div className="space-y-2">
-              <p>
-                <strong>Entry Date:</strong> {form.entryDate}
-              </p>
-              <p>
-                <strong>Invoice No:</strong> {form.invoiceNo}
-              </p>
-              <p>
-                <strong>No. of Supporting:</strong> {form.supporting}
               </p>
               <p>
                 <strong>Description:</strong> {form.description}
               </p>
               <p>
-                <strong>Supplier:</strong>{" "}
-                {
-                  suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
-                    ?.SUPPLIER_NAME
-                }
+                <strong>Total Amount:</strong> {form.totalAmount.toFixed(2)}
               </p>
-              <p>
-                <strong>GL Date:</strong> {form.glDate}
-              </p>
-              <p>
-                <strong>Payment Code:</strong> {form.paymentCode}
-              </p>
+            </div>
 
-              <h3 className="font-semibold mt-2">Accounts:</h3>
-              <ul className="list-disc pl-5">
-                {rows.map((row, index) => (
-                  <li key={index}>
-                    {row.accountCode} - {row.particulars} - {row.amount}
-                  </li>
+            <table className="w-full border-collapse border text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-2 py-1 text-left">Account Code</th>
+                  <th className="border px-2 py-1 text-left">Particular</th>
+                  <th className="border px-2 py-1 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => (
+                  <tr key={i}>
+                    <td className="border px-2 py-1">{row.accountCode}</td>
+                    <td className="border px-2 py-1">{row.particulars}</td>
+                    <td className="border px-2 py-1 text-right">
+                      {row.amount.toFixed(2)}
+                    </td>
+                  </tr>
                 ))}
-              </ul>
+                <tr className="font-semibold">
+                  <td colSpan={2} className="text-right border px-2 py-1">
+                    Total
+                  </td>
+                  <td className="border px-2 py-1 text-right">
+                    {form.totalAmount.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-              <p className="font-semibold mt-2">
-                Total: {form.totalAmount.toFixed(2)}
-              </p>
-            </div>
+            <p className="mt-6 text-xs text-center border-t pt-2">
+              Prepared By ____________________ &nbsp;&nbsp;&nbsp; Authorized
+              Signatory ____________________ &nbsp;&nbsp;&nbsp; Recipient
+              Signature ____________________
+            </p>
+          </div>
 
-            <div className="flex justify-end mt-4 space-x-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={mutation.isPending}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white"
-              >
-                {mutation.isPending ? "Submitting..." : "Confirm"}
-              </button>
-            </div>
+          <div className="flex flex-col md:flex-row justify-between gap-4">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="w-full md:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg"
+            >
+              Print
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+            >
+              {mutation.isPending
+                ? "Submitting..."
+                : voucherId
+                ? "Update"
+                : "Save"}
+            </button>
           </div>
         </div>
-      )}
-    </div>
-  </SectionContainer>
+
+        <PaymentTable></PaymentTable>
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0  bg-black flex justify-center items-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-11/12 md:w-1/2 max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4">
+                Confirm Voucher Submission
+              </h2>
+
+              <div className="space-y-2">
+                <p>
+                  <strong>Entry Date:</strong> {form.entryDate}
+                </p>
+                <p>
+                  <strong>Invoice No:</strong> {form.invoiceNo}
+                </p>
+                <p>
+                  <strong>No. of Supporting:</strong> {form.supporting}
+                </p>
+                <p>
+                  <strong>Description:</strong> {form.description}
+                </p>
+                <p>
+                  <strong>Supplier:</strong>{" "}
+                  {
+                    suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
+                      ?.SUPPLIER_NAME
+                  }
+                </p>
+                <p>
+                  <strong>GL Date:</strong> {form.glDate}
+                </p>
+                <p>
+                  <strong>Payment Code:</strong> {form.paymentCode}
+                </p>
+
+                <h3 className="font-semibold mt-2">Accounts:</h3>
+                <ul className="list-disc pl-5">
+                  {rows.map((row, index) => (
+                    <li key={index} className={row.isNew ? 'text-black' : ''}>
+                      {row.accountCode} - {row.particulars} - {row.amount}
+                      {row.isNew}
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="font-semibold mt-2">
+                  Total: {form.totalAmount.toFixed(2)}
+                </p>
+              </div>
+
+              <div className="flex justify-end mt-4 space-x-3">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={mutation.isPending}
+                  className="px-4 py-2 rounded-lg bg-green-500 text-white"
+                >
+                  {mutation.isPending ? "Submitting..." : "Confirm"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </SectionContainer>
   );
 };
 

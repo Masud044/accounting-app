@@ -76,7 +76,6 @@ const ReceiveEdit = () => {
     },
     enabled: !!voucherId && accounts.length > 0,
   });
-  console.log(voucherData)
 
   // Populate form when data is loaded
   useEffect(() => {
@@ -84,31 +83,28 @@ const ReceiveEdit = () => {
 
     const master = voucherData.master || {};
     const details = voucherData.details || [];
-    console.log(voucherData.details);
+    const summary = voucherData.summary || {};
+    const paymentCode = master.CASHACCOUNT || "";
 
-
+    // Map rows from credit entries, excluding the payment code entry
     const mappedRows = details
-      .filter((d) => d.credit && Number(d.credit) > 0)
-      .map((d, i) => {
+      .filter((d) => {
+        // Only include credit entries that are NOT the payment code
+        return d.credit && Number(d.credit) > 0 && d.code !== paymentCode;
+      })
+      .map((d) => {
         const account = accounts.find((acc) => acc.value === d.code);
         return {
           id: d.id,
-          accountCode: d.code,
-          particulars: account ? account.label : "",
+          accountCode: d.code || "",
+          particulars: account ? account.label : (d.codedescription || ""),
           amount: parseFloat(d.credit),
-          debitId:  d.id,
-          creditId: d.id,
+          creditId: d.id, // Store the credit ID for updates
+          isExisting: true, // Mark as existing row
         };
       });
-      console.table(
-  rows.map(r => ({
-    debitId: r.debitId,
-    account: r.accountCode,
-    amount: r.amount,
-    particulars: r.particulars,
-  }))
-);
 
+    // Calculate total from mapped rows only
     const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
     setForm({
@@ -122,8 +118,8 @@ const ReceiveEdit = () => {
       supporting: master.SUPPORTING || "",
       description: master.DESCRIPTION || "",
       customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
-      ReceiveCode: master.CASHACCOUNT || "",
-      paymentCode: master.CASHACCOUNT || "",
+      ReceiveCode: paymentCode,
+      paymentCode: paymentCode,
       accountId: "",
       particular: "",
       amount: "",
@@ -140,37 +136,58 @@ const ReceiveEdit = () => {
       console.log("Backend Response:", res.data);
       return res.data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.status === "success") {
         toast.success("Voucher updated successfully!");
-        queryClient.invalidateQueries(["unpostedVouchers"]);
-        queryClient.invalidateQueries(["voucher", voucherId]);
+        
+        // Invalidate queries first
+        await queryClient.invalidateQueries(["unpostedVouchers"]);
+        await queryClient.invalidateQueries(["voucher", voucherId]);
+        
+        // Force refetch to get fresh data
+        const freshData = await queryClient.fetchQuery({
+          queryKey: ["voucher", voucherId],
+          queryFn: async () => {
+            const res = await ReceiveService.search(voucherId);
+            return res.data;
+          },
+        });
+        
+        console.log("Fresh data after update:", freshData);
+        
+        setShowModal(false);
+        
+        // Optional: Navigate back after successful update
+        // setTimeout(() => navigate(-1), 500);
       } else {
         toast.error("Error processing voucher");
+        setShowModal(false);
       }
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update error:", error);
       toast.error("Error submitting voucher. Please try again.");
-    },
-    onSettled: () => {
       setShowModal(false);
     },
   });
 
   // Add Row Handler
   const addRow = () => {
-    if (!form.accountId || !form.amount) return;
+    if (!form.accountId || !form.amount) {
+      toast.error("Please select account and enter amount");
+      return;
+    }
+
+    const selectedAccount = accounts.find((acc) => acc.value === form.accountId);
 
     const newRow = {
-      id: Date.now(),
+      id: Date.now(), // Temporary ID for new rows
       accountCode: form.accountId,
-      particulars: form.particular,
+      particulars: selectedAccount ? selectedAccount.label : form.particular,
       amount: parseFloat(form.amount),
-      debitId: null,
-      creditId: null,
+      creditId: null, // New rows don't have creditId yet
+      isExisting: false, // Mark as new row
     };
-    
-
 
     const updatedRows = [...rows, newRow];
     const total = updatedRows.reduce((sum, r) => sum + Number(r.amount), 0);
@@ -185,29 +202,28 @@ const ReceiveEdit = () => {
     });
   };
 
-
+  // Update Row Handler
   const updateRow = (id, field, value) => {
-  const updatedRows = rows.map((row) =>
-    row.id === id
-      ? {
-          ...row,
-          [field]: field === "amount" ? Number(value) : value,
-        }
-      : row
-  );
+    const updatedRows = rows.map((row) =>
+      row.id === id
+        ? {
+            ...row,
+            [field]: field === "amount" ? Number(value) : value,
+          }
+        : row
+    );
 
-  const total = updatedRows.reduce(
-    (sum, r) => sum + Number(r.amount || 0),
-    0
-  );
+    const total = updatedRows.reduce(
+      (sum, r) => sum + Number(r.amount || 0),
+      0
+    );
 
-  setRows(updatedRows);
-  setForm((prev) => ({
-    ...prev,
-    totalAmount: total,
-  }));
-};
-
+    setRows(updatedRows);
+    setForm((prev) => ({
+      ...prev,
+      totalAmount: total,
+    }));
+  };
 
   // Remove Row Handler
   const removeRow = (id) => {
@@ -219,9 +235,6 @@ const ReceiveEdit = () => {
     setRows(updatedRows);
     setForm({ ...form, totalAmount: total });
   };
-
-  console.log("Rows before submit:", rows);
-
 
   // Submit Handler
   const handleSubmit = () => {
@@ -237,37 +250,82 @@ const ReceiveEdit = () => {
       return;
     }
 
-    const invalidRow = rows.some((row) => !row.accountCode || !row.particulars);
+    const invalidRow = rows.some((row) => !row.accountCode || !row.amount);
     if (invalidRow) {
-      toast.error("Each row must have Account Code and Particular filled.");
+      toast.error("Each row must have Account Code and Amount filled.");
       return;
     }
 
+    // Get the first debit entry ID (payment code entry)
+    const firstDebitEntry = voucherData?.details?.find(
+      d => d.code === form.paymentCode && d.debit && Number(d.debit) > 0
+    );
+    const creditId = firstDebitEntry?.id || null;
+
+    // Calculate fresh total from current rows only
+    const calculatedTotal = rows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
     const payload = {
+      action: "update",
       masterID: Number(voucherId),
       trans_date: form.entryDate,
       gl_date: form.glDate,
       receive_desc: form.description,
       pcode: form.paymentCode,
-      credit_id: form.creditId,
+      credit_id: creditId,
       supplierid: String(form.customer),
-      totalAmount: Number(form.totalAmount),
+      totalAmount: Number(calculatedTotal),
       supporting: String(form.supporting),
-      DEBIT_ID: rows.map((r) => r.debitId || null),
-      // DEBIT_ID: rows.map((r) => Number(r.debitId)),
+      DEBIT_ID: rows.map((r) => r.creditId ? Number(r.creditId) : null),
       amount2: rows.map((r) => Number(r.amount)),
       acode: rows.map((r) => r.accountCode),
-      CODEDESCRIPTION: rows.map((r) => r.particulars),
-      DESCRIPTION: rows.map((r) => r.particulars),
+      CODEDESCRIPTION: rows.map((r) => {
+        const parts = r.particulars.split(' - ');
+        return parts.length > 1 ? parts[1] : r.particulars;
+      }),
+      DESCRIPTION: rows.map((r) => {
+        const parts = r.particulars.split(' - ');
+        return parts.length > 1 ? parts[1] : r.particulars;
+      }),
     };
 
+    console.log("=== DETAILED PAYLOAD DEBUG ===");
+    console.log("Full Payload:", JSON.stringify(payload, null, 2));
+    console.log("\n--- Row Details ---");
+    rows.forEach((row, idx) => {
+      console.log(`Row ${idx + 1}:`, {
+        id: row.id,
+        creditId: row.creditId,
+        accountCode: row.accountCode,
+        amount: row.amount,
+        isExisting: row.isExisting
+      });
+    });
+    console.log("\n--- Calculations ---");
+    console.log("Calculated Total:", calculatedTotal);
+    console.log("Form Total Amount:", form.totalAmount);
+    console.log("Payment Code Entry ID (credit_id):", payload.credit_id);
+    console.log("\n--- Arrays ---");
+    console.log("DEBIT_ID array:", payload.DEBIT_ID);
+    console.log("amount2 array:", payload.amount2);
+    console.log("acode array:", payload.acode);
+    
+    // Verify totals match
+    const amountSum = payload.amount2.reduce((sum, amt) => sum + amt, 0);
+    console.log("\n--- Verification ---");
+    console.log("Sum of amount2 array:", amountSum);
+    console.log("Matches totalAmount?", amountSum === payload.totalAmount);
+    console.log("\n--- Expected Backend Behavior ---");
+    console.log(`Should UPDATE voucher_details SET debit = ${calculatedTotal} WHERE id = ${creditId}`);
+    rows.forEach((row, idx) => {
+      if (row.creditId) {
+        console.log(`Should UPDATE voucher_details SET credit = ${row.amount} WHERE id = ${row.creditId}`);
+      } else {
+        console.log(`Should INSERT new row with credit = ${row.amount}`);
+      }
+    });
+
     mutation.mutate(payload);
-    console.log("=== PAYLOAD DEBUG ===");
-  console.log("Full Payload:", JSON.stringify(payload, null, 2));
-  console.log("Rows being sent:", rows);
-  console.log("DEBIT_IDs:", payload.DEBIT_ID);
-  console.log("Amounts:", payload.amount2);
-  console.log("Account Codes:", payload.acode);
   };
 
   return (
@@ -448,7 +506,7 @@ const ReceiveEdit = () => {
             <input
               type="text"
               value={form.particular}
-              // readOnly
+              onChange={(e) => setForm({ ...form, particular: e.target.value })}
               className="col-span-2 border w-full rounded py-1 bg-white"
             />
           </div>
@@ -495,16 +553,9 @@ const ReceiveEdit = () => {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border">
-                  {/* Account Code */}
-                  <td className="border px-2 md:px-4 py-2">
-                    <input
-                      type="text"
-                      value={row.accountCode}
-                      onChange={(e) =>
-                        updateRow(row.id, "accountCode", e.target.value)
-                      }
-                      className="w-full bg-transparent outline-none text-center"
-                    />
+                  {/* Account Code - Display only */}
+                  <td className="border px-2 md:px-4 py-2 text-center">
+                    <span className="text-sm">{row.accountCode}</span>
                   </td>
 
                   {/* Particulars */}
@@ -610,6 +661,8 @@ const ReceiveEdit = () => {
                 {rows.map((row, index) => (
                   <li key={index}>
                     {row.accountCode} - {row.particulars} - {row.amount}
+                    {row.isExisting && " (Existing)"}
+                    {!row.isExisting && " (New)"}
                   </li>
                 ))}
               </ul>
