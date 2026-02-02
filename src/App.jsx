@@ -24,6 +24,7 @@ import CashTransfer from "./features/main-entry/pages/CashTransfer";
 import DashboardHome from "./features/main-entry/pages/DashboardHome";
 import ReceiveEdit from "./features/main-entry/pages/ReceiveEdit";
 import ReceiveCreate from "./features/main-entry/pages/ReceiveCreate";
+import ChartOfAccount from "./features/main-entry/pages/ChartOfAccount";
 
 
 function App() {
@@ -49,6 +50,8 @@ function App() {
             
               {/* <Route path="receive-voucher" element={<ReceiveCreate />} /> */}
                <Route path="receive-edit/:voucherId" element={<ReceiveEdit />} />
+
+                <Route path="chart-voucher" element={<ChartOfAccount />} />
                
             <Route path="cash-voucher" element={<CashTransfer />} />
             <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
