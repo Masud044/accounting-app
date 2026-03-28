@@ -188,80 +188,124 @@ const createColumns = (handleActivateVoucher) => [
   },
 
   // ✅ ACTIONS WITH CONDITIONAL ROUTING
-  {
+  // {
+  //   id: "actions",
+  //   enableHiding: false,
+  //   header: () => <div className="text-center">Actions</div>,
+  //   cell: ({ row }) => {
+  //     const item = row.original;
+  //     const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
+
+  //     return (
+  //       <div className="flex items-center justify-center gap-2">
+  //         {/* View/Activate Button */}
+  //         <Button 
+  //           variant="ghost" 
+  //           size="icon"
+  //           className="h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-50"
+  //         >
+  //           <FileText size={16} />
+  //         </Button>
+
+  //         {/* Edit Button with Dynamic Route */}
+  //         <Link to={editRoute}>
+  //           <Button 
+  //             variant="ghost" 
+  //             size="icon"
+  //             className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+  //           >
+  //             <Pencil size={16} />
+  //           </Button>
+  //         </Link>
+
+  //         {/* User/Activate Button */}
+  //         <Button 
+  //           variant="ghost" 
+  //           size="icon"
+  //           onClick={() => handleActivateVoucher(item.ID)}
+  //           className="h-8 w-8 text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+  //         >
+  //           <FileUser size={16} />
+  //         </Button>
+
+  //         {/* Dropdown Menu for Additional Actions */}
+  //         <DropdownMenu>
+  //           <DropdownMenuTrigger asChild>
+  //             <Button variant="ghost" className="h-8 w-8 p-0">
+  //               <span className="sr-only">Open menu</span>
+  //               <MoreHorizontal className="h-4 w-4" />
+  //             </Button>
+  //           </DropdownMenuTrigger>
+  //           <DropdownMenuContent align="end">
+  //             <DropdownMenuLabel>More Actions</DropdownMenuLabel>
+  //             <DropdownMenuItem
+  //               onClick={() => navigator.clipboard.writeText(item.ID)}
+  //             >
+  //               Copy ID
+  //             </DropdownMenuItem>
+  //             <DropdownMenuItem
+  //               onClick={() => navigator.clipboard.writeText(item.VOUCHERNO)}
+  //             >
+  //               Copy Voucher No
+  //             </DropdownMenuItem>
+  //             <DropdownMenuSeparator />
+  //             <DropdownMenuItem
+  //               onClick={() => console.log("Delete ID:", item.ID)}
+  //               className="text-red-600"
+  //             >
+  //               <Trash2 size={16} className="mr-2" />
+  //               Delete
+  //             </DropdownMenuItem>
+  //           </DropdownMenuContent>
+  //         </DropdownMenu>
+  //       </div>
+  //     );
+  //   },
+  // },
+
+   {
     id: "actions",
     enableHiding: false,
     header: () => <div className="text-center">Actions</div>,
     cell: ({ row }) => {
       const item = row.original;
       const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
-
+  
       return (
-        <div className="flex items-center justify-center gap-2">
-          {/* View/Activate Button */}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-50"
-          >
-            <FileText size={16} />
-          </Button>
-
+        <div className="flex items-center justify-center gap-3">
           {/* Edit Button with Dynamic Route */}
-          <Link to={editRoute}>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-            >
-              <Pencil size={16} />
+         <Link to={editRoute}>
+           <Button 
+             variant="ghost" 
+             size="icon"
+             
+           >
+             <Pencil size={16} />
             </Button>
-          </Link>
-
+         </Link>
           {/* User/Activate Button */}
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={() => handleActivateVoucher(item.ID)}
-            className="h-8 w-8 text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+          onClick={() => handleActivateVoucher(item.ID)}
+          
           >
             <FileUser size={16} />
+         </Button>
+  
+         
+  
+          {/* Delete Button */}
+          <Button
+            onClick={() => console.log("Delete ID:", item.ID)}
+           
+          >
+            <Trash2 size={18} />
           </Button>
-
-          {/* Dropdown Menu for Additional Actions */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>More Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(item.ID)}
-              >
-                Copy ID
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(item.VOUCHERNO)}
-              >
-                Copy Voucher No
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => console.log("Delete ID:", item.ID)}
-                className="text-red-600"
-              >
-                <Trash2 size={16} className="mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       );
     },
-  },
+  }
 ];
 
 export function DashboardHomeTable() {
@@ -321,7 +365,7 @@ export function DashboardHomeTable() {
   });
 
   return (
-    <div className=" shadow-2xl rounded-lg bg-white">
+    <div className=" rounded-lg bg-white">
       
       {/* ✅ SEARCH AND COLUMN TOGGLE */}
       <div className="flex items-center py-4 gap-4">
@@ -334,14 +378,7 @@ export function DashboardHomeTable() {
           className="max-w-sm"
         />
         
-        <Input
-          placeholder="Filter by voucher no..."
-          value={table.getColumn("VOUCHERNO")?.getFilterValue() ?? ""}
-          onChange={(e) =>
-            table.getColumn("VOUCHERNO")?.setFilterValue(e.target.value)
-          }
-          className="max-w-sm"
-        />
+       
         
         {/* ✅ COLUMN VISIBILITY DROPDOWN */}
         <DropdownMenu>

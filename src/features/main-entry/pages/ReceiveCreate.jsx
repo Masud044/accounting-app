@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -7,13 +7,15 @@ import { toast } from "react-toastify";
 import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
-import ReceiveTable from "../components/ReceiveTable";
+// import ReceiveTable from "../components/ReceiveTable";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 
 const ReceiveCreate = () => {
-//   const navigate = useNavigate();
+   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
 
@@ -280,10 +282,18 @@ const ReceiveCreate = () => {
 
   return (
 
-    <>
     <SectionContainer>
-      <div className="p-6 space-y-6 bg-white rounded-lg shadow-md">
-        <h1 className="font-semibold text-sm text-gray-800">Create Receive Voucher</h1>
+    
+      <div className="p-2 space-y-6 bg-white rounded-lg mt-4 shadow-md">
+         <div className="flex items-center justify-between mb-6">
+          <h2 className="font-semibold text-sm text-gray-800">
+            Create Receive Voucher
+          </h2>
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ArrowLeft size={16} className="mr-2" />
+            Back
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[150px_1fr_1fr] gap-4 bg-white rounded-lg">
           <div className="bg-gray-200 border-black">
@@ -500,9 +510,9 @@ const ReceiveCreate = () => {
                   </td>
                   <td className="border px-2 md:px-4 py-2 text-center">
                     {row.id !== "dummy" && (
-                      <button type="button" onClick={() => removeRow(row.id)}>
-                        <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
-                      </button>
+                      <Button type="button" onClick={() => removeRow(row.id)}>
+                        <Trash2 className="w-4 h-4 md:w-5 md:h-5 " />
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -524,21 +534,21 @@ const ReceiveCreate = () => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between gap-4">
-             <button
+             <Button
             type="button"
            onClick={handlePrint}
-            className="w-full md:w-auto bg-green-500 text-white px-12 py-2 rounded-lg"
+            // className="w-full md:w-auto bg-green-500 text-white px-12 py-2 rounded-lg"
           >
             print
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => setShowModal(true)}
             disabled={mutation.isPending}
-            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+            // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
             {mutation.isPending ? "Submitting..." : "Create"}
-          </button>
+          </Button>
         </div>
 
          {/* Hidden Print Area */}
@@ -621,9 +631,9 @@ const ReceiveCreate = () => {
           </div>
         </div>
       )}
-    </SectionContainer>
-   <ReceiveTable></ReceiveTable>
-    </>
+   
+  
+  </SectionContainer>
   );
 };
 

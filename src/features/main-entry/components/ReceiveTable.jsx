@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash2,
   Plus,
+  PlusIcon,
 } from "lucide-react";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -44,6 +45,8 @@ import api from "@/api/Ap";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { ReceiveService } from "@/api/AccontingApi";
 import { toast } from "react-toastify";
+import ReceiveCreate from "../pages/ReceiveCreate";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
  
 
@@ -102,6 +105,8 @@ export default function ReceiveTable() {
       deleteMutation.mutate(deleteModal.id);
     }
   };
+
+  
 
   // Extract and sort vouchers with useMemo to prevent infinite re-renders
   const sortedVouchers = useMemo(() => {
@@ -207,7 +212,7 @@ export default function ReceiveTable() {
         {/* Edit Button */}
         <Link
           to={`/dashboard/receive-edit/${voucher.ID}`}
-          className="text-blue-600 hover:text-blue-800"
+         
         >
           <Pencil size={18} />
         </Link>
@@ -224,12 +229,12 @@ export default function ReceiveTable() {
         </button> */}
 
         {/* Delete Button */}
-        <button
+        <Button
           onClick={() => handleDeleteClick(voucher)}
-          className="text-red-600 hover:text-red-800"
+         
         >
           <Trash2 size={18} />
-        </button>
+        </Button>
       </div>
     );
   },
@@ -282,10 +287,17 @@ export default function ReceiveTable() {
   return (
 
     <>
-    <div className="min-h-screen">
-     
+    <div className=" mt-6">
+      <Card className="w-full  shadow-lg">
+          <CardHeader className="border-b">
+          <CardTitle className="text-sm font-bold">
+            Receive Voucher
+          </CardTitle>
+         
+        </CardHeader>
+
         {/* Data Table */}
-        <div className="bg-card rounded-md mt-4 shadow-sm p-4 ">
+        <div className="bg-card rounded-md  p-4 ">
           <div className="space-y-4">
             {/* Filters and Controls */}
             <div className="flex flex-col sm:flex-row gap-4">
@@ -296,9 +308,14 @@ export default function ReceiveTable() {
                 className="max-w-sm"
               />
 
+             
+
               <DropdownMenu>
+                
                 <DropdownMenuTrigger asChild>
+                  
                   <Button variant="outline" className="ml-auto">
+                  
                     Columns <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -320,6 +337,14 @@ export default function ReceiveTable() {
                     ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <Link to="/dashboard/receive-create">
+  <Button>
+    <PlusIcon size={16} className="mr-2" />
+    Add New Receiver
+  </Button>
+</Link>
+
             </div>
 
             {/* Table */}
@@ -380,6 +405,7 @@ export default function ReceiveTable() {
             <DataTablePagination table={table} />
           </div>
         </div>
+        </Card>
      
     </div>
 

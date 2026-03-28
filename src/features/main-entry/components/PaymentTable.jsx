@@ -183,12 +183,15 @@ export default function PaymentTable() {
     return (
       <div className="flex items-center justify-center gap-3">
         {/* Edit Button */}
-        <Link
+        
+          <Link
           to={`/dashboard/payment-voucher/${voucher.ID}`}
-          className="text-blue-600 hover:text-blue-800"
+         
         >
           <Pencil size={18} />
         </Link>
+      
+        
 
         {/* Copy Voucher No */}
         {/* <button
@@ -202,12 +205,12 @@ export default function PaymentTable() {
         </button> */}
 
         {/* Delete Button */}
-        <button
+        <Button
           onClick={() => handleDeleteClick(voucher)}
-          className="text-red-600 hover:text-red-800"
+          // className="text-red-600 hover:text-red-800"
         >
           <Trash2 size={18} />
-        </button>
+        </Button>
       </div>
     );
   },

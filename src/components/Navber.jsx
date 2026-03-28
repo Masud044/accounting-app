@@ -28,6 +28,8 @@ import {  NavigationMenu,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger, } from "@/components/ui/navigation-menu";
+  import img from "../assets/image2.png"
+
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -49,7 +51,8 @@ export default function Navbar() {
         {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
         <img
-          src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png"
+          // src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png"
+          src={img}
           alt="Logo"
           className="w-24 md:w-28"
         />

@@ -1,11 +1,17 @@
 import React from 'react';
-import ReceiveCreate from './ReceiveCreate';
+
+import ReceiveTable from '../components/ReceiveTable';
+import { SectionContainer } from '@/components/SectionContainer';
 
 const receive = () => {
   return (
-    <div>
-         <ReceiveCreate></ReceiveCreate>
+    <SectionContainer>
+
+       <div>
+        <ReceiveTable></ReceiveTable>
     </div>
+    </SectionContainer>
+   
   );
 };
 

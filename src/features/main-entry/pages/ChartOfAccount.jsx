@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
+import { SectionContainer } from "@/components/SectionContainer"
 
 /* ---------------- Zod Schema ---------------- */
 const accountFormSchema = z.object({
@@ -70,10 +71,11 @@ export default function ChartOfAccount() {
   }
 
   return (
-    <div className="flex justify-center items-center  bg-slate-50 p-4">
-      <Card className="w-full max-w-3xl shadow-lg">
-        <CardHeader className="border-b mt-[-4]">
-          <CardTitle className="text-2xl font-bold">
+    <SectionContainer>
+    <div className="flex justify-center items-center bg-slate-50 mt-4">
+      <Card className="w-full  shadow-lg">
+        <CardHeader className="border-b">
+          <CardTitle className="text-sm font-bold">
             Chart of Account Information
           </CardTitle>
          
@@ -81,7 +83,7 @@ export default function ChartOfAccount() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-4  pt-2">
 
               {/* Account Name */}
               <FormField
@@ -93,14 +95,14 @@ export default function ChartOfAccount() {
                       Account Name <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Petty Cash" {...field} />
+                      <Input placeholder="Enter account name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* First Level */}
                 <FormField
                   control={form.control}
@@ -111,7 +113,7 @@ export default function ChartOfAccount() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder="Select First Level" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -137,7 +139,7 @@ export default function ChartOfAccount() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select sub-level" />
+                            <SelectValue placeholder="Select Second Level" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -159,7 +161,7 @@ export default function ChartOfAccount() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select group" />
+                            <SelectValue placeholder="Select Third Level" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -225,7 +227,7 @@ export default function ChartOfAccount() {
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
+                    <Save className="mr-2 h-4 w-4 " />
                     Save Account
                   </>
                 )}
@@ -235,5 +237,6 @@ export default function ChartOfAccount() {
         </Form>
       </Card>
     </div>
+    </SectionContainer>
   )
 }
