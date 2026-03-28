@@ -48,7 +48,7 @@ function App() {
             <Route path="receive-voucher" element={<Receive />} />
           
             
-              {/* <Route path="receive-voucher" element={<ReceiveCreate />} /> */}
+               <Route path="receive-create" element={<ReceiveCreate />} />
                <Route path="receive-edit/:voucherId" element={<ReceiveEdit />} />
 
                 <Route path="chart-voucher" element={<ChartOfAccount />} />

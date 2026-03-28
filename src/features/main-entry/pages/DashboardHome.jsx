@@ -1,14 +1,25 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
-// import api from "../api/Api";
-
-// import { DashboardVoucherList } from "@/components/DashboardVoucherList";
-// import { SectionContainer } from "@/components/SectionContainer";
-// import api from "../../../api/Ap";
-
-import { SectionContainer } from "@/components/SectionContainer";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  Landmark,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+} from "lucide-react";
 
 import api from "@/api/Ap";
+import { SectionContainer } from "@/components/SectionContainer";
 import { DashboardHomeTable } from "../components/DashboardHomeTable";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const DashboardHome = () => {
   // Fetch Expenses
@@ -21,16 +32,15 @@ const DashboardHome = () => {
   });
 
   // Fetch Income
- const { data: income = {} } = useQuery({
-  queryKey: ["income"],
-  queryFn: async () => {
-    const res = await api.get("/dash_board_income.php");
-    return res.data.success ? res.data : {};
-  },
-});
-console.log(income)
+  const { data: income = {} } = useQuery({
+    queryKey: ["income"],
+    queryFn: async () => {
+      const res = await api.get("/dash_board_income.php");
+      return res.data.success ? res.data : {};
+    },
+  });
 
-  // Fetch Cash
+  // Fetch Bank Balance
   const { data: cash = {} } = useQuery({
     queryKey: ["cash"],
     queryFn: async () => {
@@ -38,73 +48,117 @@ console.log(income)
       return res.data.success ? res.data : {};
     },
   });
-  console.log(cash)
+
+  // Helper function for Theme Styles
+  const getTheme = (type) => {
+    switch (type) {
+      case "income":
+        return {
+          cardBg: "bg-[#F0FDF4] border-emerald-100/50", // Emerald 50
+          iconBg: "bg-emerald-100 text-emerald-600",
+          badgeBg: "bg-emerald-100/50 text-emerald-700",
+          trendIcon: TrendingUp,
+        };
+      case "expense":
+        return {
+          cardBg: "bg-[#FFF1F2] border-rose-100/50", // Rose 50
+          iconBg: "bg-rose-100 text-rose-600",
+          badgeBg: "bg-rose-100/50 text-rose-700",
+          trendIcon: TrendingDown,
+        };
+      case "balance":
+        return {
+          cardBg: "bg-[#F5F3FF] border-violet-100/50", // Violet 50
+          iconBg: "bg-violet-100 text-violet-600",
+          badgeBg: "bg-violet-100/50 text-violet-700",
+          trendIcon: Activity,
+        };
+      default:
+        return {};
+    }
+  };
+
+  // Stat Card Component
+  const StatCard = ({ title, value, icon: Icon, trend, type }) => {
+    const theme = getTheme(type);
+    const TrendIcon = theme.trendIcon;
+
+    return (
+      <Card className={cn(
+        "border shadow-sm transition-all duration-300 hover:shadow-md",
+        theme.cardBg
+      )}>
+        <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
+          <CardTitle className="text-sm font-medium text-slate-600">
+            {title}
+          </CardTitle>
+          <div className={cn("p-2 rounded-full transition-transform hover:scale-110", theme.iconBg)}>
+            <Icon size={18} strokeWidth={2.5} />
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="flex items-baseline space-x-2">
+            <span className="text-3xl font-bold tracking-tight text-slate-900">
+              {Number(value || 0).toLocaleString()}
+            </span>
+            <span className="text-sm font-semibold text-slate-500">Taka</span>
+          </div>
+
+          <div className="mt-5">
+            <div className={cn(
+              "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ring-black/5",
+              theme.badgeBg
+            )}>
+              <TrendIcon size={12} className="mr-1.5" strokeWidth={3} />
+              {trend}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
-   <SectionContainer>
-     <div className=" grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Money In */}
-      <div className="space-y-6 mt-4">
-        <h1>Money Income</h1>
-        <div className="bg-white shadow rounded p-4">
-          <h3 className="text-gray-700 font-semibold flex justify-between items-center">
-            Invoices
-           
-          </h3>
-          <div className="mt-4">
-            <p className="text-2xl font-bold">{income.total_income || 0}</p>
-            {/* <a href="#" className="text-purple-600 text-sm">{income.invoiceCount || 0} invoices issued</a> */}
-          </div>
-          {/* <div className="mt-2 text-gray-400">
-            <p>${income.overdue || 0}</p>
-            <p className="text-sm">{income.overdueCount || 0} invoices overdue</p>
-          </div> */}
-        </div>
-        {/* <div className="bg-white shadow rounded p-4">
-          <h3 className="text-gray-700 font-semibold">GST refund</h3>
-          <p className="text-2xl font-bold mt-2">${income.gstRefund || 0}</p>
-          <p className="text-sm text-gray-400">GST refund from ATO</p>
-        </div> */}
-      </div>
+    <SectionContainer>
+      <div className="py-5 space-y-6 bg-slate-50/30 min-h-screen">
+        
+        {/* Stats Grid */}
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+          <StatCard
+            title="Money Income"
+            value={income.total_income}
+            icon={ArrowUpRight}
+            trend="+12%"
+            type="income"
+          />
 
-      {/* Money Out */}
-      <div className="space-y-6 mt-4">
-        <h1>Money Expenses</h1>
-        <div className="bg-white shadow rounded p-4">
-          <h3 className="text-gray-700 font-semibold">Expenses</h3>
-          <p className="text-2xl font-bold mt-2">{expenses.total_expense || 0}</p>
-          {/* <a href="#" className="text-purple-600 text-sm">{expenses.supplierOwing || 0} owing to suppliers</a> */}
-        </div>
-       
-      </div>
+          <StatCard
+            title="Money Expenses"
+            value={expenses.total_expense}
+            icon={ArrowDownRight}
+            trend="-5%"
+            type="expense"
+          />
 
-      {/* Banking */}
-      <div className="space-y-6 mt-4">
-        <h1>Banking</h1>
-        <div className="bg-white shadow rounded p-4">
-          <h3 className="text-gray-700 font-semibold">Bank accounts</h3>
-          <p className="text-2xl font-bold mt-2">{cash.bankBalance || 0}</p>
-          {/* <p className="text-sm text-gray-400">In the bank</p> */}
+          <StatCard
+            title="Banking Balance"
+            value={cash.bankBalance}
+            icon={Landmark}
+            trend="Stable"
+            type="balance"
+          />
         </div>
-        {/* <div className="bg-white shadow rounded p-4">
-          <h3 className="text-gray-700 font-semibold">Credit cards</h3>
-          <p className="text-2xl font-bold mt-2"> ${cash.expense_summary?.reduce((sum, d) => sum + d.TOTAL_DEBIT, 0).toLocaleString()}</p>
-          <p className="text-sm text-gray-400">In credit cards</p>
-        </div> */}
-        {/* <div className="bg-white shadow rounded p-4">
-          <h3 className="text-gray-700 font-semibold">Transactions</h3>
-          <p className="text-2xl font-bold mt-2">{cash.unallocatedTransactions || 0}</p>
-          <p className="text-sm text-gray-400">Unallocated transactions</p> */}
-        {/* </div> */}
-      </div>
 
-      {/* Dashboard Voucher Component */}
-      <div className="col-span-full mt-6">
-        {/* <DashboardVoucher /> */}
-      <DashboardHomeTable></DashboardHomeTable>
+        {/* Table Section */}
+        <Card className="border-none  overflow-hidden">
+           <div className="p-1">
+             <DashboardHomeTable />
+           </div>
+        </Card>
+
       </div>
-    </div>
-   </SectionContainer>
+    </SectionContainer>
   );
 };
 

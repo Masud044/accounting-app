@@ -13,6 +13,7 @@ import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
 import { PaymentService } from "@/api/AccontingApi";
 import PaymentTable from "../components/PaymentTable";
+import { Button } from "@/components/ui/button";
 
 const Payment = () => {
   const { voucherId } = useParams();
@@ -822,24 +823,24 @@ payload.NEW_DESCRIPTION = newRows.map(r => r.particulars)
           </div>
 
           <div className="flex flex-col md:flex-row justify-between gap-4">
-            <button
+            <Button
               type="button"
               onClick={handlePrint}
-              className="w-full md:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg"
+              // className="w-full md:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg"
             >
               Print
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => setShowModal(true)}
-              className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+              // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
             >
               {mutation.isPending
                 ? "Submitting..."
                 : voucherId
                 ? "Update"
                 : "Save"}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -896,19 +897,19 @@ payload.NEW_DESCRIPTION = newRows.map(r => r.particulars)
               </div>
 
               <div className="flex justify-end mt-4 space-x-3">
-                <button
+                <Button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-lg bg-gray-300"
+                  // className="px-4 py-2 rounded-lg bg-gray-300"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleSubmit}
                   disabled={mutation.isPending}
-                  className="px-4 py-2 rounded-lg bg-green-500 text-white"
+                  // className="px-4 py-2 rounded-lg bg-green-500 text-white"
                 >
                   {mutation.isPending ? "Submitting..." : "Confirm"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

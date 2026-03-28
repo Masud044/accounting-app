@@ -330,7 +330,7 @@ const ReceiveEdit = () => {
 
   return (
     <SectionContainer>
-      <div className="p-6 space-y-6 bg-white rounded-lg shadow-md">
+      <div className="p-6 space-y-6 bg-white rounded-lg mt-4 shadow-md">
         {/* Header with Back Button */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-sm text-gray-800">
@@ -584,9 +584,9 @@ const ReceiveEdit = () => {
 
                   {/* Delete */}
                   <td className="border px-2 md:px-4 py-2 text-center">
-                    <button type="button" onClick={() => removeRow(row.id)}>
-                      <Trash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
-                    </button>
+                    <Button type="button" onClick={() => removeRow(row.id)}>
+                      <Trash2 className="w-4 h-4 md:w-5 md:h-5 " />
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -607,21 +607,21 @@ const ReceiveEdit = () => {
         </div>
 
         <div className="flex justify-end gap-4">
-          <button
+          <Button
             type="button"
             onClick={() => navigate(-1)}
-            className="bg-gray-300 text-black px-8 py-2 rounded-lg"
+            // className="bg-gray-300 text-black px-8 py-2 rounded-lg"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => setShowModal(true)}
             disabled={mutation.isPending}
-            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+            // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
             {mutation.isPending ? "Updating..." : "Update"}
-          </button>
+          </Button>
         </div>
       </div>
 

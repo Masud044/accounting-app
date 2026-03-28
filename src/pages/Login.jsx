@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuth } from "@/authentication/AuthProvaider";
+import img from "../assets/image2.png"
 
 const Login = () => {
   const navigate = useNavigate();
@@ -41,7 +42,8 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <img
-              src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png"
+              // src="https://revinns.com/wp-content/uploads/2023/03/E2-B-1.png"
+              src={img}
               alt="image"
               width={170}
               height={170}
