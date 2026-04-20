@@ -38,11 +38,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { PaymentService } from "@/api/AccontingApi";
 import { toast } from "react-toastify";
+import axios from "axios";
 
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 export default function PaymentTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -56,7 +58,9 @@ export default function PaymentTable() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedPaymentVouchers"],
     queryFn: async () => {
-      const res = await api.get("/pay_all_unposted.php");
+      // const res = await api.get("/pay_all_unposted.php");
+      const res = await axios.get(`${url}/api/payment-all-unposted`);
+      
       return res.data;
     },
   });
@@ -100,7 +104,9 @@ export default function PaymentTable() {
 
   // Extract and sort vouchers with useMemo to prevent infinite re-renders
   const sortedVouchers = useMemo(() => {
-    const vouchers = data?.status === "success" ? data.data : [];
+    // const vouchers = data?.status === "success" ? data.data : [];
+      // const vouchers = data?.success ? data.data : [];
+      const vouchers = Array.isArray(data?.data) ? data.data : [];
     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
   }, [data]);
 

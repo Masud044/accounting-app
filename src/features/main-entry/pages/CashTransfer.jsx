@@ -13,11 +13,12 @@ import html2canvas from "html2canvas";
 // import { SectionContainer } from "../../SectionContainer";
 
 import { toast } from "react-toastify";
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import CashTransferTable from "../components/CashTransferTable";
-
+import axios from "axios";
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const CashTransfer = () => {
   const queryClient = useQueryClient();
 
@@ -41,7 +42,8 @@ const CashTransfer = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/case_flow_account_code.php");
+      // const res = await api.get("/case_flow_account_code.php");
+       const res = await axios.get(`${url}/api/case-flow-account-code`);
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
@@ -56,8 +58,9 @@ const CashTransfer = () => {
   // ---------- MUTATION ----------
   const mutation = useMutation({
     mutationFn: async ({ payload }) => {
-      const apiUrl = "/CashFlowAdd.php";
-      const res = await api.post(apiUrl, payload);
+      // const apiUrl = "/CashFlowAdd.php";
+       const apiUrl = `${url}/api/cash-flow-add`;
+      const res = await axios.post(apiUrl, payload);
       return res.data;
     },
     onSuccess: (data) => {

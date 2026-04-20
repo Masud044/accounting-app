@@ -39,10 +39,11 @@ import {
 // import { DataTablePagination } from "@/components/DataTablePagination"
 import api from "@/api/Ap"
 import { DataTablePagination } from "@/components/DataTablePagination"
+import axios from "axios"
 
 // Helper function to get voucher type label
 const getVoucherTypeLabel = (type) => {
-  switch(type) {
+  switch(String(type)) {
     case "1": return "Receive";
     case "2": return "Payment";
     case "3": return "Journal";
@@ -53,7 +54,7 @@ const getVoucherTypeLabel = (type) => {
 
 // Helper function to get edit route
 const getEditRoute = (type, id) => {
-  switch(type) {
+  switch(String(type)) {
     case "1": return `/dashboard/receive-edit/${id}`;
     case "2": return `/dashboard/payment-voucher/${id}`;
     case "3": return `/dashboard/journal-voucher/${id}`;
@@ -105,14 +106,14 @@ const createColumns = (handleActivateVoucher) => [
      
       const type = row.getValue("VOUCHER_TYPE");
       const label = getVoucherTypeLabel(type);
-      const colorClass = 
-        type === "1" ? " text-green-800" :
-        type === "2" ? " text-red-800" :
-        type === "3" ? " text-blue-800" :
-        " text-purple-800";
-      
+     const colorMap = {
+    1: "text-green-800 bg-green-100",
+    2: "text-red-800 bg-red-100",
+    3: "text-blue-800 bg-blue-100",
+    4: "text-purple-800 bg-purple-100",
+  };
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorClass}`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorMap[type] || "text-gray-800 bg-gray-100"}`}>
           {label}
         </span>
       );
@@ -307,7 +308,7 @@ const createColumns = (handleActivateVoucher) => [
     },
   }
 ];
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 export function DashboardHomeTable() {
 
     const queryClient = useQueryClient();
@@ -315,7 +316,8 @@ export function DashboardHomeTable() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
-      const res = await api.get("/info_list.php");
+      // const res = await api.get("/info_list.php");
+       const res = await axios.get(`${url}/api/info-list`);
       return res.data;
     }
   });

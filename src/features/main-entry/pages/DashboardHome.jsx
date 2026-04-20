@@ -9,7 +9,7 @@ import {
   Activity,
 } from "lucide-react";
 
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
 import { DashboardHomeTable } from "../components/DashboardHomeTable";
 
@@ -20,13 +20,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import axios from "axios";
 
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const DashboardHome = () => {
   // Fetch Expenses
   const { data: expenses = {} } = useQuery({
     queryKey: ["expenses"],
     queryFn: async () => {
-      const res = await api.get("/dash_board_expense.php");
+      // const res = await api.get("/dash_board_expense.php");
+      const res = await axios.get(`${url}/api/dashboard-expense`);
       return res.data.success ? res.data : {};
     },
   });
@@ -35,7 +38,8 @@ const DashboardHome = () => {
   const { data: income = {} } = useQuery({
     queryKey: ["income"],
     queryFn: async () => {
-      const res = await api.get("/dash_board_income.php");
+      // const res = await api.get("/dash_board_income.php");
+      const res = await axios.get(`${url}/api/dashboard-income`);
       return res.data.success ? res.data : {};
     },
   });
@@ -44,7 +48,8 @@ const DashboardHome = () => {
   const { data: cash = {} } = useQuery({
     queryKey: ["cash"],
     queryFn: async () => {
-      const res = await api.get("/dash_board_cash.php");
+      // const res = await api.get("/dash_board_cash.php");
+      const res = await axios.get(`${url}/api/dashboard-cash`);
       return res.data.success ? res.data : {};
     },
   });

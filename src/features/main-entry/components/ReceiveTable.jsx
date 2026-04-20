@@ -41,15 +41,16 @@ import {
 // import { DataTablePagination } from "@/components/DataTablePagination";
 
 
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { ReceiveService } from "@/api/AccontingApi";
 import { toast } from "react-toastify";
 import ReceiveCreate from "../pages/ReceiveCreate";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import axios from "axios";
 
  
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 export default function ReceiveTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -63,10 +64,15 @@ export default function ReceiveTable() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
-      const res = await api.get("/receive_all_unposted.php");
+      // const res = await api.get("/receive_all_unposted.php");
+       const res = await axios.get(`${url}/api/receive-all-unposted`);
+   
       return res.data;
+     
     },
+   
   });
+  console.log(data)
 
 
   // ✅ Delete Mutation
@@ -110,9 +116,12 @@ export default function ReceiveTable() {
 
   // Extract and sort vouchers with useMemo to prevent infinite re-renders
   const sortedVouchers = useMemo(() => {
-    const vouchers = data?.status === "success" ? data.data : [];
+    // const vouchers = data?.success === "true" ? data.data : [];
+    //  const vouchers = data?.success ? data.data : [];
+     const vouchers = Array.isArray(data?.data) ? data.data : [];
     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
   }, [data]);
+  console.log(sortedVouchers)
 
   const columns = [
     // {
