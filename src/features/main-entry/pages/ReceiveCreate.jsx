@@ -4,7 +4,7 @@ import Select from "react-select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
 // import ReceiveTable from "../components/ReceiveTable";
@@ -12,8 +12,9 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const ReceiveCreate = () => {
    const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -49,26 +50,29 @@ const ReceiveCreate = () => {
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
-      const res = await api.get("/customer.php");
+      // const res = await api.get("/customer.php");
+        const res = await axios.get(`${url}/api/customer-type`);
       return res.data.data || [];
     },
   });
 
   // Fetch Receive Codes
   const { data: ReceiveCodes = [] } = useQuery({
-    queryKey: ["ReceiveCodes"],
-    queryFn: async () => {
-      const res = await api.get("/receive_code.php");
-      return res.data.success === 1 ? res.data.data || [] : [];
-    },
-  });
+  queryKey: ["ReceiveCodes"],
+  queryFn: async () => {
+    const res = await axios.get(`${url}/api/receive-code`);
+    return res.data.success === true ? res.data.data || [] : [];
+   
+  },
+});
+  
 
   // Fetch Accounts
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
     //   const res = await api.get("/account_code.php");
-      const res = await api.get("/rec_account_code.php");
+      const res = await axios.get(`${url}/api/account-code`);
       
       if (res.data.success === 1) {
         return res.data.data.map((acc) => ({

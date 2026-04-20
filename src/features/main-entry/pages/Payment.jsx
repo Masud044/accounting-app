@@ -8,13 +8,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "react-toastify";
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import { PaymentService } from "@/api/AccontingApi";
 import PaymentTable from "../components/PaymentTable";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const Payment = () => {
   const { voucherId } = useParams();
   useEffect(() => {
@@ -62,7 +64,8 @@ const Payment = () => {
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: async () => {
-      const res = await api.get("/supplier.php");
+      // const res = await api.get("/supplier.php");
+         const res = await axios.get(`${url}/api/supplier-type`);
       return res.data.data || [];
     },
   });
@@ -70,17 +73,38 @@ const Payment = () => {
   const { data: PaymentCodes = [] } = useQuery({
     queryKey: ["paymentCodes"],
     queryFn: async () => {
-      const res = await api.get("/receive_code.php");
-      return res.data.success === 1 ? res.data.data || [] : [];
+      // const res = await api.get("/receive_code.php");
+      const res = await axios.get(`${url}/api/receive-code`);
+     
+      return res.data.success === true ? res.data.data || [] : [];
     },
   });
 
+  // const { data: accounts = [] } = useQuery({
+  //   queryKey: ["accounts"],
+  //   queryFn: async () => {
+  //     // const res = await api.get("/account_code.php");
+  //     const res = await axios.get(`${url}/api/account-code`);
+
+  //     if (res.data.success === 1) {
+  //       return res.data.data.map((acc) => ({
+  //         value: acc.ACCOUNT_ID,
+  //         label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
+  //         name: acc.ACCOUNT_NAME,
+  //       }));
+  //     }
+  //     return [];
+  //   },
+  // });
+
+ 
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/account_code.php");
-
-      if (res.data.success === 1) {
+      // const res = await api.get("/rec_account_code.php");
+      const res = await axios.get(`${url}/api/receive-account-code`);
+      
+      if (res.data.success === true) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
           label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
@@ -113,23 +137,33 @@ const Payment = () => {
 
 
       // ✅ Find credit entry (payment account)
-      const creditEntry = details.find((d) => d.credit && Number(d.credit) > 0);
+      // const creditEntry = details.find((d) => d.credit && Number(d.credit) > 0);
+      const creditEntry = details.find((d) => d.CREDIT && Number(d.CREDIT) > 0);
       console.log("Credit Entry:", creditEntry);
 
       // ✅ Get debit entries (existing rows from database)
       const mappedRows = details
-        .filter((d) => d.debit && Number(d.debit) > 0)
+         .filter((d) => d.DEBIT && Number(d.DEBIT) > 0) 
         .map((d, i) => {
-          const account = accounts.find((acc) => acc.value === d.code);
+        const account = accounts.find((acc) => acc.value === d.CODE);
+          // return {
+          //   id: d.id || `${d.code}-${i}`,
+          //   accountCode: d.code,
+          //   particulars: d.codedescription || (account ? account.label : ""),
+          //   amount: parseFloat(d.debit),
+          //   debitId: d.id,
+          //   creditId: null,
+          //   isNew: false, // ✅ Existing rows from database
+          // };
           return {
-            id: d.id || `${d.code}-${i}`,
-            accountCode: d.code,
-            particulars: d.codedescription || (account ? account.label : ""),
-            amount: parseFloat(d.debit),
-            debitId: d.id,
-            creditId: null,
-            isNew: false, // ✅ Existing rows from database
-          };
+          id: d.ID || `${d.CODE}-${i}`,           // ✅ uppercase
+          accountCode: d.CODE,                      // ✅ uppercase
+          particulars: d.CODEDESCRIPTION || (account ? account.label : ""), // ✅ uppercase
+          amount: parseFloat(d.DEBIT),              // ✅ uppercase
+          debitId: d.ID,                            // ✅ uppercase
+          creditId: null,
+          isNew: false,
+        };
         });
 
       const total = mappedRows.reduce(
@@ -152,7 +186,7 @@ const Payment = () => {
         description: master.DESCRIPTION || "",
         supplier: master.CUSTOMER_ID || "",
         paymentCode: master.CASHACCOUNT || "",
-        creditId: creditEntry ? creditEntry.id : null,
+        creditId: creditEntry ? creditEntry.ID : null,
         accountId: "",
         particular: "",
         amount: "",

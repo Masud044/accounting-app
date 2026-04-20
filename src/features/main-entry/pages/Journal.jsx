@@ -14,11 +14,13 @@ import jsPDF from "jspdf";
 // import { SectionContainer } from "../../SectionContainer";
 // import JournalVoucherListTwo from "./JournalVoucherListTwo";
 import { toast } from "react-toastify";
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import JournalTable from "../components/JournalTable";
+import axios from "axios";
 
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const Journal = () => {
   const { voucherId } = useParams();
 
@@ -66,8 +68,9 @@ const Journal = () => {
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
     queryFn: async () => {
-      const res = await api.get("/gl_account_code.php");
-      if (res.data.success === 1) {
+      // const res = await api.get("/gl_account_code.php");
+      const res = await axios.get(`${url}/api/gl-account-code`);
+      if (res.data.success === true) {
         return res.data.data.map((acc) => ({
           value: acc.ACCOUNT_ID,
           label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
@@ -82,7 +85,8 @@ const Journal = () => {
   const { data: voucherData } = useQuery({
     queryKey: ["voucher", voucherId],
     queryFn: async () => {
-      const res = await api.get(`/GL_VIEW.php?insertID=${voucherId}`);
+      // const res = await api.get(`/GL_VIEW.php?insertID=${voucherId}`);
+      const res = await axios.get(`${url}/api/gl-view?insertID=${voucherId}`);
       return res.data;
     },
     enabled: !!voucherId && accounts.length > 0,
@@ -127,45 +131,79 @@ const Journal = () => {
 
 
   // ---------- MUTATION ----------
-  const mutation = useMutation({
-    mutationFn: async ({ isNew, payload }) => {
-      const apiUrl = isNew ? "/gl_add.php" : "/gl_edit.php";
-      const res = await api.post(apiUrl, payload);
-      return res.data;
-    },
-    onSuccess: (data, variables) => {
-      if (data.status === "success") {
-        toast.success(
-          variables.isNew
-            ? "Journal-Voucher created successfully!"
-            : "Journal-Voucher updated successfully!"
-        );
-        setForm({
-          entryDate: today,
+  // const mutation = useMutation({
+  //   mutationFn: async ({ isNew, payload }) => {
+  //     const apiUrl = isNew ? `${url}/api/gl-add` : `${url}/api/gl-edit`;
+  //     const res = await axios.post(apiUrl, payload);
+  //     return res.data;
+  //   },
+  //   onSuccess: (data, variables) => {
+  //     if (data.status === "success") {
+  //       toast.success(
+  //         variables.isNew
+  //           ? "Journal-Voucher created successfully!"
+  //           : "Journal-Voucher updated successfully!"
+  //       );
+  //       setForm({
+  //         entryDate: today,
          
-          supporting: "",
-          description: "",
+  //         supporting: "",
+  //         description: "",
         
-          glDate: today,
+  //         glDate: today,
          
-          accountId: "",
-          particular: "",
+  //         accountId: "",
+  //         particular: "",
           
-        });
-        setRows([
+  //       });
+  //       setRows([
       
-    ]);
-        queryClient.invalidateQueries(["unpostedVouchers"]);
-      } else {
-        toast.error("Error processing voucher.");
-      }
-      setShowModal(false);
-    },
-    onError: () => {
-      toast.error("Error submitting voucher. Please try again.");
-      setShowModal(false);
-    },
-  });
+  //   ]);
+  //       queryClient.invalidateQueries(["unpostedVouchers"]);
+  //     } else {
+  //       toast.error("Error processing voucher.");
+  //     }
+  //     setShowModal(false);
+  //   },
+  //   onError: () => {
+  //     toast.error("Error submitting voucher. Please try again.");
+  //     setShowModal(false);
+  //   },
+  // });
+
+  const mutation = useMutation({
+  mutationFn: async ({ isNew, payload }) => {
+    const apiUrl = isNew ? `${url}/api/gl-add` : `${url}/api/gl-edit`;
+    console.log("PAYLOAD:", JSON.stringify(payload, null, 2));
+    const res = await axios.post(apiUrl, payload);
+    console.log("RESPONSE:", res.data);
+    return res.data;
+  },
+  onSuccess: (data, variables) => {
+    if (data.status === "success") {
+      toast.success(variables.isNew ? "Created!" : "Updated!");
+      // ✅ form & rows reset
+      setForm({
+        entryDate: today,
+        supporting: "",
+        description: "",
+        glDate: today,
+        accountId: "",
+        particular: "",
+      });
+      setRows([{ id: "dummy", accountCode: "", particulars: "", debitId: null, creditId: null }]);
+      queryClient.invalidateQueries(["unpostedVouchers"]);
+    } else {
+      toast.error(data.message || "Error processing voucher."); // ✅ actual message দেখাবে
+    }
+    setShowModal(false);
+  },
+  onError: (err) => {
+    console.error("Error:", err.response?.data || err.message);
+    toast.error(err.response?.data?.message || "Server error. Please try again.");
+    setShowModal(false);
+  },
+});
 
   // ---------- HANDLERS ----------
  const addRow = () => {
@@ -251,6 +289,7 @@ const Journal = () => {
       trans_date: form.entryDate,
       GL_ENTRY_DATE: form.glDate,
       receive_desc: form.description,
+      supporting: String(form.supporting || "0"),
       details: rows.map((r) => ({
         code: `${r.accountCode}##${r.particulars}`,
         debit: parseFloat(r.debit) || 0,

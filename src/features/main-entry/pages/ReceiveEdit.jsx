@@ -8,7 +8,8 @@ import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
-
+import axios from "axios";
+const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const ReceiveEdit = () => {
   const { voucherId } = useParams();
   const navigate = useNavigate();
@@ -37,7 +38,8 @@ const ReceiveEdit = () => {
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
-      const res = await api.get("/customer.php");
+      // const res = await api.get("/customer.php");
+       const res = await axios.get(`${url}/api/customer-type`);
       return res.data.data || [];
     },
   });
@@ -46,26 +48,47 @@ const ReceiveEdit = () => {
   const { data: ReceiveCodes = [] } = useQuery({
     queryKey: ["ReceiveCodes"],
     queryFn: async () => {
-      const res = await api.get("/receive_code.php");
-      return res.data.success === 1 ? res.data.data || [] : [];
+      // const res = await api.get("/receive_code.php");
+        const res = await axios.get(`${url}/api/receive-code`);
+      return res.data.success === true ? res.data.data || [] : [];
     },
   });
 
   // Fetch Accounts
-  const { data: accounts = [] } = useQuery({
-    queryKey: ["accounts"],
-    queryFn: async () => {
-      const res = await api.get("/rec_account_code.php");
-      if (res.data.success === 1) {
-        return res.data.data.map((acc) => ({
-          value: acc.ACCOUNT_ID,
-          label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
-          name: acc.ACCOUNT_NAME,
-        }));
-      }
-      return [];
-    },
-  });
+  // const { data: accounts = [] } = useQuery({
+  //   queryKey: ["accounts"],
+  //   queryFn: async () => {
+  //     // const res = await api.get("/rec_account_code.php");
+  //     const res = await axios.get(`${url}/api/receive-account-code`);
+      
+  //     if (res.data.success === true) {
+  //       return res.data.data.map((acc) => ({
+  //         value: acc.ACCOUNT_ID,
+  //         label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
+  //         name: acc.ACCOUNT_NAME,
+  //       }));
+  //     }
+  //     return [];
+  //   },
+  // });
+
+  // Fetch Accounts
+    const { data: accounts = [] } = useQuery({
+      queryKey: ["accounts"],
+      queryFn: async () => {
+      //   const res = await api.get("/account_code.php");
+        const res = await axios.get(`${url}/api/account-code`);
+        
+        if (res.data.success === 1) {
+          return res.data.data.map((acc) => ({
+            value: acc.ACCOUNT_ID,
+            label: `${acc.ACCOUNT_ID} - ${acc.ACCOUNT_NAME}`,
+            name: acc.ACCOUNT_NAME,
+          }));
+        }
+        return [];
+      },
+    });
 
   // Fetch voucher data
   const { data: voucherData } = useQuery({
