@@ -172,45 +172,84 @@ export default function JournalTable() {
         return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
-    {
+     {
       id: "actions",
       enableHiding: false,
+      header: () => <div className="text-center">Actions</div>,
       cell: ({ row }) => {
         const voucher = row.original;
-
+    
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() =>
-                  navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
-                }
-              >
-                Copy Voucher No
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={`/dashboard/journal-voucher/${voucher.ID}`}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit Voucher
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Voucher
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center justify-center gap-3">
+            {/* Edit Button */}
+            <Link
+              to={`/dashboard/journal-voucher/${voucher.ID}`}
+             
+            >
+              <Pencil size={18} />
+            </Link>
+    
+            {/* Copy Voucher No */}
+            {/* <button
+              onClick={() =>
+                navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
+              }
+              className="text-gray-600 hover:text-black"
+              title="Copy Voucher No"
+            >
+              📋
+            </button> */}
+    
+            {/* Delete Button */}
+            {/* <Button
+              onClick={() => handleDeleteClick(voucher)}
+             
+            >
+              <Trash2 size={18} />
+            </Button> */}
+          </div>
         );
       },
-    },
+    }
+    // {
+    //   id: "actions",
+    //   enableHiding: false,
+    //   cell: ({ row }) => {
+    //     const voucher = row.original;
+
+    //     return (
+    //       <DropdownMenu>
+    //         <DropdownMenuTrigger asChild>
+    //           <Button variant="ghost" className="h-8 w-8 p-0">
+    //             <span className="sr-only">Open menu</span>
+    //             <MoreHorizontal className="h-4 w-4" />
+    //           </Button>
+    //         </DropdownMenuTrigger>
+    //         <DropdownMenuContent align="end">
+    //           <DropdownMenuLabel>Actions</DropdownMenuLabel>
+    //           <DropdownMenuItem
+    //             onClick={() =>
+    //               navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
+    //             }
+    //           >
+    //             Copy Voucher No
+    //           </DropdownMenuItem>
+    //           <DropdownMenuSeparator />
+    //           <DropdownMenuItem asChild>
+    //             <Link to={`/dashboard/journal-voucher/${voucher.ID}`}>
+    //               <Pencil className="mr-2 h-4 w-4" />
+    //               Edit Voucher
+    //             </Link>
+    //           </DropdownMenuItem>
+    //           <DropdownMenuItem className="text-red-600">
+    //             <Trash2 className="mr-2 h-4 w-4" />
+    //             Delete Voucher
+    //           </DropdownMenuItem>
+    //         </DropdownMenuContent>
+    //       </DropdownMenu>
+    //     );
+    //   },
+    // },
   ];
 
   const table = useReactTable({
