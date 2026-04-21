@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import { SectionContainer } from "@/components/SectionContainer";
 import JournalTable from "../components/JournalTable";
 import axios from "axios";
+import { Button } from "@/components/ui/button";
 
 const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const Journal = () => {
@@ -652,24 +653,24 @@ const handlePrint = async () => {
 </div>
 
         <div className="flex justify-between items-center gap-10 mb-4">
-          <button
+          <Button
             type="button"
            onClick={handlePrint}
-            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+            // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
             print
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => setShowModal(true)}
-            className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
+            // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
           >
             {mutation.isPending
               ? "Submitting..."
               : voucherId
               ? "Update"
               : "Save"}
-          </button>
+          </Button>
         </div>
       </div>
     <JournalTable></JournalTable>
@@ -711,19 +712,19 @@ const handlePrint = async () => {
             </div>
 
             <div className="flex justify-end mt-4 space-x-3">
-              <button
+              <Button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-lg bg-gray-300"
+                // className="px-4 py-2 rounded-lg bg-gray-300"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSubmit}
                 disabled={mutation.isPending}
-                className="px-4 py-2 rounded-lg bg-green-500 text-white"
+                // className="px-4 py-2 rounded-lg bg-green-500 text-white"
               >
                 {mutation.isPending ? "Submitting..." : "Confirm"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

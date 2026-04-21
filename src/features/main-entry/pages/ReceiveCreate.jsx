@@ -118,6 +118,7 @@ const ReceiveCreate = () => {
           },
         ]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
+        navigate("/dashboard/receive-voucher");
       } else {
         toast.error("Error processing voucher");
       }

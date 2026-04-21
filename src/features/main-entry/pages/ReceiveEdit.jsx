@@ -179,6 +179,7 @@ const ReceiveEdit = () => {
         console.log("Fresh data after update:", freshData);
         
         setShowModal(false);
+        navigate("/dashboard/receive-voucher");
         
         // Optional: Navigate back after successful update
         // setTimeout(() => navigate(-1), 500);
