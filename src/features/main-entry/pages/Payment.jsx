@@ -5,8 +5,7 @@ import Select from "react-select";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+
 import { toast } from "react-toastify";
 // import api from "@/api/Ap";
 
@@ -127,6 +126,16 @@ const Payment = () => {
 
   console.log("data", voucherData);
 
+  const toInputDate = (raw) => {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return "";
+  const year  = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day   = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
   useEffect(() => {
     if (voucherId && voucherData?.status === "success" && accounts.length > 0) {
       const master = voucherData.master || {};
@@ -175,12 +184,14 @@ const Payment = () => {
 
       setForm((prev) => ({
         ...prev,
-        entryDate: master.TRANS_DATE
-          ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        glDate: master.GL_ENTRY_DATE
-          ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
+        // entryDate: master.TRANS_DATE
+        //   ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+        //   : new Date().toISOString().split("T")[0],
+        // glDate: master.GL_ENTRY_DATE
+        //   ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+        //   : new Date().toISOString().split("T")[0],
+        entryDate: toInputDate(master.TRANS_DATE),   // ✅ DB থেকে আসা date
+  glDate:    toInputDate(master.GL_ENTRY_DATE), // ✅ DB থেকে আসা date
         invoiceNo: master.VOUCHERNO || "",
         supporting: master.SUPPORTING || "",
         description: master.DESCRIPTION || "",
@@ -431,72 +442,7 @@ payload.NEW_DESCRIPTION = newRows.map(r => r.particulars)
     mutation.mutate({ isNew, payload });
   };
 
-  // ---------- PRINT HANDLER ----------
-  const handlePrint = async () => {
-    const printArea = document.getElementById("print-area");
-
-    if (!printArea) {
-      toast.error("Print area not found!");
-      return;
-    }
-
-    try {
-      printArea.style.display = "block";
-
-      const canvas = await html2canvas(printArea, {
-        scale: 2,
-        backgroundColor: "#fff",
-        useCORS: true,
-        logging: false,
-        onclone: (clonedDoc) => {
-          clonedDoc.querySelectorAll("*").forEach((el) => {
-            const style = clonedDoc.defaultView.getComputedStyle(el);
-
-            if (style.color.includes("oklch")) {
-              el.style.setProperty("color", "#000", "important");
-            }
-            if (style.backgroundColor.includes("oklch")) {
-              el.style.setProperty("background-color", "#fff", "important");
-            }
-            if (style.borderColor.includes("oklch")) {
-              el.style.setProperty("border-color", "#000", "important");
-            }
-          });
-        },
-      });
-
-      const imgData = canvas.toDataURL("image/png", 1.0);
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210;
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const pdfBlob = pdf.output("blob");
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      window.open(blobUrl, "_blank");
-
-      pdf.save(`Payment_Voucher_${form.invoiceNo || "new"}.pdf`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Error generating PDF: " + err.message);
-    } finally {
-      printArea.style.display = "none";
-    }
-  };
+ 
 
   return (
     <SectionContainer>
@@ -790,80 +736,10 @@ payload.NEW_DESCRIPTION = newRows.map(r => r.particulars)
             </table>
           </div>
 
-          {/* Printable PDF Section */}
-          <div
-            id="print-area"
-            className="hidden print:block p-8 bg-white text-black"
-          >
-            <h1 className="text-xl font-bold text-center mb-2">
-              PAYMENT VOUCHER
-            </h1>
-            <div className="border p-3 mb-4 text-sm space-y-1">
-              <p>
-                <strong>Voucher No:</strong> {form.invoiceNo}
-              </p>
-              <p>
-                <strong>Date:</strong> {form.entryDate}
-              </p>
-              <p>
-                <strong>Supplier:</strong>{" "}
-                {
-                  suppliers.find((s) => s.SUPPLIER_ID === form.supplier)
-                    ?.SUPPLIER_NAME
-                }
-              </p>
-              <p>
-                <strong>Description:</strong> {form.description}
-              </p>
-              <p>
-                <strong>Total Amount:</strong> {form.totalAmount.toFixed(2)}
-              </p>
-            </div>
+         
 
-            <table className="w-full border-collapse border text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border px-2 py-1 text-left">Account Code</th>
-                  <th className="border px-2 py-1 text-left">Particular</th>
-                  <th className="border px-2 py-1 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, i) => (
-                  <tr key={i}>
-                    <td className="border px-2 py-1">{row.accountCode}</td>
-                    <td className="border px-2 py-1">{row.particulars}</td>
-                    <td className="border px-2 py-1 text-right">
-                      {row.amount.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-                <tr className="font-semibold">
-                  <td colSpan={2} className="text-right border px-2 py-1">
-                    Total
-                  </td>
-                  <td className="border px-2 py-1 text-right">
-                    {form.totalAmount.toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <p className="mt-6 text-xs text-center border-t pt-2">
-              Prepared By ____________________ &nbsp;&nbsp;&nbsp; Authorized
-              Signatory ____________________ &nbsp;&nbsp;&nbsp; Recipient
-              Signature ____________________
-            </p>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between gap-4">
-            <Button
-              type="button"
-              onClick={handlePrint}
-              // className="w-full md:w-auto cursor-pointer bg-green-500 text-white px-6 py-2 rounded-lg"
-            >
-              Print
-            </Button>
+          <div className="flex flex-col md:flex-row justify-end gap-4">
+           
             <Button
               type="button"
               onClick={() => setShowModal(true)}
