@@ -8,8 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // import PageTitle from "../../RouteTitle";
 
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+
 // import { SectionContainer } from "../../SectionContainer";
 
 import { toast } from "react-toastify";
@@ -118,81 +117,7 @@ const CashTransfer = () => {
     mutation.mutate({ payload });
   };
 
-  // ---------- PRINT HANDLER ----------
-
-  const handlePrint = async () => {
-    const printArea = document.getElementById("print-area");
-
-    if (!printArea) {
-      toast.error("Print area not found!");
-      return;
-    }
-
-    try {
-      // Temporarily show hidden print area
-      printArea.style.display = "block";
-
-      // Capture HTML to canvas
-      const canvas = await html2canvas(printArea, {
-  scale: 2,
-  backgroundColor: "#fff",
-  useCORS: true,
-  logging: false,
-  onclone: (clonedDoc) => {
-    clonedDoc.querySelectorAll("*").forEach((el) => {
-      const style = clonedDoc.defaultView.getComputedStyle(el);
-
-      if (style.color.includes("oklch")) {
-        el.style.setProperty("color", "#000", "important");
-      }
-      if (style.backgroundColor.includes("oklch")) {
-        el.style.setProperty("background-color", "#fff", "important");
-      }
-      if (style.borderColor.includes("oklch")) {
-        el.style.setProperty("border-color", "#000", "important");
-      }
-    });
-  }
-});
-
-      const imgData = canvas.toDataURL("image/png", 1.0);
-
-      // Create PDF
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add extra pages if content exceeds one page
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      // ✅ Automatically open PDF in a new tab
-      const pdfBlob = pdf.output("blob");
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      window.open(blobUrl, "_blank");
-
-      // ✅ Optionally trigger download
-      pdf.save(`Cash_Voucher_${form.invoiceNo || "new"}.pdf`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Error generating PDF: " + err.message);
-    } finally {
-      // Hide print area again
-      printArea.style.display = "none";
-    }
-  };
-
+ 
   return (
    <SectionContainer>
      <div className="">
@@ -395,49 +320,10 @@ const CashTransfer = () => {
           />
         </div>
 
-        {/* Printable PDF Section */}
-        <div
-          id="print-area"
-          className="hidden print:block p-8 bg-white text-black"
-        >
-          <h1 className="text-xl font-bold text-center mb-2">Cash Transfer</h1>
-          <div className="border p-3 mb-4 text-sm space-y-1">
-            <p>
-              <strong>Date:</strong> {form.entryDate}
-            </p>
-            <p>
-              <strong>Amount:</strong> {form.amount}
-            </p>
-            <p>
-              <strong>To Code:</strong> {form.toCode}
-            </p>
-            <p>
-              <strong>From code:</strong> {form.fromCode}
-            </p>
-            <p>
-              <strong>GL Date:</strong> {form.glDate}
-            </p>
+       
 
-            <p>
-              <strong>Description:</strong> {form.description}
-            </p>
-          </div>
-
-          <p className="mt-6 text-xs text-center border-t pt-2">
-            Prepared By ____________________ &nbsp;&nbsp;&nbsp; Authorized
-            Signatory ____________________ &nbsp;&nbsp;&nbsp; Recipient
-            Signature ____________________
-          </p>
-        </div>
-
-        <div className="flex justify-between items-center gap-10 mb-4">
-          <Button
-            type="button"
-            onClick={handlePrint}
-            // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
-          >
-            print
-          </Button>
+        <div className="flex justify-end items-center gap-10 mb-4">
+         
           <Button
             type="button"
             onClick={() => setShowModal(true)}

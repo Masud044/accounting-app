@@ -9,8 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // import PageTitle from "../../RouteTitle";
 
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+
 // import { SectionContainer } from "../../SectionContainer";
 // import JournalVoucherListTwo from "./JournalVoucherListTwo";
 import { toast } from "react-toastify";
@@ -317,80 +316,7 @@ const Journal = () => {
 };
 
 
-// ---------- PRINT HANDLER ----------
 
-const handlePrint = async () => {
-  const printArea = document.getElementById("print-area");
-
-  if (!printArea) {
-    toast.error("Print area not found!");
-    return;
-  }
-
-  try {
-    // Temporarily show hidden print area
-    printArea.style.display = "block";
-
-    // Capture HTML to canvas
-    const canvas = await html2canvas(printArea, {
-  scale: 2,
-  backgroundColor: "#fff",
-  useCORS: true,
-  logging: false,
-  onclone: (clonedDoc) => {
-    clonedDoc.querySelectorAll("*").forEach((el) => {
-      const style = clonedDoc.defaultView.getComputedStyle(el);
-
-      if (style.color.includes("oklch")) {
-        el.style.setProperty("color", "#000", "important");
-      }
-      if (style.backgroundColor.includes("oklch")) {
-        el.style.setProperty("background-color", "#fff", "important");
-      }
-      if (style.borderColor.includes("oklch")) {
-        el.style.setProperty("border-color", "#000", "important");
-      }
-    });
-  }
-});
-
-    const imgData = canvas.toDataURL("image/png", 1.0);
-
-    // Create PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add extra pages if content exceeds one page
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // ✅ Automatically open PDF in a new tab
-    const pdfBlob = pdf.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl, "_blank");
-
-    // ✅ Optionally trigger download
-    pdf.save(`Journal_Voucher_${form.invoiceNo || "new"}.pdf`);
-  } catch (err) {
-    console.error(err);
-    toast.error("Error generating PDF: " + err.message);
-  } finally {
-    // Hide print area again
-    printArea.style.display = "none";
-  }
-};
 
 
 
@@ -608,58 +534,10 @@ const handlePrint = async () => {
           </tbody>
         </table>
 
-            {/* Printable PDF Section */}
-<div id="print-area"  className="hidden print:block p-8 bg-white text-black">
-  <h1 className="text-xl font-bold text-center mb-2">JOURNAL VOUCHER</h1>
-  <div className="border p-3 mb-4 text-sm space-y-1">
-    <p><strong>Supporting:</strong> {form.supporting}</p>
-    <p><strong>Date:</strong> {form.entryDate}</p>
   
-    <p><strong>Description:</strong> {form.description}</p>
-    {/* <p><strong>Total Amount:</strong> {form.totalAmount.toFixed(2)}</p> */}
-  </div>
 
-  <table className="w-full border-collapse border text-sm">
-    <thead>
-      <tr className="bg-gray-100">
-        <th className="border px-2 py-1 text-left">Account Code</th>
-        <th className="border px-2 py-1 text-left">Particular</th>
-        <th className="border px-2 py-1 text-right">Debit</th>
-        <th className="border px-2 py-1 text-right">Credit</th>
-      </tr>
-    </thead>
-    <tbody>
-      {rows.map((row, i) => (
-        <tr key={i}>
-          <td className="border px-2 py-1">{row.accountCode}</td>
-          <td className="border px-2 py-1">{row.particulars}</td>
-          <td className="border px-2 py-1">{row.debit}</td>
-          <td className="border px-2 py-1">{row.credit}</td>
+        <div className="flex justify-end items-center gap-10 mb-4">
          
-        </tr>
-      ))}
-      {/* <tr className="font-semibold">
-        <td colSpan={2} className="text-right border px-2 py-1">Total</td>
-        <td className="border px-2 py-1 text-right">{form.totalAmount.toFixed(2)}</td>
-      </tr> */}
-    </tbody>
-  </table>
-
-  <p className="mt-6 text-xs text-center border-t pt-2">
-    Prepared By ____________________ &nbsp;&nbsp;&nbsp;
-    Authorized Signatory ____________________ &nbsp;&nbsp;&nbsp;
-    Recipient Signature ____________________
-  </p>
-</div>
-
-        <div className="flex justify-between items-center gap-10 mb-4">
-          <Button
-            type="button"
-           onClick={handlePrint}
-            // className="bg-green-500 cursor-pointer text-white px-12 py-2 rounded-lg"
-          >
-            print
-          </Button>
           <Button
             type="button"
             onClick={() => setShowModal(true)}
