@@ -45,6 +45,18 @@ export const NAV_ITEMS = [
     ],
   },
 
+  {
+    label: "Inventory",
+    links: [
+      { to: "/dashboard/inventory", label: "Inventory", Icon: ClipboardList },
+      { to: "/dashboard/dispatch", label: "Dispatch", Icon: FileText },
+      { to: "/dashboard/item", label: "item", Icon: ClipboardList },
+      { to: "/dashboard/item-stock", label: "item-stock", Icon: FileText },
+     
+     
+    ],
+  },
+
 //   {
 //     label: "Users",
 //     links: [
