@@ -25,6 +25,10 @@ import DashboardHome from "./features/main-entry/pages/DashboardHome";
 import ReceiveEdit from "./features/main-entry/pages/ReceiveEdit";
 import ReceiveCreate from "./features/main-entry/pages/ReceiveCreate";
 import ChartOfAccount from "./features/main-entry/pages/ChartOfAccount";
+import InventoriesPage from "./features/inventory-page/inventory";
+import ItemStockPage from "./features/inventory-page/item-stock";
+import ItemsPage from "./features/inventory-page/item";
+import Requisitions from "./features/inventory-page/requisition-master";
 
 
 function App() {
@@ -55,6 +59,11 @@ function App() {
                
             <Route path="cash-voucher" element={<CashTransfer />} />
             <Route path="cash-voucher/:voucherID" element={<CashTransfer />} />
+             <Route path="inventory" element={<InventoriesPage />} />
+              <Route path="item-stock" element={<ItemStockPage />} />
+               <Route path="item" element={<ItemsPage />} />
+                <Route path="dispatch" element={<Requisitions/>} />
+                
             
             
             
