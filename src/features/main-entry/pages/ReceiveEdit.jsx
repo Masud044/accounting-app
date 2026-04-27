@@ -4,7 +4,7 @@ import Select from "react-select";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import api from "@/api/Ap";
+// import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
@@ -100,6 +100,17 @@ const ReceiveEdit = () => {
     enabled: !!voucherId && accounts.length > 0,
   });
 
+  const toInputDate = (raw) => {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return "";
+  const year  = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day   = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+
   // Populate form when data is loaded
   useEffect(() => {
     if (!voucherId || voucherData?.status !== "success") return;
@@ -131,12 +142,14 @@ const ReceiveEdit = () => {
     const total = mappedRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
     setForm({
-      entryDate: master.TRANS_DATE
-        ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
-        : today,
-      glDate: master.GL_ENTRY_DATE
-        ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
-        : today,
+      // entryDate: master.TRANS_DATE
+      //   ? new Date(master.TRANS_DATE).toISOString().split("T")[0]
+      //   : today,
+      // glDate: master.GL_ENTRY_DATE
+      //   ? new Date(master.GL_ENTRY_DATE).toISOString().split("T")[0]
+      //   : today,
+      entryDate: toInputDate(master.TRANS_DATE),   // ✅ DB থেকে আসা date
+  glDate:    toInputDate(master.GL_ENTRY_DATE), // ✅ DB থেকে আসা date
       invoiceNo: master.VOUCHERNO || "",
       supporting: master.SUPPORTING || "",
       description: master.DESCRIPTION || "",

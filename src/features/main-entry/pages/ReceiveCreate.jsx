@@ -8,8 +8,7 @@ import { toast } from "react-toastify";
 import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
 // import ReceiveTable from "../components/ReceiveTable";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -209,78 +208,7 @@ const ReceiveCreate = () => {
    
   };
 
-  const handlePrint = async () => {
-  const printArea = document.getElementById("print-area");
 
-  if (!printArea) {
-    toast.error("Print area not found!");
-    return;
-  }
-
-  try {
-    // Temporarily show hidden print area
-    printArea.style.display = "block";
-
-    // Capture HTML to canvas
-    const canvas = await html2canvas(printArea, {
-     scale: 2,
-     backgroundColor: "#fff",
-     useCORS: true,
-     logging: false,
-     onclone: (clonedDoc) => {
-       clonedDoc.querySelectorAll("*").forEach((el) => {
-         const style = clonedDoc.defaultView.getComputedStyle(el);
-   
-         if (style.color.includes("oklch")) {
-           el.style.setProperty("color", "#000", "important");
-         }
-         if (style.backgroundColor.includes("oklch")) {
-           el.style.setProperty("background-color", "#fff", "important");
-         }
-         if (style.borderColor.includes("oklch")) {
-           el.style.setProperty("border-color", "#000", "important");
-         }
-       });
-     }
-   });
-
-    const imgData = canvas.toDataURL("image/png", 1.0);
-
-    // Create PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add extra pages if content exceeds one page
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    // ✅ Automatically open PDF in a new tab
-    const pdfBlob = pdf.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl, "_blank");
-
-    // ✅ Optionally trigger download
-    pdf.save(`Receive_Voucher_${form.invoiceNo || "new"}.pdf`);
-  } catch (err) {
-    console.error(err);
-    toast.error("Error generating PDF: " + err.message);
-  } finally {
-    // Hide print area again
-    printArea.style.display = "none";
-  }
-};
 
 
   
@@ -538,14 +466,8 @@ const ReceiveCreate = () => {
           </table>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-             <Button
-            type="button"
-           onClick={handlePrint}
-            // className="w-full md:w-auto bg-green-500 text-white px-12 py-2 rounded-lg"
-          >
-            print
-          </Button>
+        <div className="flex flex-col md:flex-row justify-end gap-4">
+            
           <Button
             type="button"
             onClick={() => setShowModal(true)}
@@ -556,36 +478,7 @@ const ReceiveCreate = () => {
           </Button>
         </div>
 
-         {/* Hidden Print Area */}
-      <div id="print-area" className="hidden p-8 bg-white">
-        <h1 className="text-2xl font-bold text-center mb-4">RECEIVE VOUCHER</h1>
-        <p><strong>Invoice No:</strong> {form.invoiceNo}</p>
-        <p><strong>Date:</strong> {form.entryDate}</p>
-        <p><strong>Customer:</strong> {customers.find(c => c.CUSTOMER_ID === form.customer)?.CUSTOMER_NAME || "N/A"}</p>
-        <p><strong>Description:</strong> {form.description}</p>
-        <table className="w-full mt-4 border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border px-2 py-1 text-left">Account Code</th>
-              <th className="border px-2 py-1 text-left">Particulars</th>
-              <th className="border px-2 py-1 text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => row.id !== "dummy" && (
-              <tr key={row.id}>
-                <td className="border px-2 py-1">{row.accountCode}</td>
-                <td className="border px-2 py-1">{row.particulars}</td>
-                <td className="border px-2 py-1 text-right">{row.amount}</td>
-              </tr>
-            ))}
-            <tr className="font-bold bg-gray-100">
-              <td colSpan={2} className="text-right border px-2 py-1">Total</td>
-              <td className="border px-2 py-1 text-right">{form.totalAmount}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        
         
       </div>
 

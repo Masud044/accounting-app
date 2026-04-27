@@ -15,6 +15,10 @@ import {
   Trash2,
   Plus,
   PlusIcon,
+  Download,
+  FileText,
+  FileSpreadsheet,
+ 
 } from "lucide-react";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -50,13 +54,16 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from "axios";
 
  
-const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const BASE_URL  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 export default function ReceiveTable() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
    const [deleteModal, setDeleteModal] = useState({ show: false, id: null, voucherNo: "" });
+   // Track which voucher+type is currently downloading to show a loading state
+  const [downloading, setDownloading] = useState(null); // e.g. "42-pdf"
+
 
     const queryClient = useQueryClient();
 
@@ -65,7 +72,7 @@ export default function ReceiveTable() {
     queryKey: ["unpostedVouchers"],
     queryFn: async () => {
       // const res = await api.get("/receive_all_unposted.php");
-       const res = await axios.get(`${url}/api/receive-all-unposted`);
+       const res = await axios.get(`${BASE_URL}/api/receive-all-unposted`);
    
       return res.data;
      
@@ -122,6 +129,55 @@ export default function ReceiveTable() {
     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
   }, [data]);
   console.log(sortedVouchers)
+
+  const handleDownload = async (voucher, type) => {
+      const key = `${voucher.ID}-${type}`;
+      setDownloading(key);
+  
+      try {
+        const response = await fetch(
+          `${BASE_URL}/api/receipt/download/${voucher.ID}?type=${type}`
+        );
+  
+        if (!response.ok) {
+          // Try to parse error body from backend
+          let errMsg = `Server error ${response.status}`;
+          try {
+            const errBody = await response.json();
+            errMsg = errBody.detail || errBody.message || errMsg;
+          } catch {
+            // ignore parse failure
+          }
+          toast.error(`Download failed: ${errMsg}`);
+          return;
+        }
+  
+        const blob = await response.blob();
+  
+        // ── Use a different variable name — NOT "url" ──
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor    = document.createElement("a");
+        const ext       = type === "pdf" ? "pdf" : "xlsx";
+  
+        anchor.href     = objectUrl;
+        anchor.download = `receipt_voucher_${voucher.VOUCHERNO}.${ext}`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+  
+        // Revoke after a short delay so the browser has time to start the download
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  
+        toast.success(`${type.toUpperCase()} downloaded successfully!`);
+      } catch (err) {
+        // Now we actually log and display the real error
+        console.error(`[handleDownload] ${type} error:`, err);
+        toast.error(`Error downloading ${type.toUpperCase()}: ${err.message}`);
+      } finally {
+        setDownloading(null);
+      }
+    };
+  
 
   const columns = [
     // {
@@ -209,45 +265,120 @@ export default function ReceiveTable() {
         return <div className="font-medium ml-3">{formatted}</div>;
       },
     },
-   {
-  id: "actions",
-  enableHiding: false,
-  header: () => <div className="text-center">Actions</div>,
-  cell: ({ row }) => {
-    const voucher = row.original;
 
-    return (
-      <div className="flex items-center justify-center gap-3">
-        {/* Edit Button */}
-        <Link
-          to={`/dashboard/receive-edit/${voucher.ID}`}
+     {
+      id: "actions",
+      enableHiding: false,
+      header: () => <div className="text-center">Actions</div>,
+      cell: ({ row }) => {
+        const voucher = row.original;
+
+        return (
+          <div className="flex items-center justify-center gap-1">
+
+            {/* Edit */}
+            <Link
+              to={`/dashboard/receive-edit/${voucher.ID}`}
+              // className="inline-flex items-center justify-center h-8 w-8 rounded-md text-gray-500 hover:text-violet-700 hover:bg-violet-50 transition-colors"
+              title="Edit Voucher"
+            >
+              <Pencil size={16} />
+            </Link>
+
+            {/* Download dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  // className="h-8 w-8 text-gray-500 hover:text-violet-700"
+                  title="Download"
+                  disabled={downloading?.startsWith(`${voucher.ID}-`)}
+                >
+                  <Download size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Download as
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2"
+                  disabled={downloading === `${voucher.ID}-pdf`}
+                  onClick={() => handleDownload(voucher, "pdf")}
+                >
+                  <FileText size={14} className="text-red-500" />
+                  {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2"
+                  disabled={downloading === `${voucher.ID}-excel`}
+                  onClick={() => handleDownload(voucher, "excel")}
+                >
+                  <FileSpreadsheet size={14} className="text-green-600" />
+                  {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Delete */}
+            <Button
+              // variant="ghost"
+              size="icon"
+              // className="h-8 w-8 text-gray-500 hover:text-red-600"
+              onClick={() => handleDeleteClick(voucher)}
+              title="Delete Voucher"
+            >
+              <Trash2 size={16} />
+            </Button>
+
+          </div>
+        );
+      },
+    },
+//    {
+//   id: "actions",
+//   enableHiding: false,
+//   header: () => <div className="text-center">Actions</div>,
+//   cell: ({ row }) => {
+//     const voucher = row.original;
+
+//     return (
+//       <div className="flex items-center justify-center gap-3">
+//         {/* Edit Button */}
+//         <Link
+//           to={`/dashboard/receive-edit/${voucher.ID}`}
          
-        >
-          <Pencil size={18} />
-        </Link>
+//         >
+//           <Pencil size={18} />
+//         </Link>
 
-        {/* Copy Voucher No */}
-        {/* <button
-          onClick={() =>
-            navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
-          }
-          className="text-gray-600 hover:text-black"
-          title="Copy Voucher No"
-        >
-          📋
-        </button> */}
+//         {/* Copy Voucher No */}
+//         {/* <button
+//           onClick={() =>
+//             navigator.clipboard.writeText(voucher.VOUCHERNO?.toString() || "")
+//           }
+//           className="text-gray-600 hover:text-black"
+//           title="Copy Voucher No"
+//         >
+//           📋
+//         </button> */}
 
-        {/* Delete Button */}
-        <Button
-          onClick={() => handleDeleteClick(voucher)}
+//         {/* Delete Button */}
+//         <Button
+//           onClick={() => handleDeleteClick(voucher)}
          
-        >
-          <Trash2 size={18} />
-        </Button>
-      </div>
-    );
-  },
-}
+//         >
+//           <Trash2 size={18} />
+//         </Button>
+//       </div>
+//     );
+//   },
+// }
   ];
 
   const table = useReactTable({
