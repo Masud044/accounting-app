@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import {
   Sheet,
   SheetContent,
@@ -32,8 +32,8 @@ import { BookOpen } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useUpdateChartOfAccount, useChartOfAccounts } from "./queries";
 
+// ── Schema ────────────────────────────────────────────────────────────────────
 const formSchema = z.object({
-  accountId:     z.string().min(1, "Account ID is required").max(10),
   accountName:   z.string().min(1, "Account Name is required").max(50),
   firstLevelId:  z.string().optional(),
   secondLevelId: z.string().optional(),
@@ -42,50 +42,73 @@ const formSchema = z.object({
   lastLevel:     z.string(),
 });
 
-// deepest selected value becomes PARENT_ACCOUNT_ID
-function deriveParent(data) {
-  if (data.thirdLevelId)  return { parentAccountId: data.thirdLevelId,  lebel: 4 };
-  if (data.secondLevelId) return { parentAccountId: data.secondLevelId, lebel: 3 };
-  if (data.firstLevelId)  return { parentAccountId: data.firstLevelId,  lebel: 2 };
-  return { parentAccountId: "0", lebel: 1 };
-}
+const defaultValues = {
+  accountName:   "",
+  firstLevelId:  "",
+  secondLevelId: "",
+  thirdLevelId:  "",
+  enabled:       "1",
+  lastLevel:     "0",
+};
 
-// Pre-fill: find which level option matches current PARENT_ACCOUNT_ID
-// resolveInitialLevels — ACCOUNT_ID দিয়ে match করে row ID return করবে
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// PARENT_ACCOUNT_ID দিয়ে match করে সেই row-এর String(ID) return করে
+// function resolveInitialLevels(allAccounts, parentAccountId) {
+//   if (!parentAccountId || parentAccountId === "0") {
+//     return { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
+//   }
+
+//   const parent = allAccounts.find((a) => a.ACCOUNT_ID === parentAccountId);
+//   if (!parent) return { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
+
+//   const rowId = String(parent.ID); // ← row PK — Add sheet-এর মতো same
+//   const lvl   = Number(parent.LEBEL);
+
+//   if (lvl === 1) return { firstLevelId: rowId, secondLevelId: "", thirdLevelId: "" };
+//   if (lvl === 2) return { firstLevelId: "", secondLevelId: rowId, thirdLevelId: "" };
+//   if (lvl === 3) return { firstLevelId: "", secondLevelId: "", thirdLevelId: rowId };
+//   return { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
+// }
+
 function resolveInitialLevels(allAccounts, parentAccountId) {
   if (!parentAccountId || parentAccountId === "0") {
     return { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
   }
 
-  // parent_account_id stores the ACCOUNT_ID string → find the row
-  const parent = allAccounts.find((a) => a.ACCOUNT_ID === parentAccountId);
-  if (!parent) return { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
+  const result = { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
 
-  const lvl = Number(parent.LEBEL);
-  const rowId = String(parent.ID); // ← row PK, same as Add sheet
+  // Direct parent থেকে শুরু করে Level 1 পর্যন্ত উপরে উঠতে থাকবে
+  let current = allAccounts.find((a) => a.ACCOUNT_ID === parentAccountId);
 
-  if (lvl === 1) return { firstLevelId: rowId, secondLevelId: "", thirdLevelId: "" };
-  if (lvl === 2) return { firstLevelId: "", secondLevelId: rowId, thirdLevelId: "" };
-  if (lvl === 3) return { firstLevelId: "", secondLevelId: "", thirdLevelId: rowId };
-  return { firstLevelId: "", secondLevelId: "", thirdLevelId: "" };
+  while (current) {
+    const lvl   = Number(current.LEBEL);
+    const rowId = String(current.ID);
+
+    if (lvl === 1) { result.firstLevelId  = rowId; break; } // root পেয়েছি, থামো
+    if (lvl === 2) { result.secondLevelId = rowId; }
+    if (lvl === 3) { result.thirdLevelId  = rowId; }
+
+    // এক ধাপ উপরে যাও — parent এর parent খোঁজো
+    current = allAccounts.find((a) => a.ACCOUNT_ID === current.PARENT_ACCOUNT_ID);
+  }
+
+  return result;
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function UpdateChartSheet({ open, onOpenChange, showConfirmation, account }) {
   const updateMutation = useUpdateChartOfAccount();
   const { data: allAccounts = [] } = useChartOfAccounts();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      accountId: "", accountName: "",
-      firstLevelId: "", secondLevelId: "", thirdLevelId: "",
-      enabled: "1", lastLevel: "0",
-    },
+    defaultValues,
   });
 
   const { formState: { isDirty } } = form;
 
-  // Each dropdown independent — filtered only by LEBEL
+  // ── Dropdown options — value = String(a.ID) (row PK) ─────────────────────
   const level1Options = useMemo(
     () => allAccounts.filter((a) => Number(a.LEBEL) === 1),
     [allAccounts]
@@ -99,41 +122,40 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
     [allAccounts]
   );
 
-  // Pre-fill when account prop changes
+  // ── Auto-fill when account prop arrives ──────────────────────────────────
   useEffect(() => {
     if (account && allAccounts.length > 0) {
       const { firstLevelId, secondLevelId, thirdLevelId } =
         resolveInitialLevels(allAccounts, account.PARENT_ACCOUNT_ID);
 
       form.reset({
-        accountId:     account.ACCOUNT_ID    || "",
         accountName:   account.ACCOUNT_NAME  || "",
         firstLevelId,
         secondLevelId,
         thirdLevelId,
-        enabled:       account.ENABLED   != null ? String(account.ENABLED)   : "1",
-        lastLevel:     account.LASTLEVEL != null ? String(account.LASTLEVEL) : "0",
+        enabled:   account.ENABLED   != null ? String(account.ENABLED)   : "1",
+        lastLevel: account.LASTLEVEL != null ? String(account.LASTLEVEL) : "0",
       });
     }
   }, [account, allAccounts]);
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   const onSubmit = async (data) => {
     if (!account?.ID) { toast.error("Account ID is missing."); return; }
-    const { parentAccountId, lebel } = deriveParent(data);
+
+    // Add sheet-এর মতো same drop_X pattern — backend same logic চালাবে
+    const payload = {
+      account_name: data.accountName,
+      lastlevel:    Number(data.lastLevel),
+      enabled:      Number(data.enabled),
+    };
+
+    if (data.thirdLevelId)       payload.drop_3 = data.thirdLevelId;
+    else if (data.secondLevelId) payload.drop_2 = data.secondLevelId;
+    else if (data.firstLevelId)  payload.drop_1 = data.firstLevelId;
+
     try {
-      await updateMutation.mutateAsync({
-        id: account.ID,
-        data: {
-          account_id:        data.accountId,
-          account_name:      data.accountName,
-          account_type:      account.ACCOUNT_TYPE ?? 0,
-          is_parent:         account.IS_PARENT    ?? 0,
-          parent_account_id: parentAccountId,
-          lebel,
-          lastlevel:         Number(data.lastLevel),
-          enabled:           Number(data.enabled),
-        },
-      });
+      await updateMutation.mutateAsync({ id: account.ID, data: payload });
       toast.success("Account updated successfully!");
       onOpenChange(false);
     } catch (err) {
@@ -141,6 +163,7 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
     }
   };
 
+  // ── Cancel ────────────────────────────────────────────────────────────────
   const handleCancel = async () => {
     if (isDirty && showConfirmation) {
       const confirmed = await showConfirmation({
@@ -157,6 +180,7 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
 
   const isSubmitting = updateMutation.isPending;
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleCancel(); }}>
       <SheetContent className="sm:max-w-xl w-full flex flex-col gap-0 p-0 z-105">
@@ -188,19 +212,27 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
                 </FormItem>
               )} />
 
-              {/* Three independent level selects */}
+              {/* Level Selects — value = String(a.ID) */}
               <div className="grid grid-cols-3 gap-4">
 
                 <FormField control={form.control} name="firstLevelId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Level <span className="text-destructive">*</span></FormLabel>
-                    <Select disabled={isSubmitting} onValueChange={field.onChange} value={field.value || ""}>
+                    <FormLabel>First Level</FormLabel>
+                    <Select
+                      disabled={isSubmitting}
+                      value={field.value || ""}
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue("secondLevelId", "");
+                        form.setValue("thirdLevelId", "");
+                      }}
+                    >
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select First Level" /></SelectTrigger>
                       </FormControl>
                       <SelectContent className="z-106">
                         {level1Options.map((a) => (
-                          <SelectItem key={a.ACCOUNT_ID} value={a.ACCOUNT_ID}>
+                          <SelectItem key={a.ID} value={String(a.ID)}>
                             {a.ACCOUNT_NAME}
                           </SelectItem>
                         ))}
@@ -213,13 +245,20 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
                 <FormField control={form.control} name="secondLevelId" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Second Level</FormLabel>
-                    <Select disabled={isSubmitting} onValueChange={field.onChange} value={field.value || ""}>
+                    <Select
+                      disabled={isSubmitting}
+                      value={field.value || ""}
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        form.setValue("thirdLevelId", "");
+                      }}
+                    >
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select Second Level" /></SelectTrigger>
                       </FormControl>
                       <SelectContent className="z-106">
                         {level2Options.map((a) => (
-                          <SelectItem key={a.ACCOUNT_ID} value={a.ACCOUNT_ID}>
+                          <SelectItem key={a.ID} value={String(a.ID)}>
                             {a.ACCOUNT_NAME}
                           </SelectItem>
                         ))}
@@ -232,13 +271,17 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
                 <FormField control={form.control} name="thirdLevelId" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Third Level</FormLabel>
-                    <Select disabled={isSubmitting} onValueChange={field.onChange} value={field.value || ""}>
+                    <Select
+                      disabled={isSubmitting}
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                    >
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select Third Level" /></SelectTrigger>
                       </FormControl>
                       <SelectContent className="z-106">
                         {level3Options.map((a) => (
-                          <SelectItem key={a.ACCOUNT_ID} value={a.ACCOUNT_ID}>
+                          <SelectItem key={a.ID} value={String(a.ID)}>
                             {a.ACCOUNT_NAME}
                           </SelectItem>
                         ))}
@@ -256,7 +299,12 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
                   <FormItem>
                     <FormLabel>Enabled</FormLabel>
                     <FormControl>
-                      <RadioGroup disabled={isSubmitting} onValueChange={field.onChange} value={field.value} className="flex items-center gap-6 pt-1">
+                      <RadioGroup
+                        disabled={isSubmitting}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex items-center gap-6 pt-1"
+                      >
                         <div className="flex items-center gap-2">
                           <RadioGroupItem value="1" id="upd-en-yes" />
                           <label htmlFor="upd-en-yes" className="text-sm cursor-pointer">Yes</label>
@@ -275,7 +323,12 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
                   <FormItem>
                     <FormLabel>Last Level</FormLabel>
                     <FormControl>
-                      <RadioGroup disabled={isSubmitting} onValueChange={field.onChange} value={field.value} className="flex items-center gap-6 pt-1">
+                      <RadioGroup
+                        disabled={isSubmitting}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex items-center gap-6 pt-1"
+                      >
                         <div className="flex items-center gap-2">
                           <RadioGroupItem value="1" id="upd-ll-yes" />
                           <label htmlFor="upd-ll-yes" className="text-sm cursor-pointer">Yes</label>
@@ -294,9 +347,13 @@ export default function UpdateChartSheet({ open, onOpenChange, showConfirmation,
             </div>
 
             <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Updating...</> : "Update Account"}
+                {isSubmitting
+                  ? <><Spinner className="mr-2 h-4 w-4" />Updating...</>
+                  : "Update Account"}
               </Button>
             </div>
           </form>

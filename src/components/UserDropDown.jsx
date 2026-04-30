@@ -2,12 +2,10 @@ import React from "react";
 import {
   BadgeCheckIcon,
   BellIcon,
-  ChevronDown,
   CreditCardIcon,
   LogOutIcon,
   SparklesIcon,
 } from "lucide-react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -18,42 +16,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/authentication/AuthProvaider";
-// import { useAuth } from "@/authentication/AuthProvider";
-// import { useNavigate } from "react-router-dom";
-
-// const user = {
-//   name: "User 536",
-//   email: "user@font.com",
-//   avatar: "https://github.com/evilrabbit.png",
-// };
-// console.log(user)
-
+import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2"; // ← নতুন
 
 export default function UserDropDown() {
-  const { user, logout } = useAuth();
-  console.log(user)
+  const { user, logout } = useAuthV2(); // ← নতুন hook
   const navigate = useNavigate();
 
-
   const handleLogout = async () => {
-  await logout();        // clears user & calls API
-  navigate("/login");    // redirect to login page
+    await logout();
+    navigate("/login");
+  };
 
-
-};
-
-if (!user) return null;
-
+  if (!user) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-8 w-8 rounded-lg ">
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback className="rounded-lg">AS</AvatarFallback>
+        <Avatar className="h-8 w-8 rounded-lg cursor-pointer">
+          <AvatarImage src={user.avatar} alt={user.username} />
+          <AvatarFallback className="rounded-lg">
+            {user.username?.slice(0, 2).toUpperCase() || "U"}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -64,14 +48,17 @@ if (!user) return null;
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="size-8 rounded-lg">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">TB</AvatarFallback>
+              <AvatarImage src={user.avatar} alt={user.username} />
+              <AvatarFallback className="rounded-lg">
+                {user.username?.slice(0, 2).toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{user.firstname}</span>
-              <span className="text-muted-foreground truncate text-xs">
-                {user.username}
-              </span>
+              {/* backend থেকে username আর employee_id আসে */}
+              <span className="truncate font-semibold">{user.username}</span>
+              {/* <span className="text-muted-foreground truncate text-xs">
+                Employee ID: {user.employee_id}
+              </span> */}
             </div>
           </div>
         </DropdownMenuLabel>
@@ -98,7 +85,6 @@ if (!user) return null;
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-
         <DropdownMenuItem
           onClick={handleLogout}
           className="text-red-600 cursor-pointer focus:text-red-700"

@@ -240,6 +240,8 @@ export default function ChartList() {
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
     state: { sorting, columnFilters, columnVisibility, rowSelection, globalFilter },
+    autoResetPageIndex: false,   // sort/filter এ page reset হবে না
+  enableMultiSort: false,      // একবারে একটাই column sort
   });
 
   // ── Loading ────────────────────────────────────────────────────────────────
