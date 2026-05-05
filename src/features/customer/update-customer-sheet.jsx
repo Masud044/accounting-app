@@ -85,6 +85,7 @@ export default function UpdateCustomerSheet({ open, onOpenChange, showConfirmati
           ADDRESS:        data.address       || null,
           REMARKS:        data.remarks       || null,
           STATUS:         Number(data.status),
+          UPDATE_BY:      null,
         },
       });
       toast.success("Customer updated successfully!");
