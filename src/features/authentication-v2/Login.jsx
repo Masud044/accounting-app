@@ -118,13 +118,7 @@ const handleSubmit = async (e) => {
           {loginPending ? "Signing in…" : "Sign in"}
         </Button>
 
-        {/* Register link */}
-        <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link to="/register" className="text-primary hover:underline font-medium">
-            Create account
-          </Link>
-        </p>
+      
       </form>
     </div>
   );
