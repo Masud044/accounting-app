@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Users, X } from "lucide-react";
 import Select from "react-select";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,25 +14,37 @@ import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
+// ── Customer default form ─────────────────────────────────────────────────────
+const customerDefault = {
+  customerName: "", contactPerson: "", phone: "", mobile: "",
+  email: "", address: "", remarks: "", status: "1",
+};
+
 const ReceiveEdit = () => {
   const { voucherId } = useParams();
   const navigate      = useNavigate();
   const queryClient   = useQueryClient();
   const today         = new Date().toISOString().split("T")[0];
 
-  // ── Bill state ───────────────────────────────────────────────────────────────
-  const [existingDocs, setExistingDocs] = useState([]); // from GLDOC table
-  const [newBillFiles, setNewBillFiles] = useState([]); // local File[] to upload
+  // ── Bill state ────────────────────────────────────────────────────────────────
+  const [existingDocs, setExistingDocs] = useState([]);
+  const [newBillFiles, setNewBillFiles] = useState([]);
 
   const [rows, setRows]           = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm]           = useState({
+
+  // ── Customer modal state ──────────────────────────────────────────────────────
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerForm,      setCustomerForm]      = useState(customerDefault);
+  const [customerErrors,    setCustomerErrors]    = useState({});
+
+  const [form, setForm] = useState({
     entryDate: today, invoiceNo: "", supporting: "", description: "",
     customer: "", glDate: today, ReceiveCode: "", paymentCode: "",
     creditId: null, accountId: "", particular: "", amount: "", totalAmount: 0,
   });
 
-  // ── Fetch existing GLDOC docs for this voucher ───────────────────────────────
+  // ── Fetch existing GLDOC docs for this voucher ────────────────────────────────
   useQuery({
     queryKey: ["gldocs", voucherId],
     queryFn: async () => {
@@ -46,7 +58,7 @@ const ReceiveEdit = () => {
     enabled: !!voucherId,
   });
 
-  // ── Upload new bills ─────────────────────────────────────────────────────────
+  // ── Upload new bills ──────────────────────────────────────────────────────────
   const uploadNewBills = async () => {
     if (!newBillFiles.length) return;
     const uploads = newBillFiles.map((file) => {
@@ -58,12 +70,11 @@ const ReceiveEdit = () => {
     });
     await Promise.allSettled(uploads);
     setNewBillFiles([]);
-    // refresh existing docs
     const res = await axios.get(`${url}/api/gldoc`, { params: { glmaster_id: voucherId } });
     setExistingDocs(res.data.data || []);
   };
 
-  // ── Queries ──────────────────────────────────────────────────────────────────
+  // ── Queries ───────────────────────────────────────────────────────────────────
   const { data: customers = [] } = useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
@@ -104,7 +115,7 @@ const ReceiveEdit = () => {
     enabled: !!voucherId && accounts.length > 0,
   });
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   const toInputDate = (raw) => {
     if (!raw) return "";
     const d = new Date(raw);
@@ -112,7 +123,7 @@ const ReceiveEdit = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  // ── Populate form ────────────────────────────────────────────────────────────
+  // ── Populate form ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!voucherId || voucherData?.status !== "success") return;
     const master      = voucherData.master  || {};
@@ -146,7 +157,7 @@ const ReceiveEdit = () => {
     setRows(mappedRows);
   }, [voucherId, voucherData, accounts]);
 
-  // ── Mutation ─────────────────────────────────────────────────────────────────
+  // ── Voucher Mutation ──────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (payload) => {
       const res = await ReceiveService.update(payload);
@@ -154,9 +165,7 @@ const ReceiveEdit = () => {
     },
     onSuccess: async (data) => {
       if (data.status === "success") {
-        // Upload any new bill files after update
         await uploadNewBills();
-
         toast.success("Voucher updated successfully!");
         await queryClient.invalidateQueries(["unpostedVouchers"]);
         await queryClient.invalidateQueries(["voucher", voucherId]);
@@ -173,7 +182,54 @@ const ReceiveEdit = () => {
     },
   });
 
-  // ── Row handlers ─────────────────────────────────────────────────────────────
+  // ── Customer Mutation ─────────────────────────────────────────────────────────
+  const customerMutation = useMutation({
+    mutationFn: (data) =>
+      axios.post(`${url}/api/customer`, {
+        CUSTOMER_NAME:  data.customerName,
+        CONTACT_PERSON: data.contactPerson || null,
+        PHONE:          data.phone         || null,
+        MOBILE:         data.mobile        || null,
+        EMAIL:          data.email         || null,
+        ADDRESS:        data.address       || null,
+        REMARKS:        data.remarks       || null,
+        STATUS:         Number(data.status),
+        ENTRY_BY: null, PASSWORD: null, ORG_ID: null, DUE: null, FAX: null,
+      }),
+    onSuccess: () => {
+      toast.success("Customer created successfully!");
+      queryClient.invalidateQueries(["customers"]);
+      setCustomerForm(customerDefault);
+      setCustomerErrors({});
+      setShowCustomerModal(false);
+    },
+    onError: (err) =>
+      toast.error(err?.response?.data?.message || "Failed to create customer."),
+  });
+
+  // ── Customer form validation ──────────────────────────────────────────────────
+  const validateCustomer = () => {
+    const errs = {};
+    if (!customerForm.customerName.trim()) errs.customerName = "Customer name is required";
+    if (customerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerForm.email))
+      errs.email = "Invalid email address";
+    setCustomerErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleCustomerSubmit = (e) => {
+    e.preventDefault();
+    if (!validateCustomer()) return;
+    customerMutation.mutate(customerForm);
+  };
+
+  const handleCloseCustomerModal = () => {
+    setCustomerForm(customerDefault);
+    setCustomerErrors({});
+    setShowCustomerModal(false);
+  };
+
+  // ── Row handlers ──────────────────────────────────────────────────────────────
   const addRow = () => {
     if (!form.accountId || !form.amount) { toast.error("Please select account and enter amount"); return; }
     const selectedAccount = accounts.find((a) => a.value === form.accountId);
@@ -202,7 +258,7 @@ const ReceiveEdit = () => {
     setForm({ ...form, totalAmount: updatedRows.reduce((s, r) => s + Number(r.amount || 0), 0) });
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────────────
   const handleSubmit = () => {
     if (!form.entryDate || !form.glDate || !form.description ||
         !form.paymentCode || !form.customer || rows.length === 0) {
@@ -217,7 +273,7 @@ const ReceiveEdit = () => {
     const firstDebitEntry = voucherData?.details?.find(
       (d) => d.code === form.paymentCode && d.debit && Number(d.debit) > 0
     );
-    const creditId       = firstDebitEntry?.id || null;
+    const creditId        = firstDebitEntry?.id || null;
     const calculatedTotal = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
 
     mutation.mutate({
@@ -239,9 +295,15 @@ const ReceiveEdit = () => {
     });
   };
 
-  const isSubmitting = mutation.isPending;
+  const isSubmitting     = mutation.isPending;
+  const isCustomerSaving = customerMutation.isPending;
 
-  // ── UI ───────────────────────────────────────────────────────────────────────
+  // ── Shared input / label classes (customer modal) ─────────────────────────────
+  const inputCls = "w-full border rounded px-2 py-1 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-gray-400";
+  const labelCls = "block text-sm font-semibold text-gray-700 mb-1";
+  const errCls   = "text-xs text-red-500 mt-0.5";
+
+  // ── UI ────────────────────────────────────────────────────────────────────────
   return (
     <SectionContainer>
       <div className="p-6 space-y-6 bg-white rounded-lg mt-4 shadow-md">
@@ -249,9 +311,14 @@ const ReceiveEdit = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-sm text-gray-800">Edit Receive Voucher</h2>
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} className="mr-2" /> Back
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setShowCustomerModal(true)} disabled={isSubmitting}>
+              <Users size={15} className="mr-1" /> + Customer
+            </Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              <ArrowLeft size={16} className="mr-2" /> Back
+            </Button>
+          </div>
         </div>
 
         {/* Top grid */}
@@ -432,7 +499,7 @@ const ReceiveEdit = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* ── Voucher Confirmation Modal ── */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white rounded-2xl p-6 w-11/12 md:w-1/2 max-h-[90vh] overflow-y-auto">
@@ -446,7 +513,6 @@ const ReceiveEdit = () => {
               <p><strong>GL Date:</strong> {form.glDate}</p>
               <p><strong>Payment Code:</strong> {form.paymentCode}</p>
 
-              {/* bill summary */}
               {(existingDocs.length > 0 || newBillFiles.length > 0) && (
                 <div>
                   <strong>Bills:</strong>
@@ -476,6 +542,169 @@ const ReceiveEdit = () => {
           </div>
         </div>
       )}
+
+      {/* ── Add Customer Modal ── */}
+      {showCustomerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-11/12 md:w-[560px] max-h-[90vh] overflow-y-auto">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-gray-100">
+                  <Users size={18} className="text-gray-700" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-800">Add New Customer</h2>
+                  <p className="text-xs text-gray-500">Create a new customer record</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseCustomerModal}
+                disabled={isCustomerSaving}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleCustomerSubmit} className="px-6 py-5 space-y-4">
+
+              {/* Customer Name */}
+              <div>
+                <label className={labelCls}>
+                  Customer Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerForm.customerName}
+                  onChange={(e) => setCustomerForm({ ...customerForm, customerName: e.target.value })}
+                  placeholder="Enter customer name"
+                  disabled={isCustomerSaving}
+                  className={inputCls}
+                />
+                {customerErrors.customerName && <p className={errCls}>{customerErrors.customerName}</p>}
+              </div>
+
+              {/* Contact Person + Phone */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Contact Person</label>
+                  <input
+                    type="text"
+                    value={customerForm.contactPerson}
+                    onChange={(e) => setCustomerForm({ ...customerForm, contactPerson: e.target.value })}
+                    placeholder="Contact person"
+                    disabled={isCustomerSaving}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Phone</label>
+                  <input
+                    type="text"
+                    value={customerForm.phone}
+                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                    placeholder="Phone number"
+                    disabled={isCustomerSaving}
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+
+              {/* Mobile + Email */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Mobile</label>
+                  <input
+                    type="text"
+                    value={customerForm.mobile}
+                    onChange={(e) => setCustomerForm({ ...customerForm, mobile: e.target.value })}
+                    placeholder="Mobile number"
+                    disabled={isCustomerSaving}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Email</label>
+                  <input
+                    type="email"
+                    value={customerForm.email}
+                    onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                    placeholder="email@example.com"
+                    disabled={isCustomerSaving}
+                    className={inputCls}
+                  />
+                  {customerErrors.email && <p className={errCls}>{customerErrors.email}</p>}
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className={labelCls}>Address</label>
+                <textarea
+                  value={customerForm.address}
+                  onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
+                  placeholder="Customer address"
+                  rows={2}
+                  disabled={isCustomerSaving}
+                  className={`${inputCls} resize-none`}
+                />
+              </div>
+
+              {/* Remarks + Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Remarks</label>
+                  <input
+                    type="text"
+                    value={customerForm.remarks}
+                    onChange={(e) => setCustomerForm({ ...customerForm, remarks: e.target.value })}
+                    placeholder="Optional remarks"
+                    disabled={isCustomerSaving}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>
+                    Status <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={customerForm.status}
+                    onChange={(e) => setCustomerForm({ ...customerForm, status: e.target.value })}
+                    disabled={isCustomerSaving}
+                    className={inputCls}
+                  >
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-2 pt-2 border-t mt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseCustomerModal}
+                  disabled={isCustomerSaving}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCustomerSaving}
+                  className="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-60"
+                >
+                  {isCustomerSaving ? "Creating..." : "Create Customer"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </SectionContainer>
   );
 };

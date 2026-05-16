@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, Trash2, AlertCircle, RefreshCw, Users } from "lucide-react";
-import { toast } from "sonner";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +34,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { IconCircleDashedPlus, IconEdit } from "@tabler/icons-react";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
-import { useCustomers, useDeleteCustomer } from "./queries";
+import { useCustomers } from "./queries";
 import AddCustomerSheet from "./add-customer-sheet";
 import UpdateCustomerSheet from "./update-customer-sheet";
 
@@ -59,30 +59,30 @@ export default function CustomerList() {
     isFetching,
   } = useCustomers();
 
-  const deleteMutation = useDeleteCustomer();
+  // const deleteMutation = useDeleteCustomer();
 
   const handleEdit = (customer) => {
     setSelectedCustomer(customer);
     setIsUpdateSheetOpen(true);
   };
 
-  const handleDelete = async (customer) => {
-    const confirmed = await showConfirmation({
-      title: "Delete customer?",
-      description: `Are you sure you want to delete "${customer.CUSTOMER_NAME}"? This action cannot be undone.`,
-      confirmText: "Delete",
-      cancelText: "Cancel",
-      variant: "destructive",
-    });
-    if (confirmed) {
-      try {
-        await deleteMutation.mutateAsync(customer.CUSTOMER_ID);
-        toast.success("Customer deleted successfully!");
-      } catch (err) {
-        toast.error(err?.message || "Failed to delete customer. Please try again.");
-      }
-    }
-  };
+  // const handleDelete = async (customer) => {
+  //   const confirmed = await showConfirmation({
+  //     title: "Delete customer?",
+  //     description: `Are you sure you want to delete "${customer.CUSTOMER_NAME}"? This action cannot be undone.`,
+  //     confirmText: "Delete",
+  //     cancelText: "Cancel",
+  //     variant: "destructive",
+  //   });
+  //   if (confirmed) {
+  //     try {
+  //       await deleteMutation.mutateAsync(customer.CUSTOMER_ID);
+  //       toast.success("Customer deleted successfully!");
+  //     } catch (err) {
+  //       toast.error(err?.message || "Failed to delete customer. Please try again.");
+  //     }
+  //   }
+  // };
 
   const columns = [
     // Customer Name
@@ -160,7 +160,7 @@ export default function CustomerList() {
               <IconEdit className="h-4 w-4" />
               <span className="sr-only">Edit</span>
             </Button>
-            <Button
+            {/* <Button
               size="icon"
               onClick={() => handleDelete(customer)}
               disabled={deleteMutation.isPending}
@@ -169,7 +169,7 @@ export default function CustomerList() {
                 ? <Spinner data-icon="inline-start" />
                 : <Trash2 className="h-4 w-4" />}
               <span className="sr-only">Delete</span>
-            </Button>
+            </Button> */}
           </div>
         );
       },
