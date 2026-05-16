@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Users, X } from "lucide-react";
 import Select from "react-select";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,8 +10,15 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { PaymentService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
+import { useCreateSupplier } from "@/features/supplier/queries"; // ← তোমার actual path
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+// ── Supplier default form ────────────────────────────────────────────────────
+const supplierDefault = {
+  supplierName: "", contactPerson: "", phone: "", mobile: "",
+  email: "", address: "", remarks: "", status: "1",
+};
 
 const PaymentEdit = () => {
   const { voucherId } = useParams();
@@ -25,7 +32,13 @@ const PaymentEdit = () => {
 
   const [rows, setRows]           = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm]           = useState({
+
+  // ── Supplier modal state ─────────────────────────────────────────────────────
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [supplierForm,      setSupplierForm]      = useState(supplierDefault);
+  const [supplierErrors,    setSupplierErrors]    = useState({});
+
+  const [form, setForm] = useState({
     entryDate: today, invoiceNo: "", supporting: "", description: "",
     supplier: "", glDate: today, paymentCode: "",
     creditId: null, accountId: "", particular: "", amount: "", totalAmount: 0,
@@ -101,25 +114,20 @@ const PaymentEdit = () => {
       : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  // ── Populate form on load — KEY FIX: maps ALL DEBIT rows (original + new) ───
+  // ── Populate form on load ────────────────────────────────────────────────────
   useEffect(() => {
     if (!voucherId || voucherData?.status !== "success" || !accounts.length) return;
 
     const master  = voucherData.master  || {};
     const details = voucherData.details || [];
 
-    // Find the credit entry (used to track credit_id for update payload)
     const creditEntry = details.find(
       (d) => Number(d.CREDIT ?? d.credit ?? 0) > 0
     );
 
-    // Map ALL debit rows — both the originally created ones AND those
-    // added as "new" rows during a previous edit session. After save they
-    // all exist as DEBIT entries in the DB, so we just filter DEBIT > 0.
     const mappedRows = details
       .filter((d) => Number(d.DEBIT ?? d.debit ?? 0) > 0)
       .map((d, i) => {
-        // Support both uppercase and lowercase field names from API
         const code        = d.CODE        ?? d.code        ?? "";
         const debitId     = d.ID          ?? d.id          ?? `${code}-${i}`;
         const rawDesc     = d.CODEDESCRIPTION ?? d.codedescription ?? "";
@@ -128,12 +136,8 @@ const PaymentEdit = () => {
         const amount      = parseFloat(d.DEBIT ?? d.debit ?? 0);
 
         return {
-          id:          debitId,
-          accountCode: code,
-          particulars,
-          amount,
-          debitId,
-          isExisting: true,   // all DB rows are "existing" on re-load
+          id: debitId, accountCode: code, particulars, amount,
+          debitId, isExisting: true,
         };
       });
 
@@ -155,7 +159,7 @@ const PaymentEdit = () => {
     setRows(mappedRows);
   }, [voucherData, accounts, voucherId]);
 
-  // ── Mutation ─────────────────────────────────────────────────────────────────
+  // ── Voucher Mutation ─────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (payload) => {
       const res = await PaymentService.update(payload);
@@ -180,6 +184,50 @@ const PaymentEdit = () => {
       setShowModal(false);
     },
   });
+
+  // ── Supplier Mutation ────────────────────────────────────────────────────────
+  const supplierMutation = useCreateSupplier();
+
+  // ── Supplier form validation ─────────────────────────────────────────────────
+  const validateSupplier = () => {
+    const errs = {};
+    if (!supplierForm.supplierName.trim()) errs.supplierName = "Supplier name is required";
+    if (supplierForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierForm.email))
+      errs.email = "Invalid email address";
+    setSupplierErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSupplierSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateSupplier()) return;
+    try {
+      await supplierMutation.mutateAsync({
+        SUPPLIER_NAME:  supplierForm.supplierName,
+        CONTACT_PERSON: supplierForm.contactPerson || null,
+        PHONE:          supplierForm.phone         || null,
+        MOBILE:         supplierForm.mobile        || null,
+        EMAIL:          supplierForm.email         || null,
+        ADDRESS:        supplierForm.address       || null,
+        REMARKS:        supplierForm.remarks       || null,
+        STATUS:         Number(supplierForm.status),
+        ENTRY_BY: null, PASSWORD: null, ORG_ID: null, DUE: null, FAX: null,
+      });
+      toast.success("Supplier created successfully!");
+      queryClient.invalidateQueries(["suppliers"]);
+      setSupplierForm(supplierDefault);
+      setSupplierErrors({});
+      setShowSupplierModal(false);
+    } catch (err) {
+      toast.error(err?.message || "Failed to create supplier.");
+    }
+  };
+
+  const handleCloseSupplierModal = () => {
+    setSupplierForm(supplierDefault);
+    setSupplierErrors({});
+    setShowSupplierModal(false);
+  };
 
   // ── Row handlers ─────────────────────────────────────────────────────────────
   const addRow = () => {
@@ -229,54 +277,46 @@ const PaymentEdit = () => {
       return;
     }
 
-    const existingRows = rows.filter((r) => r.isExisting);
+    const existingRows = rows.filter((r) =>  r.isExisting);
     const newRows      = rows.filter((r) => !r.isExisting);
 
     const payload = {
-      masterID:    Number(voucherId),
-      trans_date:  form.entryDate,
-      gl_date:     form.glDate,
+      masterID:     Number(voucherId),
+      trans_date:   form.entryDate,
+      gl_date:      form.glDate,
       receive_desc: form.description,
-      pcode:       form.paymentCode,
-      credit_id:   form.creditId,
-      supplierid:  form.supplier,
-      totalAmount: Number(form.totalAmount),
-      supporting:  String(form.supporting),
+      pcode:        form.paymentCode,
+      credit_id:    form.creditId,
+      supplierid:   form.supplier,
+      totalAmount:  Number(form.totalAmount),
+      supporting:   String(form.supporting),
 
-      // Existing rows (originally created + previously added new rows)
       ...(existingRows.length ? {
         DEBIT_ID:        existingRows.map((r) => Number(r.debitId)),
         acode:           existingRows.map((r) => r.accountCode),
         amount2:         existingRows.map((r) => Number(r.amount)),
-        CODEDESCRIPTION: existingRows.map((r) => {
-          const p = r.particulars.split(" - ");
-          return p.length > 1 ? p[1] : r.particulars;
-        }),
-        DESCRIPTION: existingRows.map((r) => {
-          const p = r.particulars.split(" - ");
-          return p.length > 1 ? p[1] : r.particulars;
-        }),
+        CODEDESCRIPTION: existingRows.map((r) => { const p = r.particulars.split(" - "); return p.length > 1 ? p[1] : r.particulars; }),
+        DESCRIPTION:     existingRows.map((r) => { const p = r.particulars.split(" - "); return p.length > 1 ? p[1] : r.particulars; }),
       } : {}),
 
-      // Brand-new rows added in this edit session
       ...(newRows.length ? {
         NEW_ACODE:           newRows.map((r) => r.accountCode),
         NEW_AMOUNT:          newRows.map((r) => Number(r.amount)),
-        NEW_CODEDESCRIPTION: newRows.map((r) => {
-          const p = r.particulars.split(" - ");
-          return p.length > 1 ? p[1] : r.particulars;
-        }),
-        NEW_DESCRIPTION: newRows.map((r) => {
-          const p = r.particulars.split(" - ");
-          return p.length > 1 ? p[1] : r.particulars;
-        }),
+        NEW_CODEDESCRIPTION: newRows.map((r) => { const p = r.particulars.split(" - "); return p.length > 1 ? p[1] : r.particulars; }),
+        NEW_DESCRIPTION:     newRows.map((r) => { const p = r.particulars.split(" - "); return p.length > 1 ? p[1] : r.particulars; }),
       } : {}),
     };
 
     mutation.mutate(payload);
   };
 
-  const isSubmitting = mutation.isPending;
+  const isSubmitting     = mutation.isPending;
+  const isSupplierSaving = supplierMutation.isPending;
+
+  // ── Shared input classes ─────────────────────────────────────────────────────
+  const inputCls = "w-full border rounded px-2 py-1 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-gray-400";
+  const labelCls = "block text-sm font-semibold text-gray-700 mb-1";
+  const errCls   = "text-xs text-red-500 mt-0.5";
 
   // ── UI ───────────────────────────────────────────────────────────────────────
   return (
@@ -286,9 +326,14 @@ const PaymentEdit = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-sm text-gray-800">Edit Payment Voucher</h2>
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} className="mr-2" /> Back
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setShowSupplierModal(true)}>
+              <Users size={15} className="mr-1" /> + Supplier
+            </Button>
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              <ArrowLeft size={16} className="mr-2" /> Back
+            </Button>
+          </div>
         </div>
 
         {/* Top grid */}
@@ -334,9 +379,7 @@ const PaymentEdit = () => {
               <div key={key} className="grid grid-cols-3 px-3 items-center py-2">
                 <label className="font-bold text-sm text-gray-800">{label}</label>
                 <input
-                  type={type}
-                  value={form[key]}
-                  readOnly={readOnly}
+                  type={type} value={form[key]} readOnly={readOnly}
                   disabled={isSubmitting || readOnly}
                   onChange={(e) => onChange?.(e.target.value)}
                   className={`col-span-2 w-full border rounded py-1 ${readOnly ? "bg-gray-100" : "bg-white"}`}
@@ -362,9 +405,7 @@ const PaymentEdit = () => {
             <div className="grid grid-cols-3 px-3 items-center py-3">
               <label className="font-bold text-sm text-gray-800">Total Amount</label>
               <input
-                type="number"
-                value={form.totalAmount.toFixed(2)}
-                readOnly
+                type="number" value={form.totalAmount.toFixed(2)} readOnly
                 className="col-span-2 w-full border rounded py-1 bg-white"
               />
             </div>
@@ -400,33 +441,26 @@ const PaymentEdit = () => {
               }}
             />
           </div>
-
           <div className="grid grid-cols-3 px-3 items-center py-3">
             <label className="font-bold text-sm text-gray-800">Particular</label>
             <input
-              type="text"
-              value={form.particular}
+              type="text" value={form.particular}
               onChange={(e) => setForm({ ...form, particular: e.target.value })}
               className="col-span-2 border w-full rounded py-1 bg-white"
             />
           </div>
-
           <div className="grid grid-cols-3 px-3 items-center py-3">
             <label className="font-bold text-sm text-gray-800">Amount</label>
             <input
-              type="number"
-              value={form.amount}
+              type="number" value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               disabled={isSubmitting}
               className="col-span-1 border w-full rounded py-1 bg-white"
             />
           </div>
-
           <div className="px-4 py-2">
             <button
-              type="button"
-              onClick={addRow}
-              disabled={isSubmitting}
+              type="button" onClick={addRow} disabled={isSubmitting}
               className="cursor-pointer border px-3 py-1 rounded-lg flex items-center font-bold text-sm text-gray-800"
             >
               <span className="mr-1 font-extrabold">+</span>Add
@@ -446,35 +480,26 @@ const PaymentEdit = () => {
             </thead>
             <tbody>
               {rows.map((row) => (
-                // New rows (added this session) get a green tint for easy identification
                 <tr key={row.id} className={`border ${!row.isExisting ? "bg-green-50" : ""}`}>
                   <td className="border px-2 md:px-4 py-2 text-center">
                     <span className="text-sm">{row.accountCode}</span>
                   </td>
                   <td className="border px-2 md:px-4 py-2">
                     <input
-                      type="text"
-                      value={row.particulars}
+                      type="text" value={row.particulars}
                       onChange={(e) => updateRow(row.id, "particulars", e.target.value)}
                       className="w-full bg-transparent outline-none"
                     />
                   </td>
                   <td className="border px-2 md:px-4 py-2 text-center">
                     <input
-                      type="number"
-                      value={row.amount}
+                      type="number" value={row.amount}
                       onChange={(e) => updateRow(row.id, "amount", e.target.value)}
                       className="w-full bg-transparent outline-none text-center"
                     />
                   </td>
                   <td className="border px-2 md:px-4 py-2 text-center">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeRow(row.id)}
-                      disabled={isSubmitting}
-                    >
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeRow(row.id)} disabled={isSubmitting}>
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </td>
@@ -500,7 +525,7 @@ const PaymentEdit = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* ── Voucher Confirmation Modal ── */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white rounded-2xl p-6 w-11/12 md:w-1/2 max-h-[90vh] overflow-y-auto">
@@ -510,10 +535,9 @@ const PaymentEdit = () => {
               <p><strong>Invoice No:</strong> {form.invoiceNo}</p>
               <p><strong>No. of Supporting:</strong> {form.supporting}</p>
               <p><strong>Description:</strong> {form.description}</p>
-              <p><strong>Supplier:</strong> {suppliers.find((s) => s.SUPPLIER_ID === form.supplier)?.SUPPLIER_NAME}</p>
+              <p><strong>Supplier:</strong> {suppliers.find((s) => String(s.SUPPLIER_ID) === form.supplier)?.SUPPLIER_NAME}</p>
               <p><strong>GL Date:</strong> {form.glDate}</p>
               <p><strong>Payment Code:</strong> {form.paymentCode}</p>
-
               {(existingDocs.length > 0 || newBillFiles.length > 0) && (
                 <div>
                   <strong>Bills:</strong>
@@ -523,7 +547,6 @@ const PaymentEdit = () => {
                   </ul>
                 </div>
               )}
-
               <h3 className="font-semibold mt-2">Accounts:</h3>
               <ul className="list-disc pl-5">
                 {rows.map((row, i) => (
@@ -535,14 +558,10 @@ const PaymentEdit = () => {
               </ul>
               <p className="font-semibold mt-2">Total: {form.totalAmount.toFixed(2)}</p>
             </div>
-
             <div className="flex justify-end mt-4 space-x-3">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg bg-gray-300">
-                Cancel
-              </button>
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg bg-gray-300">Cancel</button>
               <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
+                onClick={handleSubmit} disabled={isSubmitting}
                 className="px-4 py-2 rounded-lg bg-green-500 text-white"
               >
                 {isSubmitting ? "Updating..." : "Confirm"}
@@ -551,6 +570,165 @@ const PaymentEdit = () => {
           </div>
         </div>
       )}
+
+      {/* ── Add Supplier Dialog Modal ── */}
+      {showSupplierModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-11/12 md:w-[560px] max-h-[90vh] overflow-y-auto">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-gray-100">
+                  <Users size={18} className="text-gray-700" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-800">Add New Supplier</h2>
+                  <p className="text-xs text-gray-500">Create a new supplier record</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseSupplierModal}
+                disabled={isSupplierSaving}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSupplierSubmit} className="px-6 py-5 space-y-4">
+
+              {/* Supplier Name */}
+              <div>
+                <label className={labelCls}>Supplier Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={supplierForm.supplierName}
+                  onChange={(e) => setSupplierForm({ ...supplierForm, supplierName: e.target.value })}
+                  placeholder="Enter supplier name"
+                  disabled={isSupplierSaving}
+                  className={inputCls}
+                />
+                {supplierErrors.supplierName && <p className={errCls}>{supplierErrors.supplierName}</p>}
+              </div>
+
+              {/* Contact Person + Phone */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Contact Person</label>
+                  <input
+                    type="text"
+                    value={supplierForm.contactPerson}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, contactPerson: e.target.value })}
+                    placeholder="Contact person"
+                    disabled={isSupplierSaving}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Phone</label>
+                  <input
+                    type="text"
+                    value={supplierForm.phone}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
+                    placeholder="Phone number"
+                    disabled={isSupplierSaving}
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+
+              {/* Mobile + Email */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Mobile</label>
+                  <input
+                    type="text"
+                    value={supplierForm.mobile}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, mobile: e.target.value })}
+                    placeholder="Mobile number"
+                    disabled={isSupplierSaving}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Email</label>
+                  <input
+                    type="email"
+                    value={supplierForm.email}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })}
+                    placeholder="email@example.com"
+                    disabled={isSupplierSaving}
+                    className={inputCls}
+                  />
+                  {supplierErrors.email && <p className={errCls}>{supplierErrors.email}</p>}
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className={labelCls}>Address</label>
+                <textarea
+                  value={supplierForm.address}
+                  onChange={(e) => setSupplierForm({ ...supplierForm, address: e.target.value })}
+                  placeholder="Supplier address"
+                  rows={2}
+                  disabled={isSupplierSaving}
+                  className={`${inputCls} resize-none`}
+                />
+              </div>
+
+              {/* Remarks + Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Remarks</label>
+                  <input
+                    type="text"
+                    value={supplierForm.remarks}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, remarks: e.target.value })}
+                    placeholder="Optional remarks"
+                    disabled={isSupplierSaving}
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Status <span className="text-red-500">*</span></label>
+                  <select
+                    value={supplierForm.status}
+                    onChange={(e) => setSupplierForm({ ...supplierForm, status: e.target.value })}
+                    disabled={isSupplierSaving}
+                    className={inputCls}
+                  >
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-2 pt-2 border-t mt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseSupplierModal}
+                  disabled={isSupplierSaving}
+                  className="px-4 py-2 rounded-lg border text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSupplierSaving}
+                  className="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-60"
+                >
+                  {isSupplierSaving ? "Creating..." : "Create Supplier"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </SectionContainer>
   );
 };

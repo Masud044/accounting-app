@@ -70,9 +70,9 @@ const getVoucherTypeLabel = (type) => {
 const getEditRoute = (type, id) => {
   switch (String(type)) {
     case "1": return `/dashboard/receive-edit/${id}`;
-    case "2": return `/dashboard/payment-voucher/${id}`;
-    case "3": return `/dashboard/journal-voucher/${id}`;
-    default: return `/dashboard/cash-voucher/${id}`;
+    case "2": return `/dashboard/payment-edit/${id}`;
+    case "3": return `/dashboard/journal-edit/${id}`;
+    default: return `/dashboard/cash-transfer`;
   }
 };
 

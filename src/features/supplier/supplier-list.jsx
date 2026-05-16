@@ -8,7 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, Trash2, AlertCircle, RefreshCw, Truck } from "lucide-react";
-import { toast } from "sonner";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +34,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { IconCircleDashedPlus, IconEdit } from "@tabler/icons-react";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
-import { useSuppliers, useDeleteSupplier } from "./queries";
+import { useSuppliers } from "./queries";
 import AddSupplierSheet from "./add-supplier-sheet";
 import UpdateSupplierSheet from "./update-supplier-sheet";
 
@@ -59,30 +59,30 @@ export default function SupplierList() {
     isFetching,
   } = useSuppliers();
 
-  const deleteMutation = useDeleteSupplier();
+  // const deleteMutation = useDeleteSupplier();
 
   const handleEdit = (supplier) => {
     setSelectedSupplier(supplier);
     setIsUpdateSheetOpen(true);
   };
 
-  const handleDelete = async (supplier) => {
-    const confirmed = await showConfirmation({
-      title: "Delete supplier?",
-      description: `Are you sure you want to delete "${supplier.SUPPLIER_NAME}"? This action cannot be undone.`,
-      confirmText: "Delete",
-      cancelText: "Cancel",
-      variant: "destructive",
-    });
-    if (confirmed) {
-      try {
-        await deleteMutation.mutateAsync(supplier.SUPPLIER_ID);
-        toast.success("Supplier deleted successfully!");
-      } catch (err) {
-        toast.error(err?.message || "Failed to delete supplier. Please try again.");
-      }
-    }
-  };
+  // const handleDelete = async (supplier) => {
+  //   const confirmed = await showConfirmation({
+  //     title: "Delete supplier?",
+  //     description: `Are you sure you want to delete "${supplier.SUPPLIER_NAME}"? This action cannot be undone.`,
+  //     confirmText: "Delete",
+  //     cancelText: "Cancel",
+  //     variant: "destructive",
+  //   });
+  //   if (confirmed) {
+  //     try {
+  //       await deleteMutation.mutateAsync(supplier.SUPPLIER_ID);
+  //       toast.success("Supplier deleted successfully!");
+  //     } catch (err) {
+  //       toast.error(err?.message || "Failed to delete supplier. Please try again.");
+  //     }
+  //   }
+  // };
 
   const columns = [
     // Supplier Name
@@ -160,7 +160,7 @@ export default function SupplierList() {
               <IconEdit className="h-4 w-4" />
               <span className="sr-only">Edit</span>
             </Button>
-            <Button
+            {/* <Button
             //   variant="ghost"
               size="icon"
             //   className="h-8 w-8 text-destructive hover:text-destructive"
@@ -171,7 +171,7 @@ export default function SupplierList() {
                 ? <Spinner data-icon="inline-start" />
                 : <Trash2 className="h-4 w-4" />}
               <span className="sr-only">Delete</span>
-            </Button>
+            </Button> */}
           </div>
         );
       },
