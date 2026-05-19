@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthV2 } from "./use-auth-v2";
-import img from "@/assets/image2.png";
+// import img from "@/assets/image2.png";
+import img from "@/assets/account-image.jpeg";
+
 
 export default function LoginFormV2() {
   const id = useId();
@@ -54,8 +56,8 @@ const handleSubmit = async (e) => {
         <img
           src={img}
           alt="Logo"
-          width={170}
-          height={170}
+          width={130}
+          height={130}
           className="object-contain"
         />
         <div className="text-center">
