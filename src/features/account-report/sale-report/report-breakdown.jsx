@@ -27,7 +27,7 @@ export default function ReportBreakdown({ salesBreakdown = [], expenseBreakdown 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Sales by product</CardTitle>
-            <p className="text-xs text-muted-foreground">Account 4xx — credit side</p>
+            <p className="text-xs text-muted-foreground">Account — credit side</p>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -69,7 +69,7 @@ export default function ReportBreakdown({ salesBreakdown = [], expenseBreakdown 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Expenses by category</CardTitle>
-            <p className="text-xs text-muted-foreground">Account 5xx — debit side</p>
+            <p className="text-xs text-muted-foreground">Account — debit side</p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={230}>
@@ -184,7 +184,7 @@ export default function ReportBreakdown({ salesBreakdown = [], expenseBreakdown 
       </div>
 
       {/* ── Final Summary Footer ─────────────────────────────────── */}
-      <Card className="bg-muted/40 border-dashed">
+      {/* <Card className="bg-muted/40 border-dashed">
         <CardContent className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
@@ -215,7 +215,7 @@ export default function ReportBreakdown({ salesBreakdown = [], expenseBreakdown 
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

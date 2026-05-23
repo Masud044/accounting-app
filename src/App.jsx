@@ -42,6 +42,8 @@ import PaymentCreate from "./features/main-entry/pages/PaymentCreate";
 import PaymentEdit from "./features/main-entry/pages/PaymentEdit";
 import CashTransferCreate from "./features/main-entry/pages/CashTransferCreate";
 import SaleExpenseReportPage from "./features/account-report/sale-report";
+import GRN from "./features/grn-master";
+
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -136,6 +138,15 @@ function App() {
               />
 
               {/* Admin only -main entry */}
+
+              <Route
+                path="grn"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <GRN />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="payment-voucher"
                 element={
