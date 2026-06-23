@@ -62,7 +62,7 @@ import {
 
 export const NAV_ITEMS = [
  {
-    label: "Home",
+    label: "Dashboard",
     roles: ["Admin"],            
     links: [
        { to: "/dashboard", label: "Home", Icon: Home },
@@ -74,7 +74,7 @@ export const NAV_ITEMS = [
     label: "Voucher Entry",
     roles: ["Admin"],                  // শুধু Admin
     links: [
-     
+       { to: "/dashboard/home-table", label: "Home", Icon: Home },
       { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home },
       { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },
       { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus },
@@ -107,6 +107,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
       { to: "/dashboard/role", label: "Role", Icon: FileText },
       { to: "/dashboard/permission", label: "Permission", Icon: FileText },
+       { to: "/dashboard/egg-production", label: "Egg Production", Icon: FileText },
       
     ],
   },

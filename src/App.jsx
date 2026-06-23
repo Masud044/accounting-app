@@ -42,6 +42,8 @@ import PaymentCreate from "./features/main-entry/pages/PaymentCreate";
 import PaymentEdit from "./features/main-entry/pages/PaymentEdit";
 import CashTransferCreate from "./features/main-entry/pages/CashTransferCreate";
 import SaleExpenseReportPage from "./features/account-report/sale-report";
+import EggProductionPage from "./features/egg-production";
+import { DashboardHomeTable } from "./features/main-entry/components/DashboardHomeTable";
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -98,6 +100,15 @@ function App() {
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
                     <Grades />
+                  </ProtectedRoute>
+                }
+              />
+
+               <Route
+                path="home-table"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <DashboardHomeTable />
                   </ProtectedRoute>
                 }
               />
@@ -235,6 +246,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+ <Route
+                path="egg-production"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <EggProductionPage />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="chart-account"
                 element={
