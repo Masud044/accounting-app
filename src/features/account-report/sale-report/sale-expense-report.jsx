@@ -149,8 +149,8 @@ export default function SaleExpenseReport() {
               Journal entries — voucher type 3
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <KpiCard label="Total Sales"    value={fmt(summary.journal.total_sales)}   sub="Credit · account 4xx" icon={TrendingUp}  colorClass="text-blue-600" />
-              <KpiCard label="Total Expenses" value={fmt(summary.journal.total_expense)} sub="Debit · account 5xx"  icon={ShoppingCart} colorClass="text-red-600" />
+              <KpiCard label="Total Sales"    value={fmt(summary.journal.total_sales)}   sub="Credit-account" icon={TrendingUp}  colorClass="text-blue-600" />
+              <KpiCard label="Total Expenses" value={fmt(summary.journal.total_expense)} sub="Debit-account "  icon={ShoppingCart} colorClass="text-red-600" />
               <KpiCard
                 label="Net Surplus"
                 value={fmt(summary.journal.net_surplus)}
