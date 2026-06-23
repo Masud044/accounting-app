@@ -11,7 +11,7 @@ import {
 
 // import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
-import { DashboardHomeTable } from "../components/DashboardHomeTable";
+// import { DashboardHomeTable } from "../components/DashboardHomeTable";
 
 import {
   Card,
@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import MonthlyProductionChart from "@/features/egg-production/monthly-production-chart";
+import MonthlySummaryChart from "@/features/egg-production/monthy-summary-production";
+import DailyTrendChart from "@/features/egg-production/daily-trend";
 
 const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const DashboardHome = () => {
@@ -132,7 +135,7 @@ const DashboardHome = () => {
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3 ">
           <StatCard
             title="Money Income"
-            value={income.total_income}
+            value={income?.data?.total_income}
             icon={ArrowUpRight}
             trend="+12%"
             type="income"
@@ -140,7 +143,7 @@ const DashboardHome = () => {
 
           <StatCard
             title="Money Expenses"
-            value={expenses.total_expense}
+            value={expenses?.data?.total_expense}
             icon={ArrowDownRight}
             trend="-5%"
             type="expense"
@@ -148,7 +151,7 @@ const DashboardHome = () => {
 
           <StatCard
             title="Banking Balance"
-            value={cash.bankBalance}
+           value={cash?.data?.cash_summary?.[0]?.TOTAL_DEBIT || 0}
             icon={Landmark}
             trend="Stable"
             type="balance"
@@ -156,11 +159,14 @@ const DashboardHome = () => {
         </div>
 
         {/* Table Section */}
-        <Card className="border-none  overflow-hidden">
+        {/* <Card className="border-none  overflow-hidden">
            <div className="p-1">
              <DashboardHomeTable />
            </div>
-        </Card>
+        </Card> */}
+         <MonthlyProductionChart></MonthlyProductionChart>
+         <MonthlySummaryChart></MonthlySummaryChart>
+         <DailyTrendChart></DailyTrendChart>
 
       </div>
     </SectionContainer>
