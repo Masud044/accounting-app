@@ -164,9 +164,12 @@ const DashboardHome = () => {
              <DashboardHomeTable />
            </div>
         </Card> */}
-         <MonthlyProductionChart></MonthlyProductionChart>
+        <div className="grid grid-cols-3 gap-4">
+          <MonthlyProductionChart></MonthlyProductionChart>
          <MonthlySummaryChart></MonthlySummaryChart>
          <DailyTrendChart></DailyTrendChart>
+        </div>
+         
 
       </div>
     </SectionContainer>
