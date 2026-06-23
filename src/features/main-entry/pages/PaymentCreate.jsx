@@ -375,7 +375,7 @@ const PaymentCreate = () => {
             ))}
 
             {/* Customer select-এর পরে এই block যোগ করো */}
-            {/* <div className="grid grid-cols-3 px-3 items-center py-3">
+            <div className="grid grid-cols-3 px-3 items-center py-3">
               <label className="font-bold text-sm text-gray-800">Type</label>
               <select
                 value={form.inv_type}
@@ -390,7 +390,7 @@ const PaymentCreate = () => {
                   </option>
                 ))}
               </select>
-            </div> */}
+            </div>
 
             <div className="grid grid-cols-3 px-3 items-center">
               <label className="font-bold text-sm text-gray-800">
