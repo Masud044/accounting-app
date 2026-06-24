@@ -79,7 +79,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText },
       { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus },
       { to: "/dashboard/cash-Transfer", label: "Cash Transfer", Icon: Plus },
-       { to: "/dashboard/grn", label: "GRN Entry", Icon: Plus },
+      //  { to: "/dashboard/grn", label: "GRN Entry", Icon: Plus },
       
     ],
   },
