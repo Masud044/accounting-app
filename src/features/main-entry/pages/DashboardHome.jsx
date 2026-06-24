@@ -1,110 +1,99 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ArrowUpRight,
-  ArrowDownRight,
-  Landmark,
-  TrendingUp,
-  TrendingDown,
-  Activity,
+  ArrowUpRight, ArrowDownRight, Landmark,
+  TrendingUp, TrendingDown, Activity,
 } from "lucide-react";
-
-// import api from "@/api/Ap";
 import { SectionContainer } from "@/components/SectionContainer";
-// import { DashboardHomeTable } from "../components/DashboardHomeTable";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import MonthlyProductionChart from "@/features/egg-production/monthly-production-chart";
 import MonthlySummaryChart from "@/features/egg-production/monthy-summary-production";
 import DailyTrendChart from "@/features/egg-production/daily-trend";
 
-const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+const MONTHS = [
+  { label: "All", value: "" },
+  { label: "January", value: 1 }, { label: "February", value: 2 },
+  { label: "March", value: 3 },   { label: "April", value: 4 },
+  { label: "May", value: 5 },     { label: "June", value: 6 },
+  { label: "July", value: 7 },    { label: "August", value: 8 },
+  { label: "September", value: 9 },{ label: "October", value: 10 },
+  { label: "November", value: 11 },{ label: "December", value: 12 },
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = [{ label: "All", value: "" }, ...Array.from({ length: 5 }, (_, i) => ({
+  label: String(currentYear - i), value: currentYear - i,
+}))];
+
 const DashboardHome = () => {
-  // Fetch Expenses
-  const { data: expenses = {} } = useQuery({
-    queryKey: ["expenses"],
-    queryFn: async () => {
-      // const res = await api.get("/dash_board_expense.php");
-      const res = await axios.get(`${url}/api/dashboard-expense`);
-      return res.data.success ? res.data : {};
-    },
-  });
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
 
-  // Fetch Income
-  const { data: income = {} } = useQuery({
-    queryKey: ["income"],
-    queryFn: async () => {
-      // const res = await api.get("/dash_board_income.php");
-      const res = await axios.get(`${url}/api/dashboard-income`);
-      return res.data.success ? res.data : {};
-    },
-  });
-
-  // Fetch Bank Balance
+  // Cash Balance — filter নেই
   const { data: cash = {} } = useQuery({
     queryKey: ["cash"],
     queryFn: async () => {
-      // const res = await api.get("/dash_board_cash.php");
-      const res = await axios.get(`${url}/api/dashboard-cash`);
+      const res = await axios.get(`${url}/api/dashboard-cash/balance/1020010001`);
       return res.data.success ? res.data : {};
     },
   });
 
-  // Helper function for Theme Styles
+  // Expenses — month/year filter
+  const { data: expenses = {} } = useQuery({
+    queryKey: ["expenses", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const params = {};
+      if (selectedMonth) params.month = selectedMonth;
+      if (selectedYear)  params.year  = selectedYear;
+      const res = await axios.get(`${url}/api/dashboard-expense/breakdown`, { params });
+      return res.data.success ? res.data : {};
+    },
+  });
+
+  // Income — month/year filter
+  const { data: income = {} } = useQuery({
+    queryKey: ["income", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const params = {};
+      if (selectedMonth) params.month = selectedMonth;
+      if (selectedYear)  params.year  = selectedYear;
+      const res = await axios.get(`${url}/api/dashboard-income/breakdown`, { params });
+      return res.data.success ? res.data : {};
+    },
+  });
+
   const getTheme = (type) => {
     switch (type) {
-      case "income":
-        return {
-          cardBg: "bg-[#F0FDF4] border-emerald-100/50", // Emerald 50
-          iconBg: "bg-emerald-100 text-emerald-600",
-          badgeBg: "bg-emerald-100/50 text-emerald-700",
-          trendIcon: TrendingUp,
-        };
-      case "expense":
-        return {
-          cardBg: "bg-[#FFF1F2] border-rose-100/50", // Rose 50
-          iconBg: "bg-rose-100 text-rose-600",
-          badgeBg: "bg-rose-100/50 text-rose-700",
-          trendIcon: TrendingDown,
-        };
-      case "balance":
-        return {
-          cardBg: "bg-[#F5F3FF] border-violet-100/50", // Violet 50
-          iconBg: "bg-violet-100 text-violet-600",
-          badgeBg: "bg-violet-100/50 text-violet-700",
-          trendIcon: Activity,
-        };
-      default:
-        return {};
+      case "income":  return { cardBg: "bg-[#F0FDF4] border-emerald-100/50", iconBg: "bg-emerald-100 text-emerald-600", badgeBg: "bg-emerald-100/50 text-emerald-700", trendIcon: TrendingUp };
+      case "expense": return { cardBg: "bg-[#FFF1F2] border-rose-100/50",    iconBg: "bg-rose-100 text-rose-600",       badgeBg: "bg-rose-100/50 text-rose-700",    trendIcon: TrendingDown };
+      case "balance": return { cardBg: "bg-[#F5F3FF] border-violet-100/50",  iconBg: "bg-violet-100 text-violet-600",   badgeBg: "bg-violet-100/50 text-violet-700", trendIcon: Activity };
+      default: return {};
     }
   };
 
-  // Stat Card Component
-  const StatCard = ({ title, value, icon: Icon, trend, type }) => {
+  const filterLabel = selectedMonth && selectedYear
+    ? `${MONTHS.find(m => m.value === selectedMonth)?.label} ${selectedYear}`
+    : selectedMonth
+    ? MONTHS.find(m => m.value === selectedMonth)?.label
+    : selectedYear
+    ? String(selectedYear)
+    : "All time";
+
+  const StatCard = ({ title, value, icon: Icon, type }) => {
     const theme = getTheme(type);
     const TrendIcon = theme.trendIcon;
-
     return (
-      <Card className={cn(
-        "border shadow-sm transition-all duration-300 hover:shadow-md",
-        theme.cardBg
-      )}>
+      <Card className={cn("border shadow-sm transition-all duration-300 hover:shadow-md", theme.cardBg)}>
         <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-medium text-slate-600">
-            {title}
-          </CardTitle>
+          <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
           <div className={cn("p-2 rounded-full transition-transform hover:scale-110", theme.iconBg)}>
             <Icon size={18} strokeWidth={2.5} />
           </div>
         </CardHeader>
-
         <CardContent>
           <div className="flex items-baseline space-x-2">
             <span className="text-3xl font-bold tracking-tight text-slate-900">
@@ -112,14 +101,10 @@ const DashboardHome = () => {
             </span>
             <span className="text-sm font-semibold text-slate-500">Taka</span>
           </div>
-
           <div className="mt-5">
-            <div className={cn(
-              "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ring-black/5",
-              theme.badgeBg
-            )}>
+            <div className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ring-black/5", theme.badgeBg)}>
               <TrendIcon size={12} className="mr-1.5" strokeWidth={3} />
-              {trend}
+              {filterLabel}
             </div>
           </div>
         </CardContent>
@@ -130,46 +115,57 @@ const DashboardHome = () => {
   return (
     <SectionContainer>
       <div className="py-5 space-y-6 bg-slate-50/30 min-h-screen">
-        
+
+        {/* Filter Row */}
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value ? Number(e.target.value) : "")}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+          >
+            {MONTHS.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : "")}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+          >
+            {YEARS.map((y) => (
+              <option key={y.value} value={y.value}>{y.label}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Stats Grid */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-3 ">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
           <StatCard
             title="Money Income"
-            value={income?.data?.total_income}
+            value={income?.data?.total}
             icon={ArrowUpRight}
-            trend="+12%"
             type="income"
           />
-
           <StatCard
             title="Money Expenses"
-            value={expenses?.data?.total_expense}
+            value={expenses?.data?.total}
             icon={ArrowDownRight}
-            trend="-5%"
             type="expense"
           />
-
           <StatCard
             title="Banking Balance"
-           value={cash?.data?.cash_summary?.[0]?.TOTAL_DEBIT || 0}
+            value={cash?.data?.balance}
             icon={Landmark}
-            trend="Stable"
             type="balance"
           />
         </div>
 
-        {/* Table Section */}
-        {/* <Card className="border-none  overflow-hidden">
-           <div className="p-1">
-             <DashboardHomeTable />
-           </div>
-        </Card> */}
         <div className="grid grid-cols-3 gap-4">
-          <MonthlyProductionChart></MonthlyProductionChart>
-         <MonthlySummaryChart></MonthlySummaryChart>
-         <DailyTrendChart></DailyTrendChart>
+          <MonthlyProductionChart />
+          <MonthlySummaryChart />
+          <DailyTrendChart />
         </div>
-         
 
       </div>
     </SectionContainer>
