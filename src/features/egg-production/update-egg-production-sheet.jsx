@@ -32,11 +32,26 @@ const formSchema = z.object({
 });
 
 // Helper: Oracle date → input[type=date] value (YYYY-MM-DD)
+const MONTHS = {
+  JAN:"01", FEB:"02", MAR:"03", APR:"04", MAY:"05", JUN:"06",
+  JUL:"07", AUG:"08", SEP:"09", OCT:"10", NOV:"11", DEC:"12"
+};
+
 const toDateInputValue = (val) => {
   if (!val) return "";
-  const d = new Date(val);
-  if (isNaN(d)) return "";
-  return d.toISOString().split("T")[0];
+  const str = String(val);
+
+  // ✅ Oracle "DD-MON-YY" → "YYYY-MM-DD"
+  const oracleMatch = str.match(/^(\d{2})-([A-Z]{3})-(\d{2})$/i);
+  if (oracleMatch) {
+    const [, day, mon, yy] = oracleMatch;
+    const mm = MONTHS[mon.toUpperCase()];
+    return mm ? `20${yy}-${mm}-${day}` : "";
+  }
+
+  // ✅ ISO format fallback
+  const isoMatch = str.match(/(\d{4}-\d{2}-\d{2})/);
+  return isoMatch ? isoMatch[1] : "";
 };
 
 export default function UpdateEggProductionSheet({ open, onOpenChange, showConfirmation, record }) {
@@ -50,15 +65,14 @@ export default function UpdateEggProductionSheet({ open, onOpenChange, showConfi
   const { formState: { isDirty } } = form;
 
   useEffect(() => {
-    if (record) {
-      form.reset({
-        productionDate: toDateInputValue(record.PRODUCTION_DATE),
-        qty:            record.QTY ?? "",
-        updatedBy:      record.UPDATED_BY ?? "",
-      });
-    }
-  }, [record]);
-
+  if (open && record) {
+    form.reset({
+      productionDate: toDateInputValue(record.PRODUCTION_DATE),
+      qty:            record.QTY ?? "",
+      updatedBy:      record.UPDATED_BY ?? "",
+    });
+  }
+}, [open, record?.ID]); // ✅ open হলেই reset হবে
   const onSubmit = async (data) => {
     if (!record?.ID) { toast.error("Record ID is missing."); return; }
     try {

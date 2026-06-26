@@ -78,8 +78,18 @@ export const useCreateEggProduction = () => {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(data),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: eggProductionKeys.lists() }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: eggProductionKeys.all }), // ✅
     onError: (err) => console.error("Create egg production failed:", err),
+  });
+};
+
+export const useDeleteEggProduction = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) =>
+      fetchJSON(`${BASE}/api/egg-production/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: eggProductionKeys.all }), // ✅
+    onError: (err) => console.error("Delete egg production failed:", err),
   });
 };
 
@@ -93,22 +103,23 @@ export const useUpdateEggProduction = () => {
         body:    JSON.stringify(data),
       }),
     onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: eggProductionKeys.lists() });
-      qc.invalidateQueries({ queryKey: eggProductionKeys.detail(id) });
+      // ✅ eggProductionKeys.all দিয়ে সব query invalidate হবে
+      qc.invalidateQueries({ queryKey: eggProductionKeys.all });
     },
     onError: (err) => console.error("Update egg production failed:", err),
   });
 };
 
-export const useDeleteEggProduction = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id) =>
-      fetchJSON(`${BASE}/api/egg-production/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: eggProductionKeys.lists() }),
-    onError: (err) => console.error("Delete egg production failed:", err),
-  });
-};
+
+// export const useDeleteEggProduction = () => {
+//   const qc = useQueryClient();
+//   return useMutation({
+//     mutationFn: (id) =>
+//       fetchJSON(`${BASE}/api/egg-production/${id}`, { method: "DELETE" }),
+//     onSuccess: () => qc.invalidateQueries({ queryKey: eggProductionKeys.lists() }),
+//     onError: (err) => console.error("Delete egg production failed:", err),
+//   });
+// };
 
 
 // ─── Add this to your existing queries.js ────────────────────────────────────
