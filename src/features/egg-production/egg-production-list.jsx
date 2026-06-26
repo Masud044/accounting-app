@@ -51,9 +51,24 @@ import UpdateEggProductionSheet from "./update-egg-production-sheet";
 // ── Date formatter ────────────────────────────────────────────────────────────
 const formatDate = (val) => {
   if (!val) return "—";
-  const d = new Date(val);
-  if (isNaN(d)) return "—";
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const str = String(val); // e.g. "16-MAY-26"
+  
+  // ✅ Oracle "DD-MON-YY" format handle
+  const oracleMatch = str.match(/^(\d{2})-([A-Z]{3})-(\d{2})$/i);
+  if (oracleMatch) {
+    const [, day, mon, yy] = oracleMatch;
+    return `${day} ${mon.charAt(0).toUpperCase() + mon.slice(1).toLowerCase()} 20${yy}`;
+  }
+
+  // ✅ ISO format fallback "2026-06-26T..."
+  const isoMatch = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const [, year, month, day] = isoMatch;
+    return `${day} ${months[Number(month) - 1]} ${year}`;
+  }
+
+  return "—";
 };
 
 export default function EggProductionList() {
@@ -101,9 +116,23 @@ const {
   isFetching,
 } = useAllEggProductions();
 
+const toFilterDateStr = (val) => {
+  if (!val) return "";
+  const str = String(val);
+  const oracleMatch = str.match(/^(\d{2})-([A-Z]{3})-(\d{2})$/i);
+  if (oracleMatch) {
+    const [, day, mon, yy] = oracleMatch;
+    const mm = { JAN:"01",FEB:"02",MAR:"03",APR:"04",MAY:"05",JUN:"06",
+                 JUL:"07",AUG:"08",SEP:"09",OCT:"10",NOV:"11",DEC:"12" }[mon.toUpperCase()];
+    return mm ? `20${yy}-${mm}-${day}` : "";
+  }
+  const isoMatch = str.match(/(\d{4}-\d{2}-\d{2})/);
+  return isoMatch ? isoMatch[1] : "";
+};
+
 const records = isDateRangeActive
   ? allRecords.filter((r) => {
-      const d = new Date(r.PRODUCTION_DATE).toISOString().split("T")[0];
+      const d = toFilterDateStr(r.PRODUCTION_DATE);
       return d >= activeDateRange.from && d <= activeDateRange.to;
     })
   : allRecords;
