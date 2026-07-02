@@ -165,7 +165,7 @@ export default function InvoiceDetailSheet({ open, onOpenChange, hid }) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-2xl w-full flex flex-col gap-0 p-0 z-105">
+      <SheetContent className="sm:max-w-4xl w-full flex flex-col gap-0 p-0 z-105">
 
         {/* Header */}
         <SheetHeader className="px-6 py-5 border-b border-border shrink-0">

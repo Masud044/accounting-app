@@ -9,8 +9,12 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
+  DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Trash2, ChevronDown, Plus } from "lucide-react";
 import { useCreateInvoice } from "./queries";
 import { useCustomers } from "@/features/customer/queries";
 import { useAllEggProductions } from "@/features/egg-production/queries";
@@ -18,27 +22,12 @@ import { useAllEggProductions } from "@/features/egg-production/queries";
 // ── helpers ────────────────────────────────────────────────────────────────────
 const today = () => new Date().toISOString().split("T")[0];
 
-const toDateInput = (val) => {
-  if (!val) return "";
-  const d = new Date(val);
-  if (isNaN(d)) return "";
-  return d.toISOString().split("T")[0];
-};
-
 const fmtDate = (val) => {
   if (!val) return "—";
   return new Date(val).toLocaleDateString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
   });
 };
-
-const emptyLine = () => ({
-  productionId:  "",
-  date:          "",
-  description:   "",
-  qty:           "",
-  unitPrice:     "",
-});
 
 // ── Editable cell styles ───────────────────────────────────────────────────────
 const editableCell =
@@ -58,41 +47,90 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
 
   const [customerId,     setCustomerId]     = useState("");
   const [invoiceDate,    setInvoiceDate]    = useState(today());
-  const [selectedProdId, setSelectedProdId] = useState("");
   const [lines,          setLines]          = useState([]);
   const [taxRate,        setTaxRate]        = useState(5);
   const [manualTotal,    setManualTotal]    = useState("");
   const [isDirty,        setIsDirty]        = useState(false);
 
+  // multi-select state for the "Add Production Record" picker
+  const [pickerOpen,       setPickerOpen]       = useState(false);
+  const [checkedProdIds,   setCheckedProdIds]   = useState([]);
+
   useEffect(() => {
     if (open) {
       setCustomerId(""); setInvoiceDate(today());
-      setSelectedProdId(""); setLines([]);
+      setLines([]); setCheckedProdIds([]);
       setTaxRate(5); setManualTotal(""); setIsDirty(false);
     }
   }, [open]);
 
-  // ── Add production line ────────────────────────────────────────────────────
-  const handleAddProduction = (prodId) => {
-    setSelectedProdId(prodId);
-    if (!prodId) return;
-    const already = lines.find((l) => String(l.productionId) === String(prodId));
-    if (already) { toast.warning("This production record is already added."); return; }
-    const prod = productions.find((p) => String(p.ID) === String(prodId));
-    if (!prod) return;
-    setLines((prev) => [
-      ...prev,
-      {
-        productionId: prod.ID,
-        date:         toDateInput(prod.PRODUCTION_DATE),
-        description:  "Egg sale - daily production",
-        qty:          prod.QTY ?? 0,
-        unitPrice:    "",
-      },
-    ]);
-    setSelectedProdId("");
-    setIsDirty(true);
+  // production IDs already used across ALL lines (each line can now hold
+  // multiple merged production components)
+  const usedProdIds = lines.flatMap((l) => l.components.map((c) => String(c.productionId)));
+
+  const toggleChecked = (id) => {
+    setCheckedProdIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
+
+  // ── Add merged production line ─────────────────────────────────────────────
+  // All currently checked productions collapse into a single line: quantities
+  // sum together, date defaults to today (editable), everything else behaves
+  // like a normal line. The individual production breakdown is kept in
+  // `components` so we can still submit correct per-production quantities.
+  const handleAddSelected = () => {
+  if (checkedProdIds.length === 0) return;
+
+  const chosen = productions.filter((p) => checkedProdIds.includes(String(p.ID)));
+  if (chosen.length === 0) return;
+
+  setLines((prev) => {
+    // Already ekta line ache — tar modde e merge hobe, notun row hobe na
+    if (prev.length > 0) {
+      const existing = prev[0];
+      const newComponents = [
+        ...existing.components,
+        ...chosen.map((p) => ({ productionId: p.ID, qty: Number(p.QTY || 0) })),
+      ];
+      const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
+
+      const updatedLine = {
+        ...existing,
+        components: newComponents,
+        qty: totalQty,
+        description:
+          newComponents.length > 1
+            ? `Egg sale - ${newComponents.length} production dates`
+            : "Egg sale - daily production",
+      };
+
+      return [updatedLine];
+    }
+
+    // Prothom bar — notun 1 ta line create hobe
+    const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
+    return [
+      {
+        components: chosen.map((p) => ({
+          productionId: p.ID,
+          qty: Number(p.QTY || 0),
+        })),
+        date: today(),
+        description:
+          chosen.length > 1
+            ? `Egg sale - ${chosen.length} production dates`
+            : "Egg sale - daily production",
+        qty: totalQty,
+        unitPrice: "",
+      },
+    ];
+  });
+
+  setCheckedProdIds([]);
+  setPickerOpen(false);
+  setIsDirty(true);
+};
 
   const updateLine = (idx, field, value) => {
     setIsDirty(true);
@@ -116,6 +154,10 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
   const autoTotal = subtotal + taxAmt;
   const totalDue  = manualTotal !== "" ? Number(manualTotal) : autoTotal;
 
+  const availableProductions = productions.filter(
+    (p) => !usedProdIds.includes(String(p.ID))
+  );
+
   // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!customerId)       { toast.error("Please select a customer.");        return; }
@@ -125,6 +167,22 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
       toast.error("Enter unit price for all lines."); return;
     }
 
+    // Expand each (possibly merged) line back into one backend row per
+    // production, so quantities stay traceable to their source production.
+    // If the displayed qty was edited away from the auto-summed total, the
+    // difference is distributed proportionally across the merged components.
+    const backendLines = lines.flatMap((l) => {
+      const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
+      const editedQty    = Number(l.qty || 0);
+      const ratio        = editedQty / originalSum;
+
+      return l.components.map((c) => ({
+        productionId:  Number(c.productionId),
+        productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
+        price:         Number(l.unitPrice),
+      }));
+    });
+
     try {
       await createMutation.mutateAsync({
         customerId:  Number(customerId),
@@ -132,11 +190,7 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
         createdBy:   null,
         taxRate:     Number(taxRate),
         totAmt:      totalDue,
-        lines: lines.map((l) => ({
-          productionId:  Number(l.productionId),
-          productionQty: Number(l.qty),
-          price:         Number(l.unitPrice),
-        })),
+        lines:       backendLines,
       });
       toast.success("Invoice created successfully!");
       onOpenChange(false);
@@ -158,11 +212,10 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
   };
 
   const isSubmitting = createMutation.isPending;
-  const usedProdIds  = lines.map((l) => String(l.productionId));
 
   return (
     <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleCancel(); }}>
-      <SheetContent className="sm:max-w-3xl w-full flex flex-col gap-0 p-0 z-105">
+      <SheetContent className="sm:max-w-4xl w-full flex flex-col gap-0 p-0 z-105">
 
         {/* Header */}
         <SheetHeader className="px-6 py-4 border-b border-border shrink-0">
@@ -216,33 +269,64 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
             </div>
           </div>
 
-          {/* ── Row 2: Production select ── */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Add Production Record</Label>
-            <div className="flex gap-2">
-              <Select
-                value={selectedProdId}
-                onValueChange={handleAddProduction}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger className="h-9 flex-1">
-                  <SelectValue placeholder="Select production date to add line…" />
-                </SelectTrigger>
-                <SelectContent className="z-110">
-                  {productions.map((p) => (
-                    <SelectItem
-                      key={p.ID}
-                      value={String(p.ID)}
-                      disabled={usedProdIds.includes(String(p.ID))}
-                    >
-                      {fmtDate(p.PRODUCTION_DATE)} — {Number(p.QTY || 0).toLocaleString()} eggs
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+         {/* ── Row 2: Production multi-select ── */}
+<div className="space-y-1.5">
+  <Label className="text-xs font-medium">Add Production Record</Label>
+  <div className="flex gap-2">
+    <DropdownMenu open={pickerOpen} onOpenChange={setPickerOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button" variant="outline"
+          className="h-9 flex-1 justify-between font-normal"
+          disabled={isSubmitting}
+        >
+          <span className="text-muted-foreground truncate">
+            {checkedProdIds.length > 0
+              ? `${checkedProdIds.length} production date(s) selected`
+              : "Select production date(s) to add line…"}
+          </span>
+          <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="z-110 w-[--radix-dropdown-menu-trigger-width] max-h-72 overflow-y-auto">
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          Select one or more — combined into a single line
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {availableProductions.length === 0 && (
+          <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+            No available production records.
           </div>
+        )}
+        {availableProductions.map((p) => {
+          const id = String(p.ID);
+          return (
+            <DropdownMenuCheckboxItem
+              key={id}
+              checked={checkedProdIds.includes(id)}
+              onSelect={(e) => e.preventDefault()} // keep menu open for multi-pick
+              onCheckedChange={() => toggleChecked(id)}
+            >
+              {fmtDate(p.PRODUCTION_DATE)} — {Number(p.QTY || 0).toLocaleString()} eggs
+            </DropdownMenuCheckboxItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
 
+    {/* Add button moved OUTSIDE the dropdown — Radix's dismiss layer was
+        swallowing clicks on this button when it lived inside DropdownMenuContent */}
+    <Button
+      type="button"
+      className="h-9 shrink-0"
+      disabled={checkedProdIds.length === 0 || isSubmitting}
+      onClick={handleAddSelected}
+    >
+      <Plus className="h-3.5 w-3.5 mr-1" />
+      Add {checkedProdIds.length > 0 ? `${checkedProdIds.length} ` : ""}Selected
+    </Button>
+  </div>
+</div>
           {/* ── Invoice Table ── */}
           <div className="rounded-md overflow-hidden border border-border">
             <table className="w-full text-sm border-collapse">
@@ -265,7 +349,7 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
                 {lines.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
-                      Select a production record above to add a line.
+                      Select production record(s) above to add a line.
                     </td>
                   </tr>
                 )}
@@ -275,7 +359,7 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
                   return (
                     <tr key={idx} className="border-t border-border">
 
-                      {/* Date — blue editable */}
+                      {/* Date — blue editable, defaults to today */}
                       <td className="px-1 py-1 w-32">
                         <Input
                           type="date"
@@ -294,9 +378,10 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
                           disabled={isSubmitting}
                           className={editableCell + " w-full text-left"}
                         />
+                       
                       </td>
 
-                      {/* Qty — blue editable */}
+                      {/* Qty — blue editable, auto-summed from selection */}
                       <td className="px-1 py-1 w-28">
                         <Input
                           type="number" min="0"
