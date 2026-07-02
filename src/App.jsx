@@ -45,6 +45,7 @@ import SaleExpenseReportPage from "./features/account-report/sale-report";
 import EggProductionPage from "./features/egg-production";
 import { DashboardHomeTable } from "./features/main-entry/components/DashboardHomeTable";
 import GRN from "./features/grn-master";
+import InvoicePage from "./features/sale-invoice/sale-invoice-page";
 
 
 const ADMIN = ["Admin"];
@@ -254,6 +255,14 @@ function App() {
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
                     <SaleExpenseReportPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="sale-invoice"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <InvoicePage />
                   </ProtectedRoute>
                 }
               />
