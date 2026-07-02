@@ -26,7 +26,8 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empt
 
 import { useInvoices, useDeleteInvoice } from "./queries";
 import AddInvoiceSheet from "./create-sale-invoice-sheet";
-import InvoiceDetailSheet from "./sale-invoice-detail-page";
+// import InvoiceDetailSheet from "./sale-invoice-detail-page";
+import EditInvoiceSheet from "./edit-sale-invoice-sheet";
 
 const fmtDate = (val) => {
   if (!val) return "—";
@@ -334,12 +335,14 @@ export default function InvoiceList() {
         />
       )}
       {isDetailOpen && (
-        <InvoiceDetailSheet
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-          hid={selectedHid}
-        />
-      )}
+  <EditInvoiceSheet
+    open={isDetailOpen}
+    onOpenChange={setIsDetailOpen}
+    hid={selectedHid}
+    showConfirmation={showConfirmation}
+  />
+)}
+     
       <ConfirmationDialog />
     </div>
   );

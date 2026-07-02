@@ -67,3 +67,20 @@ export const useDeleteInvoice = () => {
     onError: (err) => console.error("Delete invoice failed:", err),
   });
 };
+
+export const useUpdateInvoice = (hid) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) =>
+      fetchJSON(`${BASE}/api/sal-invoice/${hid}`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      qc.invalidateQueries({ queryKey: invoiceKeys.detail(hid) });
+    },
+    onError: (err) => console.error("Update invoice failed:", err),
+  });
+};
