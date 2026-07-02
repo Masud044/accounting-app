@@ -37,6 +37,7 @@
     "date-fns": "^4.1.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.555.0",
     "nuqs": "^2.8.9",
     "radix-ui": "^1.4.3",

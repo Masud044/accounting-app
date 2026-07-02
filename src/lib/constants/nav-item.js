@@ -109,6 +109,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/role", label: "Role", Icon: FileText },
       { to: "/dashboard/permission", label: "Permission", Icon: FileText },
        { to: "/dashboard/egg-production", label: "Egg Production", Icon: FileText },
+         { to: "/dashboard/sale-invoice", label: "Sale Invoice", Icon: FileText },
       
     ],
   },
