@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import { FileText, Trash2, ChevronDown, Plus } from "lucide-react";
+import { FileText, Trash2, ChevronDown, Plus, X } from "lucide-react";
 import { useCreateInvoice } from "./queries";
 import { useCustomers } from "@/features/customer/queries";
 import { useAllEggProductions } from "@/features/egg-production/queries";
@@ -80,57 +80,85 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
   // like a normal line. The individual production breakdown is kept in
   // `components` so we can still submit correct per-production quantities.
   const handleAddSelected = () => {
-  if (checkedProdIds.length === 0) return;
+    if (checkedProdIds.length === 0) return;
 
-  const chosen = productions.filter((p) => checkedProdIds.includes(String(p.ID)));
-  if (chosen.length === 0) return;
+    const chosen = productions.filter((p) => checkedProdIds.includes(String(p.ID)));
+    if (chosen.length === 0) return;
 
-  setLines((prev) => {
-    // Already ekta line ache — tar modde e merge hobe, notun row hobe na
-    if (prev.length > 0) {
-      const existing = prev[0];
-      const newComponents = [
-        ...existing.components,
-        ...chosen.map((p) => ({ productionId: p.ID, qty: Number(p.QTY || 0) })),
+    setLines((prev) => {
+      // Already ekta line ache — tar modde e merge hobe, notun row hobe na
+      if (prev.length > 0) {
+        const existing = prev[0];
+        const newComponents = [
+          ...existing.components,
+          ...chosen.map((p) => ({ productionId: p.ID, qty: Number(p.QTY || 0) })),
+        ];
+        const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
+
+        const updatedLine = {
+          ...existing,
+          components: newComponents,
+          qty: totalQty,
+          description:
+            newComponents.length > 1
+              ? `Egg sale - ${newComponents.length} production dates`
+              : "Egg sale - daily production",
+        };
+
+        return [updatedLine];
+      }
+
+      // Prothom bar — notun 1 ta line create hobe
+      const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
+      return [
+        {
+          components: chosen.map((p) => ({
+            productionId: p.ID,
+            qty: Number(p.QTY || 0),
+          })),
+          date: today(),
+          description:
+            chosen.length > 1
+              ? `Egg sale - ${chosen.length} production dates`
+              : "Egg sale - daily production",
+          qty: totalQty,
+          unitPrice: "",
+        },
       ];
+    });
+
+    setCheckedProdIds([]);
+    setPickerOpen(false);
+    setIsDirty(true);
+  };
+
+  // ── Remove a single production date chip ────────────────────────────────────
+  // Removes one production from the merged line's components, recalculates
+  // qty, and frees the date back up in the dropdown. If it was the last
+  // remaining component, the whole line is dropped.
+  const removeComponent = (prodId) => {
+    setIsDirty(true);
+    setLines((prev) => {
+      if (prev.length === 0) return prev;
+      const line = prev[0];
+      const newComponents = line.components.filter(
+        (c) => String(c.productionId) !== String(prodId)
+      );
+      if (newComponents.length === 0) return [];
       const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
-
-      const updatedLine = {
-        ...existing,
-        components: newComponents,
-        qty: totalQty,
-        description:
-          newComponents.length > 1
-            ? `Egg sale - ${newComponents.length} production dates`
-            : "Egg sale - daily production",
-      };
-
-      return [updatedLine];
-    }
-
-    // Prothom bar — notun 1 ta line create hobe
-    const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
-    return [
-      {
-        components: chosen.map((p) => ({
-          productionId: p.ID,
-          qty: Number(p.QTY || 0),
-        })),
-        date: today(),
-        description:
-          chosen.length > 1
-            ? `Egg sale - ${chosen.length} production dates`
-            : "Egg sale - daily production",
-        qty: totalQty,
-        unitPrice: "",
-      },
-    ];
-  });
-
-  setCheckedProdIds([]);
-  setPickerOpen(false);
-  setIsDirty(true);
-};
+      return [
+        {
+          ...line,
+          components: newComponents,
+          qty: totalQty,
+          description:
+            newComponents.length > 1
+              ? `Egg sale - ${newComponents.length} production dates`
+              : "Egg sale - daily production",
+        },
+      ];
+    });
+  };
 
   const updateLine = (idx, field, value) => {
     setIsDirty(true);
@@ -326,6 +354,58 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
       Add {checkedProdIds.length > 0 ? `${checkedProdIds.length} ` : ""}Selected
     </Button>
   </div>
+
+  {/* Checked (not yet added) production date chips — visible as soon as you check them */}
+    {checkedProdIds.length > 0 && (
+      <div className="flex flex-wrap gap-2 pt-1">
+        {checkedProdIds.map((id) => {
+          const prod = productions.find((p) => String(p.ID) === id);
+          return (
+            <span
+              key={id}
+              className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-xs font-medium"
+            >
+              {prod ? fmtDate(prod.PRODUCTION_DATE) : `#${id}`}
+              <button
+                type="button"
+                onClick={() => toggleChecked(id)}
+                disabled={isSubmitting}
+                className="rounded-sm p-0.5 hover:text-red-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          );
+        })}
+      </div>
+    )}
+
+  {/* Selected production date chips — mirrors what's already been added
+      to the invoice line. Clicking × pulls that date back out of the line
+      and it becomes available in the dropdown again. */}
+  {lines.length > 0 && lines[0].components.length > 0 && (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {lines[0].components.map((c) => {
+        const prod = productions.find((p) => String(p.ID) === String(c.productionId));
+        return (
+          <span
+            key={c.productionId}
+            className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-md bg-blue-900 text-white text-xs font-bold"
+          >
+            {prod ? fmtDate(prod.PRODUCTION_DATE) : `#${c.productionId}`}
+            <button
+              type="button"
+              onClick={() => removeComponent(c.productionId)}
+              disabled={isSubmitting}
+              className="rounded-sm p-0.5  hover:text-red-700"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        );
+      })}
+    </div>
+  )}
 </div>
           {/* ── Invoice Table ── */}
           <div className="rounded-md overflow-hidden border border-border">

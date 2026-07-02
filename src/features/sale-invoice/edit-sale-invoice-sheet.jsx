@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import { FileText, Trash2, ChevronDown, Plus } from "lucide-react";
+import { FileText, Trash2, ChevronDown, Plus, X } from "lucide-react";
 import { useInvoiceById, useUpdateInvoice } from "./queries";
 import { useCustomers } from "@/features/customer/queries";
 import { useAllEggProductions } from "@/features/egg-production/queries";
@@ -162,6 +162,34 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
     setCheckedProdIds([]);
     setPickerOpen(false);
     setIsDirty(true);
+  };
+
+  // ── Remove a single production date chip ────────────────────────────────────
+  // Removes one production from the merged line's components, recalculates
+  // qty, and frees the date back up in the dropdown. If it was the last
+  // remaining component, the whole line is dropped.
+  const removeComponent = (prodId) => {
+    setIsDirty(true);
+    setLines((prev) => {
+      if (prev.length === 0) return prev;
+      const line = prev[0];
+      const newComponents = line.components.filter(
+        (c) => String(c.productionId) !== String(prodId)
+      );
+      if (newComponents.length === 0) return [];
+      const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
+      return [
+        {
+          ...line,
+          components: newComponents,
+          qty: totalQty,
+          description:
+            newComponents.length > 1
+              ? `Egg sale - ${newComponents.length} production dates`
+              : "Egg sale - daily production",
+        },
+      ];
+    });
   };
 
   const updateLine = (idx, field, value) => {
@@ -359,6 +387,61 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
                     Add {checkedProdIds.length > 0 ? `${checkedProdIds.length} ` : ""}Selected
                   </Button>
                 </div>
+
+                {/* Checked (not yet added) production date chips — visible as soon as you check them */}
+    {checkedProdIds.length > 0 && (
+      <div className="flex flex-wrap gap-2 pt-1">
+        {checkedProdIds.map((id) => {
+          const prod = productions.find((p) => String(p.ID) === id);
+          return (
+            <span
+              key={id}
+              className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-xs font-medium"
+            >
+              {prod ? fmtDate(prod.PRODUCTION_DATE) : `#${id}`}
+              <button
+                type="button"
+                onClick={() => toggleChecked(id)}
+                disabled={isSubmitting}
+                className="rounded-sm p-0.5 hover:text-red-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          );
+        })}
+      </div>
+    )}
+
+                {/* Selected production date chips — mirrors what's already been
+                    added to the invoice line. Clicking × pulls that date back
+                    out of the line and it becomes available in the dropdown
+                    again. */}
+                {lines.length > 0 && lines[0].components.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {lines[0].components.map((c) => {
+                      const prod = productions.find(
+                        (p) => String(p.ID) === String(c.productionId)
+                      );
+                      return (
+                        <span
+                          key={c.productionId}
+                          className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-md  bg-blue-900 text-white text-xs font-bold"
+                        >
+                          {prod ? fmtDate(prod.PRODUCTION_DATE) : `#${c.productionId}`}
+                          <button
+                            type="button"
+                            onClick={() => removeComponent(c.productionId)}
+                            disabled={isSubmitting}
+                            className="rounded-sm p-0.5  hover:text-red-700"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* ── Invoice Table ── */}
