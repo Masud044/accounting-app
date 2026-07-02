@@ -443,53 +443,7 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
                   </span>
                 </div>
 
-                {/* Tax Rate — editable */}
-                <div className="flex items-center border-b border-border">
-                  <span className="flex-1 px-3 py-1.5 font-medium bg-muted/40">Tax Rate</span>
-                  <div className="w-28 px-2 py-1">
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number" min="0" max="100" step="0.1"
-                        value={taxRate}
-                        onChange={(e) => { setTaxRate(e.target.value); setManualTotal(""); }}
-                        disabled={isSubmitting}
-                        className="h-7 text-sm text-right text-blue-600 dark:text-blue-400
-                                   border-0 bg-blue-50 dark:bg-blue-950/40
-                                   focus-visible:ring-1 focus-visible:ring-blue-400
-                                   focus-visible:ring-offset-0 px-1"
-                      />
-                      <span className="text-muted-foreground text-xs">%</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tax Amount */}
-                <div className="flex items-center border-b border-border">
-                  <span className="flex-1 px-3 py-2 font-medium bg-muted/40">Tax Amount</span>
-                  <span className="w-28 px-3 py-2 text-right tabular-nums">
-                    {taxAmt.toLocaleString(undefined, {
-                      minimumFractionDigits: 2, maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-
-                {/* Total Due — editable override */}
-                <div className="flex items-center" style={{ background: "#1a3c34" }}>
-                  <span className="flex-1 px-3 py-2 font-bold text-white">TOTAL DUE</span>
-                  <div className="w-28 px-2 py-1">
-                    <Input
-                      type="number" min="0" step="0.01"
-                      value={manualTotal !== "" ? manualTotal : autoTotal.toFixed(2)}
-                      onChange={(e) => setManualTotal(e.target.value)}
-                      disabled={isSubmitting}
-                      className="h-7 text-sm text-right font-bold text-white
-                                 border-0 bg-white/10
-                                 focus-visible:ring-1 focus-visible:ring-white/60
-                                 focus-visible:ring-offset-0 px-1"
-                    />
-                  </div>
-                </div>
-
+               
               </div>
             </div>
           )}
