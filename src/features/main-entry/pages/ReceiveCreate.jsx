@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect  } from "react";
+
 import { ArrowLeft, Trash2, Users, X } from "lucide-react";
 import Select from "react-select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
@@ -23,6 +24,7 @@ const ReceiveCreate = () => {
   const navigate    = useNavigate();
   const queryClient = useQueryClient();
   const today       = new Date().toISOString().split("T")[0];
+  const location = useLocation();
 
   // ── Bill files ───────────────────────────────────────────────────────────────
   const [billFiles, setBillFiles] = useState([]);
@@ -182,6 +184,19 @@ const ReceiveCreate = () => {
     setForm({ ...form, totalAmount: updated.reduce((s, r) => s + Number(r.amount || 0), 0) });
   };
 
+  const updateRow = (id, field, value) => {
+    setRows((prev) => {
+      const updated = prev.map((r) =>
+        r.id === id ? { ...r, [field]: value } : r
+      );
+      setForm((f) => ({
+        ...f,
+        totalAmount: updated.reduce((s, r) => s + Number(r.amount || 0), 0),
+      }));
+      return updated;
+    });
+  };
+
   // ── Submit ───────────────────────────────────────────────────────────────────
   const handleSubmit = () => {
     if (
@@ -209,6 +224,36 @@ const ReceiveCreate = () => {
       inv_type: form.inv_type ? Number(form.inv_type) : null,
     });
   };
+
+  // ── Prefill from Edit Sale Invoice's "Receive Voucher" button ───────────────
+  useEffect(() => {
+    const incoming = location.state;
+    if (!incoming) return;
+
+    setForm((f) => ({
+      ...f,
+      customer:   incoming.customer ? String(incoming.customer) : f.customer,
+      entryDate:  incoming.invoiceDate || f.entryDate,
+      glDate:     incoming.invoiceDate || f.glDate,
+      description: incoming.description || f.description,
+      invoiceNo:   incoming.invoiceHid ? String(incoming.invoiceHid) : f.invoiceNo,
+    }));
+
+    if (incoming.rows && incoming.rows.length > 0) {
+      const mappedRows = incoming.rows.map((r, i) => ({
+        id: Date.now() + i,
+        accountCode: "",
+        particulars: r.particulars || "",
+        amount: Number(r.amount || 0),
+      }));
+      setRows(mappedRows);
+      setForm((f) => ({
+        ...f,
+        totalAmount: mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0),
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isSubmitting       = mutation.isPending;
   const isCustomerSaving   = customerMutation.isPending;
@@ -384,7 +429,7 @@ const ReceiveCreate = () => {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            {/* <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border">
                   <td className="border px-2 md:px-4 py-2">{row.accountCode}</td>
@@ -398,6 +443,54 @@ const ReceiveCreate = () => {
                     )}
                   </td>
                 </tr>
+              ))}
+              {rows.length > 0 && rows[0].id !== "dummy" && (
+                <tr className="font-semibold">
+                  <td colSpan="2" className="p-2 text-right font-bold text-sm text-gray-800">Total</td>
+                  <td className="border p-2 text-center">{form.totalAmount.toFixed(2)}</td>
+                  <td />
+                </tr>
+              )}
+            </tbody> */}
+
+            <tbody>
+              {rows.map((row) => (
+                row.id === "dummy" ? null : (
+                  <tr key={row.id} className="border">
+                    <td className="border px-1 py-1">
+                      <input
+                        type="text"
+                        value={row.accountCode}
+                        onChange={(e) => updateRow(row.id, "accountCode", e.target.value)}
+                        disabled={isSubmitting}
+                        className="w-full border rounded px-2 py-1 bg-white text-sm text-center"
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <input
+                        type="text"
+                        value={row.particulars}
+                        onChange={(e) => updateRow(row.id, "particulars", e.target.value)}
+                        disabled={isSubmitting}
+                        className="w-full border rounded px-2 py-1 bg-white text-sm"
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <input
+                        type="number"
+                        value={row.amount}
+                        onChange={(e) => updateRow(row.id, "amount", e.target.value)}
+                        disabled={isSubmitting}
+                        className="w-full border rounded px-2 py-1 bg-white text-sm text-center"
+                      />
+                    </td>
+                    <td className="border px-2 md:px-4 py-2 text-center">
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeRow(row.id)} disabled={isSubmitting}>
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </td>
+                  </tr>
+                )
               ))}
               {rows.length > 0 && rows[0].id !== "dummy" && (
                 <tr className="font-semibold">
