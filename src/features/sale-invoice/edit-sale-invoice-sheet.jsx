@@ -14,7 +14,8 @@ import {
   DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import { FileText, Trash2, ChevronDown, Plus, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { FileText, Trash2, ChevronDown, Plus, X, PlusIcon } from "lucide-react";
 import { useInvoiceById, useUpdateInvoice } from "./queries";
 import { useCustomers } from "@/features/customer/queries";
 import { useAllEggProductions } from "@/features/egg-production/queries";
@@ -265,6 +266,18 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
       if (!ok) return;
     }
     onOpenChange(false);
+  };
+
+  // ── Data to pass to Create Receive Voucher page ─────────────────────────────
+  const receiveVoucherState = {
+    customer: customerId,
+    invoiceDate,
+    invoiceHid: invoiceData?.HID,
+    description: `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
+    rows: lines.map((l) => ({
+      particulars: l.description,
+      amount: Number(l.qty || 0) * Number(l.unitPrice || 0),
+    })),
   };
 
   const isSubmitting = updateMutation.isPending;
@@ -557,7 +570,7 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
+            <div className="grid grid-cols-3 justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                 Cancel
               </Button>
@@ -566,6 +579,12 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
                   ? <><Spinner className="mr-2 h-4 w-4" />Updating...</>
                   : "Update Invoice"}
               </Button>
+
+              <Link to="/dashboard/receive-create" state={receiveVoucherState}>
+                <Button type="button" variant="secondary">
+                  Receive Voucher
+                </Button>
+              </Link>
             </div>
           </>
         )}
