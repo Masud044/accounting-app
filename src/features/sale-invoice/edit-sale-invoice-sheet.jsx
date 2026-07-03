@@ -23,21 +23,46 @@ import { useAllEggProductions } from "@/features/egg-production/queries";
 // ── helpers ────────────────────────────────────────────────────────────────────
 const today = () => new Date().toISOString().split("T")[0];
 
-const fmtDate = (val) => {
-  if (!val) return "—";
-  return new Date(val).toLocaleDateString("en-GB", {
-    day: "2-digit", month: "short", year: "numeric",
-  });
-};
+// const fmtDate = (val) => {
+//   if (!val) return "—";
+//   return new Date(val).toLocaleDateString("en-GB", {
+//     day: "2-digit", month: "short", year: "numeric",
+//   });
+// };
 
-const toInputDate = (val) => {
+// const toInputDate = (val) => {
+//   if (!val) return today();
+//   const d = new Date(val);
+//   if (isNaN(d.getTime())) return today();
+//   return d.toISOString().split("T")[0];
+// };
+
+// ── Editable cell styles ───────────────────────────────────────────────────────
+
+ const toInputDate = (val) => {
   if (!val) return today();
+  // backend এখন 'YYYY-MM-DD' plain string পাঠায় — সরাসরি ব্যবহার করো,
+  // কোনো Date()/timezone conversion করার দরকার নেই
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
   const d = new Date(val);
   if (isNaN(d.getTime())) return today();
   return d.toISOString().split("T")[0];
 };
 
-// ── Editable cell styles ───────────────────────────────────────────────────────
+
+const fmtDate = (val) => {
+  if (!val) return "—";
+  // 'YYYY-MM-DD' string হলে সরাসরি parse করো local-safe ভাবে (UTC constructor দিয়ে,
+  // কারণ Date("YYYY-MM-DD") ব্রাউজারে UTC midnight ধরে parse হয়)
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(val)
+    ? new Date(`${val}T00:00:00`)   // local midnight হিসেবে parse করো, UTC midnight নয়
+    : new Date(val);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
+};
+
 const editableCell =
   "h-8 text-sm border-0 rounded-none bg-blue-50 dark:bg-blue-950/40 " +
   "focus-visible:ring-1 focus-visible:ring-blue-400 focus-visible:ring-offset-0 " +
@@ -117,6 +142,8 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
+
+ 
 
   const handleAddSelected = () => {
     if (checkedProdIds.length === 0) return;
@@ -269,11 +296,22 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
   };
 
   // ── Data to pass to Create Receive Voucher page ─────────────────────────────
+  // ── Data to pass to Create Receive Voucher page ─────────────────────────────
+  const productionDatesText = lines
+    .flatMap((l) => l.components)
+    .map((c) => {
+      const prod = productions.find((p) => String(p.ID) === String(c.productionId));
+      return prod ? fmtDate(prod.PRODUCTION_DATE) : null;
+    })
+    .filter(Boolean)
+    .join(", ");
+
   const receiveVoucherState = {
     customer: customerId,
     invoiceDate,
     invoiceHid: invoiceData?.HID,
-    description: `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
+    invoiceNo:  invoiceData?.INVOICE_ID ? String(invoiceData.INVOICE_ID) : "",
+    description: productionDatesText || `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
     rows: lines.map((l) => ({
       particulars: l.description,
       amount: Number(l.qty || 0) * Number(l.unitPrice || 0),

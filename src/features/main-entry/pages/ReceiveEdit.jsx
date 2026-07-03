@@ -392,7 +392,7 @@ const ReceiveEdit = () => {
             >
               <Users size={15} className="mr-1" /> + Customer
             </Button>
-            <Button variant="outline" onClick={() => navigate(-1)}>
+            <Button variant="outline" onClick={() => navigate("/dashboard/receive-voucher")}>
               <ArrowLeft size={16} className="mr-2" /> Back
             </Button>
           </div>
