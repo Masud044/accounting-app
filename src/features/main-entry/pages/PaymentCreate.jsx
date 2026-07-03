@@ -289,7 +289,7 @@ const PaymentCreate = () => {
             >
               <Users size={15} className="mr-1" /> + Supplier
             </Button>
-            <Button variant="outline" onClick={() => navigate(-1)}>
+            <Button variant="outline" onClick={() => navigate("/dashboard/payment-voucher")}>
               <ArrowLeft size={16} className="mr-2" /> Back
             </Button>
           </div>

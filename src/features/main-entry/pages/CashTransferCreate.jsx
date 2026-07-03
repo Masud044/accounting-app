@@ -124,7 +124,7 @@ const CashTransferCreate = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-sm text-gray-800">Create Cash Transfer</h2>
-          <Button variant="outline" onClick={() => navigate(-1)}>
+          <Button variant="outline" onClick={() =>navigate("/dashboard/cash-Transfer")}>
             <ArrowLeft size={16} className="mr-2" /> Back
           </Button>
         </div>

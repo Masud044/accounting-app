@@ -231,7 +231,7 @@ const JournalEdit = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-sm text-gray-800">Edit Journal Voucher</h2>
-          <Button variant="outline" onClick={() => navigate(-1)}>
+          <Button variant="outline" onClick={() => navigate("/dashboard/journal-voucher")}>
             <ArrowLeft size={16} className="mr-2" /> Back
           </Button>
         </div>

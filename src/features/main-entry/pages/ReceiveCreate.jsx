@@ -236,13 +236,13 @@ const ReceiveCreate = () => {
       entryDate:  incoming.invoiceDate || f.entryDate,
       glDate:     incoming.invoiceDate || f.glDate,
       description: incoming.description || f.description,
-      invoiceNo:   incoming.invoiceHid ? String(incoming.invoiceHid) : f.invoiceNo,
+      invoiceNo:   incoming.invoiceNo || f.invoiceNo,
     }));
 
-    if (incoming.rows && incoming.rows.length > 0) {
+  if (incoming.rows && incoming.rows.length > 0) {
       const mappedRows = incoming.rows.map((r, i) => ({
         id: Date.now() + i,
-        accountCode: "",
+        accountCode: "4030010000",   // 👈 hardcoded
         particulars: r.particulars || "",
         amount: Number(r.amount || 0),
       }));
@@ -254,6 +254,36 @@ const ReceiveCreate = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Auto-select "Egg" type when coming from Sale Invoice ────────────────────
+  useEffect(() => {
+    if (!location.state) return;      // sale invoice থেকে না আসলে skip
+    if (!invTypes.length) return;     // invTypes এখনো load হয়নি
+    if (form.inv_type) return;        // আগে থেকেই সেট থাকলে overwrite না
+
+    const eggType = invTypes.find(
+      (t) => String(t.DESCRIPTIO || "").trim().toLowerCase() === "egg"
+    );
+    if (eggType) {
+      setForm((f) => ({ ...f, inv_type: String(eggType.ID) }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invTypes, location.state]);
+
+  // ── Auto-select "Cash at Bank (Chicken)" receive code when coming from Sale Invoice ──
+  useEffect(() => {
+    if (!location.state) return;
+    if (!ReceiveCodes.length) return;
+    if (form.ReceiveCode) return;
+
+    const cashInBank = ReceiveCodes.find(
+      (c) => String(c.ACCOUNT_NAME || "").trim().toLowerCase() === "cash at bank (chicken)"
+    );
+    if (cashInBank) {
+      setForm((f) => ({ ...f, ReceiveCode: cashInBank.ACCOUNT_ID }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ReceiveCodes, location.state]);
 
   const isSubmitting       = mutation.isPending;
   const isCustomerSaving   = customerMutation.isPending;
@@ -275,7 +305,7 @@ const ReceiveCreate = () => {
             <Button variant="outline" onClick={() => setShowCustomerModal(true)}>
               <Users size={15} className="mr-1" /> + Customer
             </Button>
-            <Button variant="outline" onClick={() => navigate(-1)}>
+            <Button variant="outline" onClick={() => navigate("/dashboard/receive-voucher")}>
               <ArrowLeft size={16} className="mr-2" /> Back
             </Button>
           </div>
