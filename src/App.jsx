@@ -46,6 +46,8 @@ import EggProductionPage from "./features/egg-production";
 import { DashboardHomeTable } from "./features/main-entry/components/DashboardHomeTable";
 import GRN from "./features/grn-master";
 import InvoicePage from "./features/sale-invoice/sale-invoice-page";
+import RecognitionPage from "./features/purchase-recognition/recognition-page";
+// import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
 
 
 const ADMIN = ["Admin"];
@@ -274,6 +276,23 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+               <Route
+                path="purchase-recognition"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <RecognitionPage />
+                  </ProtectedRoute>
+                }
+              />
+               {/* <Route
+                path="purchase-approve"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <ApprovalDashboardPage />
+                  </ProtectedRoute>
+                }
+              /> */}
 
               <Route
                 path="chart-account"

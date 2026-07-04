@@ -23,6 +23,7 @@ import axios from "axios";
 import MonthlyProductionChart from "@/features/egg-production/monthly-production-chart";
 import MonthlySummaryChart from "@/features/egg-production/monthy-summary-production";
 import DailyTrendChart from "@/features/egg-production/daily-trend";
+import ApprovalDashboardPage from "@/features/purchase-recognition/recognition-approval-dashboard";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -347,6 +348,9 @@ const DashboardHome = () => {
           <MonthlyProductionChart />
           <MonthlySummaryChart />
           <DailyTrendChart />
+        </div>
+        <div>
+          <ApprovalDashboardPage></ApprovalDashboardPage>
         </div>
 
       </div>
