@@ -16,8 +16,15 @@ import { useMonthlyEggProduction } from "./queries";
 Chart.register(...registerables);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// const currentYear = new Date().getFullYear();
+// const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+// current year থেকে 2030 পর্যন্ত
+const yearOptions = Array.from(
+  { length: 2030 - currentYear + 1 },
+  (_, i) => currentYear + i
+);
 
 export default function MonthlyProductionChart() {
   const [year, setYear] = useState(currentYear);

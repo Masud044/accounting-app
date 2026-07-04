@@ -84,3 +84,29 @@ export const useUpdateInvoice = (hid) => {
     onError: (err) => console.error("Update invoice failed:", err),
   });
 };
+
+
+export const useInvoiceDashboard = (filters) =>
+  useQuery({
+    queryKey: [...invoiceKeys.all, "dashboard", filters],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (filters.date) params.set("date", filters.date);
+      else {
+        if (filters.month) params.set("month", filters.month);
+        if (filters.year)  params.set("year", filters.year);
+      }
+      return fetchJSON(`${BASE}/api/sal-invoice/dashboard/breakdown?${params}`);
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+export const useInvoiceMonthlySummary = (year) =>
+  useQuery({
+    queryKey: [...invoiceKeys.all, "monthly-summary", year],
+    queryFn: () => {
+      const params = year ? `?year=${year}` : "";
+      return fetchJSON(`${BASE}/api/sal-invoice/dashboard/monthly-summary${params}`);
+    },
+    staleTime: 5 * 60 * 1000,
+  });

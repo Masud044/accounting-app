@@ -108,11 +108,19 @@ export const NAV_ITEMS = [
       { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
       { to: "/dashboard/role", label: "Role", Icon: FileText },
       { to: "/dashboard/permission", label: "Permission", Icon: FileText },
-       { to: "/dashboard/egg-production", label: "Egg Production", Icon: FileText },
-         { to: "/dashboard/sale-invoice", label: "Sale Invoice", Icon: FileText },
-         { to: "/dashboard/purchase-recognition", label: "Purchase Recognition", Icon: FileText },
+      
           //  { to: "/dashboard/purchase-approve", label: "Purchase Approve", Icon: FileText },
       
+    ],
+  },
+
+   {
+    label: "Production",
+    roles: ["Admin"],     // Admin + Inventory উভয়ই
+    links: [
+      { to: "/dashboard/egg-production", label: "Egg Production", Icon: FileText },
+         { to: "/dashboard/sale-invoice", label: "Sale Invoice", Icon: FileText },
+         { to: "/dashboard/purchase-recognition", label: "Purchase Recognition", Icon: FileText },
     ],
   },
 
