@@ -17,8 +17,12 @@ Chart.register(...registerables);
 
 const currentYear  = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
-const yearOptions  = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
+// plain number array — objects নয়
+const yearOptions = Array.from(
+  { length: 2030 - currentYear + 1 },
+  (_, i) => currentYear + i
+);
 const MONTHS = [
   { value: "1",  label: "January"  },
   { value: "2",  label: "February" },

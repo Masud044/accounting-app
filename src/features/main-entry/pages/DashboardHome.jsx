@@ -24,6 +24,8 @@ import MonthlyProductionChart from "@/features/egg-production/monthly-production
 import MonthlySummaryChart from "@/features/egg-production/monthy-summary-production";
 import DailyTrendChart from "@/features/egg-production/daily-trend";
 import ApprovalDashboardPage from "@/features/purchase-recognition/recognition-approval-dashboard";
+import InvoiceDashboardPanel from "@/features/sale-invoice/invoice-dashboard-panel";
+import InvoiceMonthlyChart from "@/features/sale-invoice/invoice-monthly-chart";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -37,14 +39,26 @@ const MONTHS = [
   { label: "November", value: 11 },{ label: "December", value: 12 },
 ];
 
-const currentYear = new Date().getFullYear();
-const YEARS = [
-  { label: "All", value: "" },
-  ...Array.from({ length: 5 }, (_, i) => ({
-    label: String(currentYear - i),
-    value: currentYear - i,
-  })),
-];
+// const currentYear = new Date().getFullYear();
+// const YEARS = [
+//   { label: "All", value: "" },
+//   ...Array.from({ length: 5 }, (_, i) => ({
+//     label: String(currentYear - i),
+//     value: currentYear - i,
+//   })),
+// ];
+
+const currentYear  = new Date().getFullYear();
+// const currentMonth = new Date().getMonth() + 1;
+// const yearOptions  = Array.from({ length: 5 }, (_, i) => currentYear - i);
+const YEARS = Array.from(
+  { length: 2030 - currentYear + 1 },
+  (_, i) => {
+    const y = currentYear + i;
+    return { label: String(y), value: y };
+  }
+);
+
 
 const makeColumns = () => [
   {
@@ -123,7 +137,13 @@ const DataPanel = ({ title, type, filters, setFilters, data, isLoading }) => {
       setFilters((prev) => ({ ...prev, date: "" }));
     }
   };
-  const handleClear = () => setFilters({ month: "", year: "", date: "" });
+  // const handleClear = () => setFilters({ month: "", year: "", date: "" });
+  const handleClear = () =>
+  setFilters({
+    month: new Date().getMonth() + 1,
+    year:  currentYear,
+    date:  "",
+  });
 
   const filterLabel = () => {
     if (filters.date) return filters.date;
@@ -235,8 +255,18 @@ const DataPanel = ({ title, type, filters, setFilters, data, isLoading }) => {
 
 // ── Main ──
 const DashboardHome = () => {
-  const [expenseFilters, setExpenseFilters] = useState({ month: "", year: "", date: "" });
-  const [incomeFilters,  setIncomeFilters]  = useState({ month: "", year: "", date: "" });
+ const currentMonth = new Date().getMonth() + 1;
+
+const [expenseFilters, setExpenseFilters] = useState({
+  month: currentMonth,
+  year:  currentYear,
+  date:  "",
+});
+const [incomeFilters, setIncomeFilters] = useState({
+  month: currentMonth,
+  year:  currentYear,
+  date:  "",
+});
 
   const { data: cash = {} } = useQuery({
     queryKey: ["cash"],
@@ -337,11 +367,11 @@ const DashboardHome = () => {
         </div>
 
         {/* Stat Cards — পরে */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+        {/* <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
           <StatCard title="Money Income"    value={income?.data?.total}   icon={ArrowUpRight}   type="income"  />
           <StatCard title="Money Expenses"  value={expenses?.data?.total} icon={ArrowDownRight}  type="expense" />
           <StatCard title="Banking Balance" value={cash?.data?.balance}   icon={Landmark}        type="balance" />
-        </div>
+        </div> */}
 
         {/* Charts */}
         <div className="grid grid-cols-3 gap-4">
@@ -349,6 +379,10 @@ const DashboardHome = () => {
           <MonthlySummaryChart />
           <DailyTrendChart />
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <InvoiceDashboardPanel />
+  <InvoiceMonthlyChart />
+</div>
         <div>
           <ApprovalDashboardPage></ApprovalDashboardPage>
         </div>
