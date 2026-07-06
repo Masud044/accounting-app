@@ -110,3 +110,15 @@ export const useInvoiceMonthlySummary = (year) =>
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  export const useInvoiceDailyTrend = (year, month) =>
+  useQuery({
+    queryKey: [...invoiceKeys.all, "daily-trend", year, month],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (month) params.set("month", month);
+      if (year)  params.set("year", year);
+      return fetchJSON(`${BASE}/api/sal-invoice/dashboard/daily-summary?${params}`);
+    },
+    staleTime: 2 * 60 * 1000,
+  });

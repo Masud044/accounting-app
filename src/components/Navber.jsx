@@ -62,40 +62,51 @@ export default function Navbar() {
       {/* Desktop Nav */}
       <NavigationMenu viewport={isMobile} className="hidden md:block">
         <NavigationMenuList className="flex-wrap">
-          {NAV_ITEMS.filter((item) => canSee(item.roles)).map(
-            (
-              item,
-              idx, // ← filter যোগ
-            ) => (
-              <NavigationMenuItem key={idx}>
-                <NavigationMenuTrigger>{item.label}</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  {item.links.map((linkItem, linkItemIndex) => (
-                    <NavLink
-                      to={linkItem.to}
-                      end
-                      key={linkItemIndex}
-                      onClick={handleLinkClick}
-                      className={({ isActive }) =>
-                        `px-4 py-2 w-48 flex items-center gap-2 text-sm font-sans rounded-lg cursor-pointer ${
-                          isActive
-                            ? "text-green-700 font-medium bg-green-50"
-                            : "hover:bg-green-100 transition-colors duration-300"
-                        }`
-                      }
-                    >
-                      {linkItem.Icon && (
-                        <linkItem.Icon className="w-4 h-4 shrink-0" />
-                      )}
-                      {linkItem.label}
-                    </NavLink>
-                  ))}
-
-               
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            ),
-          )}
+        {NAV_ITEMS.filter((item) => canSee(item.roles)).map((item, idx) =>
+  item.links ? (
+    <NavigationMenuItem key={idx}>
+      <NavigationMenuTrigger>{item.label}</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        {item.links.map((linkItem, linkItemIndex) => (
+          <NavLink
+            to={linkItem.to}
+            end
+            key={linkItemIndex}
+            onClick={handleLinkClick}
+            className={({ isActive }) =>
+              `px-4 py-2 w-48 flex items-center gap-2 text-sm font-sans rounded-lg cursor-pointer ${
+                isActive
+                  ? "text-green-700 font-medium bg-green-50"
+                  : "hover:bg-green-100 transition-colors duration-300"
+              }`
+            }
+          >
+            {linkItem.Icon && <linkItem.Icon className="w-4 h-4 shrink-0" />}
+            {linkItem.label}
+          </NavLink>
+        ))}
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  ) : (
+    <NavigationMenuItem key={idx}>
+      <NavLink
+        to={item.to}
+        end
+        onClick={handleLinkClick}
+        className={({ isActive }) =>
+          `px-4 py-2 flex items-center gap-2 text-sm font-sans rounded-lg cursor-pointer ${
+            isActive
+              ? "text-green-700 font-medium bg-green-50"
+              : "hover:bg-green-100 transition-colors duration-300"
+          }`
+        }
+      >
+        {item.Icon && <item.Icon className="w-4 h-4 shrink-0" />}
+        {item.label}
+      </NavLink>
+    </NavigationMenuItem>
+  ),
+)}
         </NavigationMenuList>
       </NavigationMenu>
 

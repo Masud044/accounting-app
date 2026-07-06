@@ -44,46 +44,63 @@ export default function MobileNav({ open, onOpenChange }) {
         </SheetHeader>
 
         <div className="flex flex-col h-[calc(100%-73px)] overflow-y-auto">
-          <nav className="flex-1 px-4 py-4 space-y-2">
-            {NAV_ITEMS.map((item, idx) => (
-              <Collapsible
-                key={idx}
-                open={openSections.includes(idx)}
-                onOpenChange={() => toggleSection(idx)}
-              >
-                <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                  {item.label}
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      openSections.includes(idx) ? "rotate-180" : ""
-                    }`}
-                  />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-1 space-y-1">
-                  {item.links.map((linkItem, linkIdx) => (
-                    <NavLink
-                      key={linkIdx}
-                      to={linkItem.to}
-                      end={linkItem.to === "/dashboard"}
-                      onClick={handleLinkClick}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-2.5 ml-4 text-sm rounded-lg transition-colors ${
-                          isActive
-                            ? "text-green-700 font-medium bg-green-50"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`
-                      }
-                    >
-                      {linkItem.Icon && (
-                        <linkItem.Icon className="w-4 h-4 shrink-0" />
-                      )}
-                      {linkItem.label}
-                    </NavLink>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-          </nav>
+         <nav className="flex-1 px-4 py-4 space-y-2">
+  {NAV_ITEMS.map((item, idx) =>
+    item.links ? (
+      <Collapsible
+        key={idx}
+        open={openSections.includes(idx)}
+        onOpenChange={() => toggleSection(idx)}
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+          {item.label}
+          <ChevronDown
+            className={`w-4 h-4 transition-transform duration-200 ${
+              openSections.includes(idx) ? "rotate-180" : ""
+            }`}
+          />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-1 space-y-1">
+          {item.links.map((linkItem, linkIdx) => (
+            <NavLink
+              key={linkIdx}
+              to={linkItem.to}
+              end={linkItem.to === "/dashboard"}
+              onClick={handleLinkClick}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-2.5 ml-4 text-sm rounded-lg transition-colors ${
+                  isActive
+                    ? "text-green-700 font-medium bg-green-50"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`
+              }
+            >
+              {linkItem.Icon && <linkItem.Icon className="w-4 h-4 shrink-0" />}
+              {linkItem.label}
+            </NavLink>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+    ) : (
+      <NavLink
+        key={idx}
+        to={item.to}
+        end={item.to === "/dashboard"}
+        onClick={handleLinkClick}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+            isActive
+              ? "text-green-700 font-medium bg-green-50"
+              : "text-gray-700 hover:bg-gray-100"
+          }`
+        }
+      >
+        {item.Icon && <item.Icon className="w-4 h-4 shrink-0" />}
+        {item.label}
+      </NavLink>
+    ),
+  )}
+</nav>
 
           
         </div>

@@ -59,7 +59,7 @@ const DashboardIndex = () => {
   if (isLoading) return null;
 
   if (user?.roles?.includes("Admin")) {
-    return <DashboardHome />; // Admin → DashboardHome
+    return <WelcomePage />; // Admin → DashboardHome
   }
   return <Navigate to="/dashboard/welcome" replace />; // Inventory → WelcomePage
 };
@@ -92,6 +92,14 @@ function App() {
 
               {/* Inventory welcome page */}
               <Route path="welcome" element={<WelcomePage />} />
+              <Route
+  path="overview"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <DashboardHome />
+    </ProtectedRoute>
+  }
+/>
 
               {/* Admin + Inventory উভয়ই */}
               <Route path="inventory" element={<InventoriesPage />} />
