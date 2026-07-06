@@ -311,6 +311,7 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
     invoiceDate,
     invoiceHid: invoiceData?.HID,
     invoiceNo:  invoiceData?.INVOICE_ID ? String(invoiceData.INVOICE_ID) : "",
+    saleInvoiceNo: invoiceData?.HID ?? "",
     description: productionDatesText || `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
     rows: lines.map((l) => ({
       particulars: l.description,

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Trash2, Users, X } from "lucide-react";
 import Select from "react-select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation} from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 
 import { SectionContainer } from "@/components/SectionContainer";
@@ -12,6 +12,9 @@ import { PaymentService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanel from "@/components/shared/bill-upload-panel";
 import { useCreateSupplier } from "@/features/supplier/queries"; // ← তোমার actual path
+ 
+
+
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -43,6 +46,8 @@ const PaymentCreate = () => {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierForm, setSupplierForm] = useState(supplierDefault);
   const [supplierErrors, setSupplierErrors] = useState({});
+
+  const location = useLocation();
 
   const [form, setForm] = useState({
     entryDate: today,
@@ -266,6 +271,37 @@ const PaymentCreate = () => {
 
   const isSubmitting = mutation.isPending;
   const isSupplierSaving = supplierMutation.isPending;
+
+
+
+useEffect(() => {
+  const incoming = location.state;
+  if (!incoming) return;
+
+  setForm((f) => ({
+    ...f,
+    supplier: incoming.supplier ? String(incoming.supplier) : f.supplier,
+    entryDate: incoming.entryDate || f.entryDate,
+    glDate: incoming.glDate || f.glDate,
+    description: incoming.description || f.description,
+    invoiceNo: incoming.invoiceNo || f.invoiceNo,
+  }));
+
+  if (incoming.rows?.length > 0) {
+    const mappedRows = incoming.rows.map((r, i) => ({
+      id: Date.now() + i,
+      accountCode: "",       // 👈 tumar payment account code convention diye set korte hobe
+      particulars: r.particulars || "",
+      amount: Number(r.amount || 0),
+    }));
+    setRows(mappedRows);
+    setForm((f) => ({
+      ...f,
+      totalAmount: mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0),
+    }));
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   // ── Shared input classes ─────────────────────────────────────────────────────
   const inputCls =

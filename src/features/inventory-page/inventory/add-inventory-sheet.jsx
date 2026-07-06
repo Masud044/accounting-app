@@ -205,6 +205,7 @@ export default function AddInventorySheet({
   open,
   onOpenChange,
   showConfirmation,
+  initialData,
 }) {
   const createMutation = useCreateInventory();
   const { data: stores = [], isLoading: storesLoading } = useStores();
@@ -238,9 +239,24 @@ export default function AddInventorySheet({
     formState: { isDirty },
   } = form;
 
+  // useEffect(() => {
+  //   if (open) form.reset(defaultValues);
+  // }, [open]);
+
   useEffect(() => {
-    if (open) form.reset(defaultValues);
-  }, [open]);
+  if (open) {
+    form.reset({
+      ...defaultValues,
+      item: initialData?.itemId
+        ? { id: initialData.itemId, name: initialData.itemName }
+        : null,
+      invQty:   initialData?.qty ?? "",
+      grnNo:    initialData?.grnNo ?? "",
+      price:    initialData?.price ?? "",
+      invtDate: initialData?.invtDate ?? "",
+    });
+  }
+}, [open, initialData]);
 
   const onSubmit = async (data) => {
     try {
