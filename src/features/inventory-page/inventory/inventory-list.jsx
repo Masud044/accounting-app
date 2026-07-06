@@ -525,9 +525,9 @@ useEffect(() => {
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
               <span className="sr-only">Refresh</span>
             </Button>
-            <Button onClick={() => setIsAddSheetOpen(true)}>
-              <IconCircleDashedPlus className="mr-1" />Add Inventory
-            </Button>
+           <Button onClick={() => { setPrefillData(null); setIsAddSheetOpen(true); }}>
+  <IconCircleDashedPlus className="mr-1" />Add Inventory
+</Button>
           </div>
         </div>
       </div>
@@ -608,14 +608,17 @@ useEffect(() => {
       </div>
 
       {/* Sheets */}
-      {isAddSheetOpen && (
-        <AddInventorySheet
-          open={isAddSheetOpen}
-          onOpenChange={setIsAddSheetOpen}
-          showConfirmation={showConfirmation}
-           initialData={prefillData} 
-        />
-      )}
+     {isAddSheetOpen && (
+  <AddInventorySheet
+    open={isAddSheetOpen}
+    onOpenChange={(open) => {
+      setIsAddSheetOpen(open);
+      if (!open) setPrefillData(null);   // ✅ sheet বন্ধ হলে prefillData clear
+    }}
+    showConfirmation={showConfirmation}
+    initialData={prefillData}
+  />
+)}
       {isUpdateSheetOpen && (
         <UpdateInventorySheet
           open={isUpdateSheetOpen}

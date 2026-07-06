@@ -329,7 +329,7 @@ export default function UpdateInventorySheet({ open, onOpenChange, showConfirmat
                         <SelectValue placeholder={storesLoading ? "Loading..." : "Select store"} />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="z-106">
+                    <SelectContent className="z-115">
                       {stores.map((s) => (
                         <SelectItem key={s.STORE_ID} value={String(s.STORE_ID)}>
                           {s.STORE_NAME}
@@ -401,7 +401,7 @@ export default function UpdateInventorySheet({ open, onOpenChange, showConfirmat
                           <SelectValue placeholder={uomsLoading ? "Loading..." : "Select UOM"} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="z-106">
+                      <SelectContent className="z-115">
                         {uoms.map((u) => (
                           <SelectItem key={u.ID} value={String(u.ID)}>
                             {u.NAME}

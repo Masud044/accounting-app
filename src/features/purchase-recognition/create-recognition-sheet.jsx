@@ -415,7 +415,7 @@ const emptyItem = () => ({
 
 const emptyHeader = () => ({
   recognitionDate: today(),
-  invoiceNumber: "",
+ 
   department: "",
   requestedBy: "",
   supplierId: "",

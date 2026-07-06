@@ -448,7 +448,6 @@ const today = () => new Date().toISOString().split("T")[0];
 
 const toInputDate = (val) => {
   if (!val) return today();
-  // backend sends 'YYYY-MM-DD' plain string — use directly if already in that shape
   if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
   const d = new Date(val);
   if (isNaN(d.getTime())) return today();
@@ -478,7 +477,6 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
   const [isDirty, setIsDirty] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  // reset on open/close
   useEffect(() => {
     if (!open) {
       setInitialized(false);
@@ -486,14 +484,13 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
     }
   }, [open]);
 
-  // populate once form data has loaded
   useEffect(() => {
     if (!open || initialized || !formData) return;
 
     setHeader({
       recognitionDate: toInputDate(formData.RECOGNITION_DATE),
       poNumber:        formData.PO_NUMBER || "",
-      invoiceNumber:   formData.INVOICE_NUMBER || "",
+       invoiceNumber:   formData.INVOICE_NUMBER || "",
       department:      formData.DEPARTMENT || "",
       requestedBy:     formData.REQUESTED_BY || "",
       supplierId:      formData.SUPPLIER_ID ? String(formData.SUPPLIER_ID) : "",
@@ -552,7 +549,6 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
     });
   };
 
-  // Item selected from picker — auto-fills name, description, price
   const handleItemSelect = (idx, item) => {
     setIsDirty(true);
     setItems((prev) => {
@@ -623,34 +619,31 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
   const isSubmitting = updateMutation.isPending;
   const isLoading = isLoadingForm || !header;
 
+  // ✅ FIX: PO Number pass করা হচ্ছে, ভুল grnNo mapping সরানো
   const inventoryState = {
-  purchaseFormId: formId,
-  item: header?.vendorName ? null : null, // item auto-select ItemPicker id দিয়ে হবে নিচে
-  itemId: items[0]?.itemId ?? null,
-  itemName: items[0]?.itemName ?? "",
-  qty: items[0]?.qtyRecv ?? "",
-  price: items[0]?.unitPrice ?? "",
-  grnNo: header?.poNumber ?? "",
-  invtDate: header?.recognitionDate ?? today(),
-};
+    purchaseFormId: formId,
+    poNumber: header?.poNumber || "",
+    bulkItems: items.map((it) => ({
+      itemId:   it.itemId,
+      itemName: it.itemName,
+      qty:      it.qtyRecv,
+      price:    it.unitPrice,   // per-unit price
+    })),
+    invtDate: header?.recognitionDate ?? today(),
+  };
 
-const paymentState = {
+  const paymentState = {
   supplier: header?.supplierId ?? "",
   entryDate: header?.recognitionDate ?? today(),
   glDate: header?.invoiceDate ?? today(),
   description: header?.description || `Payment against Purchase Recognition #${formId}`,
-  invoiceNo: formId ? String(formId) : "",
-  rows: items.map((it) => ({
-    particulars: it.description || it.itemName,
-    amount: Number(it.qtyRecv || 0) * Number(it.unitPrice || 0),
-  })),
+  invoiceNo: header?.invoiceNumber ? String(header.invoiceNumber) : "",
+  poNumber: header?.poNumber ?? "",
 };
-
   return (
     <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleCancel(); }}>
       <SheetContent className="sm:max-w-4xl w-full flex flex-col gap-0 p-0 z-105">
 
-        {/* Header */}
         <SheetHeader className="px-6 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
@@ -670,10 +663,8 @@ const paymentState = {
           </div>
         ) : (
           <>
-            {/* Body */}
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-              {/* ── Header fields ── */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Recognition Date <span className="text-destructive">*</span></Label>
@@ -696,31 +687,6 @@ const paymentState = {
                   <Input value={header.poNumber} disabled className="h-9 bg-muted/50" />
                 </div>
 
-                {/* <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Invoice Number</Label>
-                  <Input
-                    value={header.invoiceNumber}
-                    onChange={(e) => updateHeader("invoiceNumber", e.target.value)}
-                    disabled={isSubmitting} className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Department</Label>
-                  <Input
-                    value={header.department}
-                    onChange={(e) => updateHeader("department", e.target.value)}
-                    disabled={isSubmitting} className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Requested By</Label>
-                  <Input
-                    value={header.requestedBy}
-                    onChange={(e) => updateHeader("requestedBy", e.target.value)}
-                    disabled={isSubmitting} className="h-9"
-                  />
-                </div> */}
-
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Supplier</Label>
                   <Select
@@ -742,29 +708,22 @@ const paymentState = {
                 </div>
 
                 <div className="space-y-1.5">
-  <Label className="text-xs font-medium">Purchase Type <span className="text-destructive">*</span></Label>
-  <Select
-    value={header.purchaseType}
-    onValueChange={(v) => updateHeader("purchaseType", v)}
-    disabled={isSubmitting}
-  >
-    <SelectTrigger className="h-9">
-      <SelectValue placeholder="Select type" />
-    </SelectTrigger>
-    <SelectContent className="z-110">
-      <SelectItem value="ITEM">Item</SelectItem>
-      <SelectItem value="SERVICE">Service</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-                {/* <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Vendor Name <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={header.vendorName}
-                    onChange={(e) => updateHeader("vendorName", e.target.value)}
-                    disabled={isSubmitting} className="h-9"
-                  />
-                </div> */}
+                  <Label className="text-xs font-medium">Purchase Type <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={header.purchaseType}
+                    onValueChange={(v) => updateHeader("purchaseType", v)}
+                    disabled={isSubmitting}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="z-110">
+                      <SelectItem value="ITEM">Item</SelectItem>
+                      <SelectItem value="SERVICE">Service</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Contact Person</Label>
                   <Input
@@ -773,8 +732,6 @@ const paymentState = {
                     disabled={isSubmitting} className="h-9"
                   />
                 </div>
-
-               
 
                 <div className="space-y-1.5 col-span-2 md:col-span-3">
                   <Label className="text-xs font-medium">Description</Label>
@@ -787,7 +744,6 @@ const paymentState = {
                 </div>
               </div>
 
-              {/* ── Item table ── */}
               <div className="flex items-center justify-between pt-2">
                 <Label className="text-xs font-medium">Itemized Asset Breakdown</Label>
                 <Button type="button" size="sm" onClick={addItemRow} disabled={isSubmitting}>
@@ -865,7 +821,6 @@ const paymentState = {
                 </table>
               </div>
 
-              {/* ── Summary ── */}
               <div className="flex justify-end">
                 <div className="w-72 rounded-md overflow-hidden border border-border text-sm">
                   <div className="flex items-center justify-between px-3 py-2 font-medium bg-muted/40">
@@ -879,42 +834,30 @@ const paymentState = {
 
             </div>
 
-            {/* Footer */}
-            {/* <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                 Cancel
               </Button>
               <Button onClick={handleSubmit} disabled={isSubmitting || items.length === 0}>
-                {isSubmitting
-                  ? <><Spinner className="mr-2 h-4 w-4" />Updating...</>
-                  : "Update Form"}
+                {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Updating...</> : "Update Form"}
               </Button>
-            </div> */}
 
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
-  <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-    Cancel
-  </Button>
-  <Button onClick={handleSubmit} disabled={isSubmitting || items.length === 0}>
-    {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Updating...</> : "Update Form"}
-  </Button>
+              {header.purchaseType === "ITEM" && (
+                <Link to="/dashboard/inventory" state={inventoryState}>
+                  <Button type="button" variant="secondary">
+                    <ArchiveIcon className="h-4 w-4 mr-1" /> Create Inventory
+                  </Button>
+                </Link>
+              )}
 
-  {header.purchaseType === "ITEM" && (
-    <Link to="/dashboard/inventory" state={inventoryState}>
-      <Button type="button" variant="secondary">
-        <ArchiveIcon className="h-4 w-4 mr-1" /> Create Inventory
-      </Button>
-    </Link>)},
-  
-
-  {header.purchaseType === "SERVICE" && (
-    <Link to="/dashboard/payment-create" state={paymentState}>
-      <Button type="button" variant="secondary">
-        <Wallet className="h-4 w-4 mr-1" /> Create Payment
-      </Button>
-    </Link>
-  )}
-</div>
+              {header.purchaseType === "SERVICE" && (
+                <Link to="/dashboard/payment-create" state={paymentState}>
+                  <Button type="button" variant="secondary">
+                    <Wallet className="h-4 w-4 mr-1" /> Create Payment
+                  </Button>
+                </Link>
+              )}
+            </div>
           </>
         )}
 

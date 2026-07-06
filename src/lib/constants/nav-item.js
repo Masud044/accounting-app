@@ -72,6 +72,24 @@ export const NAV_ITEMS = [
     ],
   },
 
+
+  //   {
+  //   label: "Home",
+  //   roles: ["Admin"],
+  //   to: "/dashboard/home-table",
+  // },
+  // {
+  //   label: "Dashboard",
+  //   roles: ["Admin"],
+    
+  //         to: "/dashboard" ,
+   
+      
+     
+   
+  // },
+
+
   {
     label: "Voucher Entry",
     roles: ["Admin"],                  // শুধু Admin
