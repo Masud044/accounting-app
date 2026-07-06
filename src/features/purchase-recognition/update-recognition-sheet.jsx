@@ -435,7 +435,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { FileText, Trash2, Plus } from "lucide-react";
+import { FileText, Trash2, Plus, ArchiveIcon, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
+
 import {
   usePurchaseRecognitionByFormId, useUpdatePurchaseRecognition, useActiveSuppliers,
 } from "./queries";
@@ -500,6 +502,7 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
       costCenterCode:  formData.COST_CENTER_CODE || "",
       invoiceDate:     toInputDate(formData.INVOICE_DATE),
       description:     formData.DESCRIPTION || "",
+      purchaseType: formData.PURCHASE_TYPE || "ITEM",
     });
 
     const rawItems = formData.items || [];
@@ -620,6 +623,29 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
   const isSubmitting = updateMutation.isPending;
   const isLoading = isLoadingForm || !header;
 
+  const inventoryState = {
+  purchaseFormId: formId,
+  item: header?.vendorName ? null : null, // item auto-select ItemPicker id দিয়ে হবে নিচে
+  itemId: items[0]?.itemId ?? null,
+  itemName: items[0]?.itemName ?? "",
+  qty: items[0]?.qtyRecv ?? "",
+  price: items[0]?.unitPrice ?? "",
+  grnNo: header?.poNumber ?? "",
+  invtDate: header?.recognitionDate ?? today(),
+};
+
+const paymentState = {
+  supplier: header?.supplierId ?? "",
+  entryDate: header?.recognitionDate ?? today(),
+  glDate: header?.invoiceDate ?? today(),
+  description: header?.description || `Payment against Purchase Recognition #${formId}`,
+  invoiceNo: formId ? String(formId) : "",
+  rows: items.map((it) => ({
+    particulars: it.description || it.itemName,
+    amount: Number(it.qtyRecv || 0) * Number(it.unitPrice || 0),
+  })),
+};
+
   return (
     <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleCancel(); }}>
       <SheetContent className="sm:max-w-4xl w-full flex flex-col gap-0 p-0 z-105">
@@ -714,6 +740,23 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-1.5">
+  <Label className="text-xs font-medium">Purchase Type <span className="text-destructive">*</span></Label>
+  <Select
+    value={header.purchaseType}
+    onValueChange={(v) => updateHeader("purchaseType", v)}
+    disabled={isSubmitting}
+  >
+    <SelectTrigger className="h-9">
+      <SelectValue placeholder="Select type" />
+    </SelectTrigger>
+    <SelectContent className="z-110">
+      <SelectItem value="ITEM">Item</SelectItem>
+      <SelectItem value="SERVICE">Service</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
                 {/* <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Vendor Name <span className="text-destructive">*</span></Label>
                   <Input
@@ -837,7 +880,7 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
+            {/* <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
                 Cancel
               </Button>
@@ -846,7 +889,32 @@ export default function EditRecognitionSheet({ open, onOpenChange, formId, showC
                   ? <><Spinner className="mr-2 h-4 w-4" />Updating...</>
                   : "Update Form"}
               </Button>
-            </div>
+            </div> */}
+
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
+  <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+    Cancel
+  </Button>
+  <Button onClick={handleSubmit} disabled={isSubmitting || items.length === 0}>
+    {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Updating...</> : "Update Form"}
+  </Button>
+
+  {header.purchaseType === "ITEM" && (
+    <Link to="/dashboard/inventory" state={inventoryState}>
+      <Button type="button" variant="secondary">
+        <ArchiveIcon className="h-4 w-4 mr-1" /> Create Inventory
+      </Button>
+    </Link>)},
+  
+
+  {header.purchaseType === "SERVICE" && (
+    <Link to="/dashboard/payment-create" state={paymentState}>
+      <Button type="button" variant="secondary">
+        <Wallet className="h-4 w-4 mr-1" /> Create Payment
+      </Button>
+    </Link>
+  )}
+</div>
           </>
         )}
 

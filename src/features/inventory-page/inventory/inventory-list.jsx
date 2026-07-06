@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -22,6 +22,7 @@ import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLocation, useNavigate } from "react-router-dom";
  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -67,6 +68,9 @@ export default function InventoryList() {
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [isUpdateSheetOpen, setIsUpdateSheetOpen] = useState(false);
   const [selectedInv, setSelectedInv] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [prefillData, setPrefillData] = useState(null);   // 👈 নতুন
 
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
   const {
@@ -83,6 +87,16 @@ export default function InventoryList() {
     setSelectedInv(inv);
     setIsUpdateSheetOpen(true);
   };
+
+useEffect(() => {
+    if (location.state?.purchaseFormId) {
+      setPrefillData(location.state);
+      setIsAddSheetOpen(true);
+      // state clear koro jate refresh/back e ফের na khule
+      navigate(location.pathname, { replace: true, state: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDelete = async (inv) => {
     const confirmed = await showConfirmation({
@@ -599,6 +613,7 @@ export default function InventoryList() {
           open={isAddSheetOpen}
           onOpenChange={setIsAddSheetOpen}
           showConfirmation={showConfirmation}
+           initialData={prefillData} 
         />
       )}
       {isUpdateSheetOpen && (

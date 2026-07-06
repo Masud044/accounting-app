@@ -57,6 +57,7 @@ const ReceiveEdit = () => {
     particular: "",
     amount: "",
     totalAmount: 0,
+    sale_invoice_no: "", 
   });
 
   // ── Fetch existing GLDOC docs for this voucher ────────────────────────────────
@@ -185,6 +186,7 @@ const ReceiveEdit = () => {
       amount: "",
       totalAmount: total,
       inv_type: master.INV_TYPE ? String(master.INV_TYPE) : "",
+      sale_invoice_no: master.SALE_INVOICE_NO ? String(master.SALE_INVOICE_NO) : "",
     });
     setRows(mappedRows);
   }, [voucherId, voucherData, accounts]);
@@ -354,6 +356,7 @@ const ReceiveEdit = () => {
       DEBIT_ID: rows.map((r) => (r.creditId ? Number(r.creditId) : null)),
       amount2: rows.map((r) => Number(r.amount)),
       inv_type: form.inv_type ? Number(form.inv_type) : null,
+       sale_invoice_no: form.sale_invoice_no ? Number(form.sale_invoice_no) : null,
       acode: rows.map((r) => r.accountCode),
       CODEDESCRIPTION: rows.map((r) => {
         const p = r.particulars.split(" - ");
@@ -450,6 +453,7 @@ const ReceiveEdit = () => {
                 key: "invoiceNo",
                 readOnly: true,
               },
+               { label: "Sale Invoice No",   type: "text",   key: "sale_invoice_no",  readOnly: true },
               {
                 label: "No. of Supporting",
                 type: "number",

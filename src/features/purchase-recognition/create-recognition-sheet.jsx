@@ -424,6 +424,7 @@ const emptyHeader = () => ({
   costCenterCode: "",
   invoiceDate: today(),
   description: "",
+   purchaseType: "ITEM",
 });
 
 // ── Editable cell style (matches Sale Invoice line convention) ────────────────
@@ -610,6 +611,23 @@ export default function AddRecognitionSheet({ open, onOpenChange, showConfirmati
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-1.5">
+  <Label className="text-xs font-medium">Purchase Type <span className="text-destructive">*</span></Label>
+  <Select
+    value={header.purchaseType}
+    onValueChange={(v) => updateHeader("purchaseType", v)}
+    disabled={isSubmitting}
+  >
+    <SelectTrigger className="h-9">
+      <SelectValue placeholder="Select type" />
+    </SelectTrigger>
+    <SelectContent className="z-110">
+      <SelectItem value="ITEM">Item</SelectItem>
+      <SelectItem value="SERVICE">Service</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
 
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">Contact Person</Label>

@@ -41,7 +41,7 @@ const ReceiveCreate = () => {
   const [form, setForm] = useState({
     entryDate: today, invoiceNo: "", supporting: "", description: "",
     customer: "", glDate: today, ReceiveCode: "",
-    accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "",
+    accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "", sale_invoice_no: "", 
   });
 
   // ── Queries ──────────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ const ReceiveCreate = () => {
         setForm({
           entryDate: today, invoiceNo: "", supporting: "", description: "",
           customer: "", glDate: today, ReceiveCode: "",
-          accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "",
+          accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "",sale_invoice_no: "",  
         });
         setRows([{ id: "dummy", accountCode: "", particulars: "", amount: 0 }]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
@@ -222,6 +222,7 @@ const ReceiveCreate = () => {
       accountID:    rows.map((r) => r.accountCode),
       amount2:      rows.map((r) => Number(r.amount || 0)),
       inv_type: form.inv_type ? Number(form.inv_type) : null,
+       sale_invoice_no: form.sale_invoice_no ? Number(form.sale_invoice_no) : null, 
     });
   };
 
@@ -237,6 +238,7 @@ const ReceiveCreate = () => {
       glDate:     incoming.invoiceDate || f.glDate,
       description: incoming.description || f.description,
       invoiceNo:   incoming.invoiceNo || f.invoiceNo,
+      sale_invoice_no: incoming.saleInvoiceNo ? String(incoming.saleInvoiceNo) : f.sale_invoice_no, 
     }));
 
   if (incoming.rows && incoming.rows.length > 0) {
@@ -342,6 +344,7 @@ const ReceiveCreate = () => {
             {[
               { label: "Entry Date",        type: "date",   key: "entryDate",  onChange: (v) => setForm({ ...form, entryDate: v }) },
               { label: "Invoice No",         type: "text",   key: "invoiceNo",  readOnly: true },
+              { label: "Sale Invoice No",   type: "text",   key: "sale_invoice_no",  readOnly: true },
               { label: "No. of Supporting",  type: "number", key: "supporting", onChange: (v) => setForm({ ...form, supporting: v }) },
               { label: "GL Date",            type: "date",   key: "glDate",     onChange: (v) => setForm({ ...form, glDate: v }) },
             ].map(({ label, type, key, readOnly, onChange }) => (
