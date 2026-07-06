@@ -27,6 +27,8 @@ import ApprovalDashboardPage from "@/features/purchase-recognition/recognition-a
 import InvoiceDashboardPanel from "@/features/sale-invoice/invoice-dashboard-panel";
 import InvoiceMonthlyChart from "@/features/sale-invoice/invoice-monthly-chart";
 
+import InvoiceDailyTrendChart from "@/features/sale-invoice/invoice-daily-chart";
+
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 const MONTHS = [
@@ -379,9 +381,16 @@ const [incomeFilters, setIncomeFilters] = useState({
           <MonthlySummaryChart />
           <DailyTrendChart />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-  <InvoiceDashboardPanel />
+        {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <InvoiceDashboardPanel className="col-span-2"/>
   <InvoiceMonthlyChart />
+  <InvoiceDailyTrendChart></InvoiceDailyTrendChart>
+</div> */}
+
+<div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+  <InvoiceDashboardPanel className="col-span-1 lg:col-span-2" />
+  <InvoiceMonthlyChart className="col-span-1" />
+  <InvoiceDailyTrendChart className="col-span-1" />
 </div>
         <div>
           <ApprovalDashboardPage></ApprovalDashboardPage>
