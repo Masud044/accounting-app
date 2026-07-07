@@ -43,7 +43,7 @@ export function useConfirmationDialog() {
   const ConfirmationDialog = () =>
     state.open ? (
       <AlertDialog open={state.open} onOpenChange={handleCancel}>
-        <AlertDialogContent className="z-108">
+        <AlertDialogContent className="z-115">
           <AlertDialogHeader>
             <AlertDialogTitle>{state.title}</AlertDialogTitle>
             <AlertDialogDescription>{state.description}</AlertDialogDescription>

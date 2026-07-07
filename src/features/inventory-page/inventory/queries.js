@@ -2,14 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
-// ── Query Keys ────────────────────────────────────────────────────────────────
 export const inventoryKeys = {
   all:    ["inventories"],
   lists:  () => [...inventoryKeys.all, "lists"],
-  detail: (id) => [...inventoryKeys.all, "detail", id],
+  detail: (hid) => [...inventoryKeys.all, "detail", hid],
 };
 
-// ── Fetcher ───────────────────────────────────────────────────────────────────
 const fetchJSON = async (url, options = {}) => {
   const res = await fetch(url, options);
   if (!res.ok) {
@@ -20,7 +18,6 @@ const fetchJSON = async (url, options = {}) => {
   return json.data ?? json;
 };
 
-// ── Hooks ─────────────────────────────────────────────────────────────────────
 export const useInventories = ({ page = 1, limit = 50 } = {}) =>
   useQuery({
     queryKey: [...inventoryKeys.lists(), page, limit],
@@ -34,16 +31,35 @@ export const useInventories = ({ page = 1, limit = 50 } = {}) =>
     throwOnError: false,
   });
 
-export const useInventoryById = (tid) =>
+export const useInventoryById = (hid) =>
   useQuery({
-    queryKey: inventoryKeys.detail(tid),
-    queryFn:  () => fetchJSON(`${BASE}/api/inventory/${tid}`),
-    enabled:  !!tid,
-    staleTime: 30 * 1000,
+    queryKey: inventoryKeys.detail(hid),
+    queryFn:  () => fetchJSON(`${BASE}/api/inventory/${hid}`),
+    enabled:  !!hid,
+    staleTime: 10 * 1000,
     refetchOnWindowFocus: false,
     throwOnError: false,
   });
 
+export const useNextGrnNo = (enabled = true) =>
+  useQuery({
+    queryKey: ["inventory", "next-grn-no"],
+    queryFn:  () => fetchJSON(`${BASE}/api/inventory/next-grn-no`),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    enabled,
+  });
+
+  export const useNextPoNo = (enabled = true) =>
+  useQuery({
+    queryKey: ["inventory", "next-po-no"],
+    queryFn:  () => fetchJSON(`${BASE}/api/inventory/next-po-no`),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    enabled,
+  });
+
+// ── data = { invDate, storeId, poNo, grnNo, items: [...] } ──
 export const useCreateInventory = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -58,18 +74,19 @@ export const useCreateInventory = () => {
   });
 };
 
+// ── { hid, data: { invDate, storeId, poNo, grnNo, items: [{ tid?, ... }] } } ──
 export const useUpdateInventory = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ tid, data }) =>
-      fetchJSON(`${BASE}/api/inventory/${tid}`, {
+    mutationFn: ({ hid, data }) =>
+      fetchJSON(`${BASE}/api/inventory/${hid}`, {
         method:  "PUT",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(data),
       }),
-    onSuccess: (_, { tid }) => {
+    onSuccess: (_, { hid }) => {
       qc.invalidateQueries({ queryKey: inventoryKeys.lists() });
-      qc.invalidateQueries({ queryKey: inventoryKeys.detail(tid) });
+      qc.invalidateQueries({ queryKey: inventoryKeys.detail(hid) });
     },
     onError: (err) => console.error("Update inventory failed:", err),
   });
@@ -78,8 +95,8 @@ export const useUpdateInventory = () => {
 export const useDeleteInventory = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (tid) =>
-      fetchJSON(`${BASE}/api/inventory/${tid}`, { method: "DELETE" }),
+    mutationFn: (hid) =>
+      fetchJSON(`${BASE}/api/inventory/${hid}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: inventoryKeys.lists() }),
     onError: (err) => console.error("Delete inventory failed:", err),
   });

@@ -22,7 +22,9 @@ const yearOptions = Array.from(
   { length: 2030 - currentYear + 1 },
   (_, i) => currentYear + i
 );
+
 const MONTHS = [
+  { value: "all", label: "All" },
   { value: "1",  label: "January"  },
   { value: "2",  label: "February" },
   { value: "3",  label: "March"    },
@@ -48,12 +50,13 @@ const toDayLabel = (isoDate) => {
 
 export default function InvoiceDailyTrendChart() {
   const [year,  setYear]  = useState(currentYear);
-  const [month, setMonth] = useState(currentMonth);
+  const [month, setMonth] = useState("all"); // default = All
+
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
 
   const { data: rawData = [], isLoading, isError, error, refetch, isFetching } =
-    useInvoiceDailyTrend(year, month);
+    useInvoiceDailyTrend(year, month === "all" ? null : month);
 
   // raw rows -> { DAY_LABEL, AMT }
   const data = rawData.map((r) => ({
@@ -136,18 +139,24 @@ export default function InvoiceDailyTrendChart() {
     };
   }, [data, isLoading, isError]);
 
-  const monthLabel = MONTHS.find((m) => Number(m.value) === month)?.label ?? "";
+  const monthLabel =
+    month === "all"
+      ? "All Months"
+      : MONTHS.find((m) => m.value === String(month))?.label ?? "";
 
   return (
     <div className="bg-card rounded-md shadow-sm p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
         <p className="text-sm font-semibold text-slate-700">
-          Daily Invoice Sale 
+          Daily Invoice Sale
         </p>
         <div className="flex items-center gap-2">
           {/* Month selector */}
-          <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+          <Select
+            value={String(month)}
+            onValueChange={(v) => setMonth(v === "all" ? "all" : Number(v))}
+          >
             <SelectTrigger className="w-32 h-8 text-sm">
               <SelectValue />
             </SelectTrigger>
