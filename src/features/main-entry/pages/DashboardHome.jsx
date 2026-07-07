@@ -387,10 +387,10 @@ const [incomeFilters, setIncomeFilters] = useState({
   <InvoiceDailyTrendChart></InvoiceDailyTrendChart>
 </div> */}
 
-<div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-  <InvoiceDashboardPanel className="col-span-1 lg:col-span-2" />
-  <InvoiceMonthlyChart className="col-span-1" />
-  <InvoiceDailyTrendChart className="col-span-1" />
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <InvoiceDashboardPanel  />
+  <InvoiceMonthlyChart />
+  <InvoiceDailyTrendChart  />
 </div>
         <div>
           <ApprovalDashboardPage></ApprovalDashboardPage>

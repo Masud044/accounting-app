@@ -1144,15 +1144,17 @@ const PaymentCreate = () => {
     const incoming = location.state;
     if (!incoming) return;
 
-    setForm((f) => ({
-      ...f,
-      supplier: incoming.supplier ? String(incoming.supplier) : f.supplier,
-      entryDate: incoming.entryDate || f.entryDate,
-      glDate: incoming.glDate || f.glDate,
-      description: incoming.description || f.description,
-      invoiceNo: incoming.invoiceNo || f.invoiceNo,
-      poNumber: incoming.poNumber || f.poNumber,   // 👈 নতুন
-    }));
+   setForm((f) => ({
+  ...f,
+  supplier: incoming.supplier ? String(incoming.supplier) : f.supplier,
+  entryDate: incoming.entryDate || f.entryDate,
+  glDate: incoming.glDate || f.glDate,
+  description: incoming.description || f.description,
+  invoiceNo: incoming.invoiceNo || f.invoiceNo,
+  poNumber: incoming.poNumber || f.poNumber,
+  inv_type: incoming.invType || f.inv_type,           // 👈 নতুন
+  paymentCode: incoming.paymentCode || f.paymentCode, // 👈 নতুন
+}));
     // rows intentionally left untouched — user adds Account/Particular/Amount manually
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
