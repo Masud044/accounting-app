@@ -95,36 +95,39 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
         ];
         const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
 
-        const updatedLine = {
-          ...existing,
-          components: newComponents,
-          qty: totalQty,
-          description:
-            newComponents.length > 1
-              ? `Egg sale - ${newComponents.length} production dates`
-              : "Egg sale - daily production",
-        };
-
-        return [updatedLine];
+       // merge branch — existing line-এর মধ্যে
+const updatedLine = {
+  ...existing,
+  components: newComponents,
+  qty: totalQty,
+  saleQty: totalQty,   // ← notun, default = totalQty, user overwrite korte parbe
+  description:
+    newComponents.length > 1
+      ? `Egg sale - ${newComponents.length} production dates`
+      : "Egg sale - daily production",
+};
+return [updatedLine];
       }
 
       // Prothom bar — notun 1 ta line create hobe
       const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
-      return [
-        {
-          components: chosen.map((p) => ({
-            productionId: p.ID,
-            qty: Number(p.QTY || 0),
-          })),
-          date: today(),
-          description:
-            chosen.length > 1
-              ? `Egg sale - ${chosen.length} production dates`
-              : "Egg sale - daily production",
-          qty: totalQty,
-          unitPrice: "",
-        },
-      ];
+     // fresh line branch
+return [
+  {
+    components: chosen.map((p) => ({
+      productionId: p.ID,
+      qty: Number(p.QTY || 0),
+    })),
+    date: today(),
+    description:
+      chosen.length > 1
+        ? `Egg sale - ${chosen.length} production dates`
+        : "Egg sale - daily production",
+    qty: totalQty,
+    saleQty: totalQty,   // ← notun
+    unitPrice: "",
+  },
+];
     });
 
     setCheckedProdIds([]);
@@ -199,18 +202,21 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
     // production, so quantities stay traceable to their source production.
     // If the displayed qty was edited away from the auto-summed total, the
     // difference is distributed proportionally across the merged components.
-    const backendLines = lines.flatMap((l) => {
-      const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
-      const editedQty    = Number(l.qty || 0);
-      const ratio        = editedQty / originalSum;
+   const backendLines = lines.flatMap((l) => {
+  const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
+  const editedQty    = Number(l.qty || 0);
+  const ratio        = editedQty / originalSum;
 
-      return l.components.map((c) => ({
-        productionId:  Number(c.productionId),
-        productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
-        price:         Number(l.unitPrice),
-      }));
-    });
+  const saleQtyTotal = Number(l.saleQty || 0);
+  const saleRatio     = saleQtyTotal / originalSum;
 
+  return l.components.map((c) => ({
+    productionId:  Number(c.productionId),
+    productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
+    saleQty:       saleRatio === 1 ? c.qty : Math.round(c.qty * saleRatio),
+    price:         Number(l.unitPrice),
+  }));
+});
     try {
       await createMutation.mutateAsync({
         customerId:  Number(customerId),
@@ -414,21 +420,18 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
               {/* Table head */}
               <thead>
                 <tr style={{ background: "#1a3c34" }}>
-                  {["Date", "Description", "Quantity (Eggs)", "Unit Price/Egg", "Amount", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="px-3 py-2 text-left text-xs font-semibold text-white whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                 {["Date", "Description", "Quantity (Eggs)", "Sale Qty", "Unit Price/Egg", "Amount", ""].map((h) => (
+  <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-white whitespace-nowrap">
+    {h}
+  </th>
+))}
                 </tr>
               </thead>
 
               <tbody>
                 {lines.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
                       Select production record(s) above to add a line.
                     </td>
                   </tr>
@@ -462,7 +465,7 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
                       </td>
 
                       {/* Qty — blue editable, auto-summed from selection */}
-                      <td className="px-1 py-1 w-28">
+                      {/* <td className="px-1 py-1 w-28">
                         <Input
                           type="number" min="0"
                           value={line.qty}
@@ -470,7 +473,21 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
                           disabled={isSubmitting}
                           className={editableCell + " w-full"}
                         />
-                      </td>
+                      </td> */}
+                       <td className="px-3 py-1 w-28 text-center tabular-nums font-medium">
+  {Number(line.qty || 0).toLocaleString()}
+</td>
+
+                      <td className="px-1 py-1 w-28">
+  <Input
+    type="number" min="0"
+    value={line.saleQty}
+    onChange={(e) => updateLine(idx, "saleQty", e.target.value)}
+    disabled={isSubmitting}
+    className={editableCell + " w-full"}
+  />
+</td>
+
 
                       {/* Unit Price — yellow (select before print) */}
                       <td className="px-1 py-1 w-28">
