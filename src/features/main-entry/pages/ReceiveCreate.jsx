@@ -241,19 +241,19 @@ const ReceiveCreate = () => {
       sale_invoice_no: incoming.saleInvoiceNo ? String(incoming.saleInvoiceNo) : f.sale_invoice_no, 
     }));
 
-  if (incoming.rows && incoming.rows.length > 0) {
-      const mappedRows = incoming.rows.map((r, i) => ({
-        id: Date.now() + i,
-        accountCode: "4030010000",   // 👈 hardcoded
-        particulars: r.particulars || "",
-        amount: Number(r.amount || 0),
-      }));
-      setRows(mappedRows);
-      setForm((f) => ({
-        ...f,
-        totalAmount: mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0),
-      }));
-    }
+ if (incoming.rows && incoming.rows.length > 0) {
+  const mappedRows = incoming.rows.map((r, i) => ({
+    id: Date.now() + i,
+    accountCode: "4030010000",
+    particulars: r.particulars || "",
+    amount: Math.round(Number(r.amount || 0) * 100) / 100,   // ← round যোগ করো
+  }));
+  setRows(mappedRows);
+  setForm((f) => ({
+    ...f,
+    totalAmount: mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0),
+  }));
+}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
