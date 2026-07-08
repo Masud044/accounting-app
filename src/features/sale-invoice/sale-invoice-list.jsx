@@ -36,7 +36,7 @@ const fmtDate = (val) => {
   });
 };
 const fmtAmt = (v) =>
-  "৳ " + Number(v || 0).toLocaleString(undefined, {
+    Number(v || 0).toLocaleString(undefined, {
     minimumFractionDigits: 2, maximumFractionDigits: 2,
   });
 
@@ -120,14 +120,14 @@ export default function InvoiceList() {
       ),
     },
     {
-      accessorKey: "TOT_AMT",
-      header: "Total Amount",
-      cell: ({ row }) => (
-        <div className="tabular-nums font-medium text-left pr-4 text-primary">
-          {Number(row.getValue("TOT_AMT"))}
-        </div>
-      ),
-    },
+  accessorKey: "TOT_AMT",
+  header: "Total Amount",
+  cell: ({ row }) => (
+    <div className="tabular-nums font-medium text-left pr-4 text-primary">
+      {fmtAmt(row.getValue("TOT_AMT"))}
+    </div>
+  ),
+},
     // {
     //   accessorKey: "CREATION_DATE",
     //   header: "Created At",
