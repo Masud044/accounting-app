@@ -194,14 +194,18 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Pencil, Trash2, Package, Wallet, Lock } from "lucide-react";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { usePurchaseRecognitions, useDeletePurchaseRecognition } from "./queries";
 import AddRecognitionSheet from "./create-recognition-sheet";
 import EditRecognitionSheet from "./update-recognition-sheet";
+
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const BASE = `${url}/api/purchase-recognition`;
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 const fmtMoney = (val) =>
@@ -215,11 +219,13 @@ const statusBadgeCls = (status) =>
     : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
 
 export default function RecognitionListPage() {
+  const navigate = useNavigate();
   const { data: forms = [], isLoading } = usePurchaseRecognitions();
   const deleteMutation = useDeletePurchaseRecognition();
 
   const [addOpen, setAddOpen] = useState(false);
   const [editFormId, setEditFormId] = useState(null);
+  const [actionLoadingId, setActionLoadingId] = useState(null); // form-level spinner for inv/payment nav
 
   const handleDelete = async (formId) => {
     if (!window.confirm(`Delete form ${formId}? This cannot be undone.`)) return;
@@ -228,6 +234,74 @@ export default function RecognitionListPage() {
       toast.success(`Form ${formId} deleted.`);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to delete form.");
+    }
+  };
+
+  // ✅ Approved + PURCHASE_TYPE = ITEM hole "Create Inventory" button dekhabe
+  const handleCreateInventory = async (form) => {
+    setActionLoadingId(form.FORM_ID);
+    try {
+      const res = await axios.get(`${BASE}/${form.FORM_ID}`);
+      const full = res.data?.data;
+      if (!full) throw new Error("Form details not found.");
+
+      const bulkItems = (full.items || []).map((it) => ({
+        itemId: it.ITEM_ID,
+        itemName: it.ITEM_NAME,
+        qty: it.GRN_QTY,
+        receiveQty: it.QTY_RECV,
+        unitId: it.UNIT_ID,
+        unit: it.UOM,
+        price: it.UNIT_PRICE,
+      }));
+
+      navigate("/dashboard/inventory", {
+        state: {
+          purchaseFormId: full.FORM_ID,
+          poNumber: full.PO_NUMBER,
+          supplierId: full.SUPPLIER_ID,
+          invtDate: full.RECOGNITION_DATE,
+          bulkItems,
+        },
+      });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to load form for inventory.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // ✅ Approved + PURCHASE_TYPE = SERVICE hole "Create Payment" button dekhabe
+  const handleCreatePayment = async (form) => {
+    setActionLoadingId(form.FORM_ID);
+    try {
+      const res = await axios.get(`${BASE}/${form.FORM_ID}`);
+      const full = res.data?.data;
+      if (!full) throw new Error("Form details not found.");
+
+      // const rows = (full.items || []).map((it) => ({
+      //   particulars: it.DESCRIPTION || it.ITEM_NAME,
+      //   amount: Number(it.QTY_RECV || 0) * Number(it.UNIT_PRICE || 0),
+      // }));
+
+      navigate("/dashboard/payment-create", {
+        state: {
+          purchaseFormId: full.FORM_ID,
+          supplier: full.SUPPLIER_ID,
+          entryDate: full.RECOGNITION_DATE,
+          glDate: full.RECOGNITION_DATE,
+          description: full.DESCRIPTION,
+          invoiceNo: full.INVOICE_NUMBER,
+          poNumber: full.PO_NUMBER,
+          invType: full.INV_TYPE,
+          paymentCode: full.PAYMENT_CODE,
+         
+        },
+      });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to load form for payment.");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -245,7 +319,7 @@ export default function RecognitionListPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline">
-              <Link to="/dashboard">Approval Dashboard</Link>
+              <Link to="/dashboard/overview">Approval Dashboard</Link>
             </Button>
             <Button onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /> New Form
@@ -284,32 +358,91 @@ export default function RecognitionListPage() {
                 </tr>
               )}
 
-              {forms.map((form) => (
-                <tr key={form.FORM_ID} className="border-t border-border">
-                  <td className="px-3 py-2 font-medium">{form.FORM_ID}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{form.PO_NUMBER}</td>
-                  <td className="px-3 py-2">{form.VENDOR_NAME}</td>
-                  <td className="px-3 py-2 text-center text-muted-foreground">{form.ITEM_COUNT} items</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{fmtMoney(form.TOTAL_AMOUNT)}</td>
-                  <td className="px-3 py-2">
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeCls(form.OVERALL_STATUS)}`}>
-                      {form.OVERALL_STATUS || "Pending"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditFormId(form.FORM_ID)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(form.FORM_ID)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {forms.map((form) => {
+                const isApproved = form.OVERALL_STATUS === "Approved";
+                // ✅ /lock hit hoye gele backend theke ACTION_CREATED = 1 ashe
+                const isLocked = Number(form.ACTION_CREATED) === 1;
+                const isActionBusy = actionLoadingId === form.FORM_ID;
+
+                const showInventoryBtn = isApproved && form.PURCHASE_TYPE === "ITEM";
+                const showPaymentBtn = isApproved && form.PURCHASE_TYPE === "SERVICE";
+
+                return (
+                  <tr key={form.FORM_ID} className="border-t border-border">
+                    <td className="px-3 py-2 font-medium">{form.FORM_ID}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{form.PO_NUMBER}</td>
+                    <td className="px-3 py-2">{form.VENDOR_NAME}</td>
+                    <td className="px-3 py-2 text-center text-muted-foreground">{form.ITEM_COUNT} items</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{fmtMoney(form.TOTAL_AMOUNT)}</td>
+                    <td className="px-3 py-2">
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeCls(form.OVERALL_STATUS)}`}>
+                        {form.OVERALL_STATUS || "Pending"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {/* ✅ Pending hole eibar kichu dekhabe na, Approved hole type onujayi ekta button */}
+                        {showInventoryBtn && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            disabled={isLocked || isActionBusy}
+                            onClick={() => handleCreateInventory(form)}
+                            title={isLocked ? "Already created — locked" : "Create Inventory"}
+                          >
+                            {isLocked ? (
+                              <Lock className="h-3.5 w-3.5 mr-1" />
+                            ) : isActionBusy ? (
+                              <Spinner className="h-3.5 w-3.5 mr-1" />
+                            ) : (
+                              <Package className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            Inventory
+                          </Button>
+                        )}
+
+                        {showPaymentBtn && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8"
+                            disabled={isLocked || isActionBusy}
+                            onClick={() => handleCreatePayment(form)}
+                            title={isLocked ? "Already created — locked" : "Create Payment"}
+                          >
+                            {isLocked ? (
+                              <Lock className="h-3.5 w-3.5 mr-1" />
+                            ) : isActionBusy ? (
+                              <Spinner className="h-3.5 w-3.5 mr-1" />
+                            ) : (
+                              <Wallet className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            Payment
+                          </Button>
+                        )}
+
+                        <Button
+  variant="ghost" size="icon" className="h-8 w-8"
+  onClick={() => setEditFormId(form.FORM_ID)}
+  disabled={isApproved}
+  title={isApproved ? "Approved form cannot be edited" : "Edit"}
+>
+  <Pencil className="h-3.5 w-3.5" />
+</Button>
+<Button
+  variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+  onClick={() => handleDelete(form.FORM_ID)}
+  disabled={deleteMutation.isPending || isApproved}
+  title={isApproved ? "Approved form cannot be deleted" : "Delete"}
+>
+  <Trash2 className="h-3.5 w-3.5" />
+</Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -12,7 +12,10 @@ import { ReceiveService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanel from "@/components/shared/bill-upload-panel";
 
+
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+const invoiceLockUrl = (hid) => `${url}/api/sal-invoice/${hid}/lock`;
 
 // ── Customer default form ────────────────────────────────────────────────────
 const customerDefault = {
@@ -93,28 +96,63 @@ const ReceiveCreate = () => {
   };
 
   // ── Voucher Mutation ─────────────────────────────────────────────────────────
+  // const mutation = useMutation({
+  //   mutationFn: async (payload) => (await ReceiveService.insert(payload)).data,
+  //   onSuccess: async (data) => {
+  //     if (data.status === "success") {
+  //       await uploadBills(data.masterID);
+  //       toast.success("Voucher created successfully!");
+  //       setBillFiles([]);
+  //       setForm({
+  //         entryDate: today, invoiceNo: "", supporting: "", description: "",
+  //         customer: "", glDate: today, ReceiveCode: "",
+  //         accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "",sale_invoice_no: "",  
+  //       });
+  //       setRows([{ id: "dummy", accountCode: "", particulars: "", amount: 0 }]);
+  //       queryClient.invalidateQueries(["unpostedVouchers"]);
+  //       navigate("/dashboard/receive-voucher");
+  //     } else {
+  //       toast.error("Error processing voucher");
+  //     }
+  //   },
+  //   onError:   () => toast.error("Error submitting voucher. Please try again."),
+  //   onSettled: () => setShowModal(false),
+  // });
+
   const mutation = useMutation({
-    mutationFn: async (payload) => (await ReceiveService.insert(payload)).data,
-    onSuccess: async (data) => {
-      if (data.status === "success") {
-        await uploadBills(data.masterID);
-        toast.success("Voucher created successfully!");
-        setBillFiles([]);
-        setForm({
-          entryDate: today, invoiceNo: "", supporting: "", description: "",
-          customer: "", glDate: today, ReceiveCode: "",
-          accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "",sale_invoice_no: "",  
-        });
-        setRows([{ id: "dummy", accountCode: "", particulars: "", amount: 0 }]);
-        queryClient.invalidateQueries(["unpostedVouchers"]);
-        navigate("/dashboard/receive-voucher");
-      } else {
-        toast.error("Error processing voucher");
+  mutationFn: async (payload) => (await ReceiveService.insert(payload)).data,
+  onSuccess: async (data) => {
+    if (data.status === "success") {
+      await uploadBills(data.masterID);
+
+      // ✅ Sale Invoice theke ashle, oi invoice-take lock kore dao
+      const invoiceHid = location.state?.invoiceHid;
+      if (invoiceHid) {
+        try {
+          await axios.put(invoiceLockUrl(invoiceHid));
+        } catch (err) {
+          console.error("Failed to lock invoice:", err);
+        }
       }
-    },
-    onError:   () => toast.error("Error submitting voucher. Please try again."),
-    onSettled: () => setShowModal(false),
-  });
+
+      toast.success("Voucher created successfully!");
+      setBillFiles([]);
+      setForm({
+        entryDate: today, invoiceNo: "", supporting: "", description: "",
+        customer: "", glDate: today, ReceiveCode: "",
+        accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "", sale_invoice_no: "",
+      });
+      setRows([{ id: "dummy", accountCode: "", particulars: "", amount: 0 }]);
+      queryClient.invalidateQueries(["unpostedVouchers"]);
+      queryClient.invalidateQueries(["salInvoice", "list"]);   // ← invoice list o invalidate koro
+      navigate("/dashboard/receive-voucher");
+    } else {
+      toast.error("Error processing voucher");
+    }
+  },
+  onError:   () => toast.error("Error submitting voucher. Please try again."),
+  onSettled: () => setShowModal(false),
+});
 
   // ── Customer Mutation ────────────────────────────────────────────────────────
   const customerMutation = useMutation({

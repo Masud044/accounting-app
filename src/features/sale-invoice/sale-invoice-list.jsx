@@ -84,9 +84,17 @@ export default function InvoiceList() {
           Invoice # <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+     
       cell: ({ row }) => (
-        <div className="font-mono text-sm ps-2 font-medium">#{row.getValue("HID")}</div>
-      ),
+  <div className="font-mono text-sm ps-2 font-medium flex items-center gap-2">
+    #{row.getValue("HID")}
+    {Number(row.original.RECEIVE_CREATED) === 1 && (
+      <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">
+        Received
+      </span>
+    )}
+  </div>
+),
     },
     {
       accessorKey: "INVOICE_DATE",
@@ -99,6 +107,9 @@ export default function InvoiceList() {
         <div className="ps-2">{fmtDate(row.getValue("INVOICE_DATE"))}</div>
       ),
     },
+
+
+    
     {
       accessorKey: "CUSTOMER_NAME",
       header: ({ column }) => (
@@ -110,15 +121,34 @@ export default function InvoiceList() {
         <div className="font-medium ps-2">{row.getValue("CUSTOMER_NAME") || "—"}</div>
       ),
     },
+    
+    {
+  accessorKey: "PRODUCTION_QTY",
+  header: "Quantity (Eggs)",
+  cell: ({ row }) => (
+    <div className="tabular-nums text-left pr-4">
+      {Number(row.getValue("PRODUCTION_QTY") || 0).toLocaleString()}
+    </div>
+  ),
+},
     {
       accessorKey: "TOT_QTY",
-      header: "Total Qty",
+      header: "Sales Qty",
       cell: ({ row }) => (
         <div className="tabular-nums text-left pr-4">
           {Number(row.getValue("TOT_QTY") || 0).toLocaleString()}
         </div>
       ),
     },
+    //  {
+    //   accessorKey: "TOT_QTY",
+    //   header: "Total Qty",
+    //   cell: ({ row }) => (
+    //     <div className="tabular-nums text-left pr-4">
+    //       {Number(row.getValue("TOT_QTY") || 0).toLocaleString()}
+    //     </div>
+    //   ),
+    // },
     {
   accessorKey: "TOT_AMT",
   header: "Total Amount",
@@ -137,36 +167,40 @@ export default function InvoiceList() {
     //     </div>
     //   ),
     // },
-    {
-      id: "actions",
-      header: "Actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const inv = row.original;
-        return (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost" size="icon" className="h-8 w-8"
-              onClick={() => handleView(inv.HID)}
-            >
-              <IconEdit className="h-4 w-4" />
-              <span className="sr-only">View</span>
-            </Button>
-            <Button
-              variant="ghost" size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={() => handleDelete(inv)}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending
-                ? <Spinner className="h-4 w-4" />
-                : <Trash2 className="h-4 w-4" />}
-              <span className="sr-only">Delete</span>
-            </Button>
-          </div>
-        );
-      },
-    },
+  {
+  id: "actions",
+  header: "Actions",
+  enableHiding: false,
+  cell: ({ row }) => {
+    const inv = row.original;
+    const isLocked = Number(inv.RECEIVE_CREATED) === 1;
+    return (
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost" size="icon" className="h-8 w-8"
+          onClick={() => handleView(inv.HID)}
+          disabled={isLocked}
+          title={isLocked ? "Receive Voucher already created — locked" : "Edit"}
+        >
+          <IconEdit className="h-4 w-4" />
+          <span className="sr-only">View</span>
+        </Button>
+        <Button
+          variant="ghost" size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive"
+          onClick={() => handleDelete(inv)}
+          disabled={deleteMutation.isPending || isLocked}
+          title={isLocked ? "Receive Voucher already created — cannot delete" : "Delete"}
+        >
+          {deleteMutation.isPending
+            ? <Spinner className="h-4 w-4" />
+            : <Trash2 className="h-4 w-4" />}
+          <span className="sr-only">Delete</span>
+        </Button>
+      </div>
+    );
+  },
+},
   ];
 
   const table = useReactTable({
