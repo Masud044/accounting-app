@@ -107,29 +107,30 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
     setCustomerId(String(invoiceData.CUSTOMER_ID ?? ""));
     setInvoiceDate(toInputDate(invoiceData.INVOICE_DATE));
 
-    const rawLines = (invoiceData.lines || []).filter((l) => l.PRODUTION_ID);
-    if (rawLines.length > 0) {
-      const components = rawLines.map((l) => ({
-        productionId: l.PRODUTION_ID,
-        qty: Number(l.PRODUCTION_QTY || 0),
-      }));
-      const totalQty = components.reduce((s, c) => s + c.qty, 0);
+   const rawLines = (invoiceData.lines || []).filter((l) => l.PRODUTION_ID);
+if (rawLines.length > 0) {
+  const components = rawLines.map((l) => ({
+    productionId: l.PRODUTION_ID,
+    qty: Number(l.PRODUCTION_QTY || 0),
+  }));
+  const totalQty     = components.reduce((s, c) => s + c.qty, 0);
+  const totalSaleQty = rawLines.reduce((s, l) => s + Number(l.SALE_QTY || 0), 0);
 
-      setLines([
-        {
-          components,
-          date: toInputDate(invoiceData.INVOICE_DATE),
-          description: components.length > 1
-            ? `Egg sale - ${components.length} production dates`
-            : "Egg sale - daily production",
-          qty: totalQty,
-          unitPrice: rawLines[0]?.PRICE ?? "",
-        },
-      ]);
-    } else {
-      setLines([]);
-    }
-
+  setLines([
+    {
+      components,
+      date: toInputDate(invoiceData.INVOICE_DATE),
+      description: components.length > 1
+        ? `Egg sale - ${components.length} production dates`
+        : "Egg sale - daily production",
+      qty: totalQty,
+      saleQty: totalSaleQty || totalQty,   // ← notun, fallback qty
+      unitPrice: rawLines[0]?.PRICE ?? "",
+    },
+  ]);
+} else {
+  setLines([]);
+}
     setTaxRate(5);
     setManualTotal("");
     setInitialized(true);
@@ -164,6 +165,7 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
           ...existing,
           components: newComponents,
           qty: totalQty,
+          saleQty: totalQty,
           description:
             newComponents.length > 1
               ? `Egg sale - ${newComponents.length} production dates`
@@ -183,6 +185,7 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
             ? `Egg sale - ${chosen.length} production dates`
             : "Egg sale - daily production",
         qty: totalQty,
+        saleQty: totalQty,
         unitPrice: "",
       }];
     });
@@ -236,8 +239,8 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
 
   // ── Calculations ───────────────────────────────────────────────────────────
   const subtotal = lines.reduce(
-    (s, l) => s + Number(l.qty || 0) * Number(l.unitPrice || 0), 0
-  );
+  (s, l) => s + Number(l.saleQty || 0) * Number(l.unitPrice || 0), 0
+);
   const taxAmt   = subtotal * (Number(taxRate || 0) / 100);
   const autoTotal = subtotal + taxAmt;
   const totalDue  = manualTotal !== "" ? Number(manualTotal) : autoTotal;
@@ -255,17 +258,21 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
       toast.error("Enter unit price for all lines."); return;
     }
 
-    const backendLines = lines.flatMap((l) => {
-      const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
-      const editedQty    = Number(l.qty || 0);
-      const ratio        = editedQty / originalSum;
+   const backendLines = lines.flatMap((l) => {
+  const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
+  const editedQty    = Number(l.qty || 0);
+  const ratio        = editedQty / originalSum;
 
-      return l.components.map((c) => ({
-        productionId:  Number(c.productionId),
-        productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
-        price:         Number(l.unitPrice),
-      }));
-    });
+  const saleQtyTotal = Number(l.saleQty || 0);
+  const saleRatio     = saleQtyTotal / originalSum;
+
+  return l.components.map((c) => ({
+    productionId:  Number(c.productionId),
+    productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
+    saleQty:       saleRatio === 1 ? c.qty : Math.round(c.qty * saleRatio),
+    price:         Number(l.unitPrice),
+  }));
+});
 
     try {
       await updateMutation.mutateAsync({
@@ -501,28 +508,25 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr style={{ background: "#1a3c34" }}>
-                      {["Date", "Description", "Quantity (Eggs)", "Unit Price/Egg", "Amount", ""].map((h) => (
-                        <th
-                          key={h}
-                          className="px-3 py-2 text-left text-xs font-semibold text-white whitespace-nowrap"
-                        >
-                          {h}
-                        </th>
-                      ))}
+                      {["Date", "Description", "Quantity (Eggs)", "Sale Qty", "Unit Price/Egg", "Amount", ""].map((h) => (
+  <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-white whitespace-nowrap">
+    {h}
+  </th>
+))}
                     </tr>
                   </thead>
 
                   <tbody>
                     {lines.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
                           Select production record(s) above to add a line.
                         </td>
                       </tr>
                     )}
 
                     {lines.map((line, idx) => {
-                      const amount = Number(line.qty || 0) * Number(line.unitPrice || 0);
+                      const amount = Number(line.saleQty || 0) * Number(line.unitPrice || 0);
                       return (
                         <tr key={idx} className="border-t border-border">
                           <td className="px-1 py-1 w-32">
@@ -545,7 +549,7 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
                           
                           </td>
 
-                          <td className="px-1 py-1 w-28">
+                          {/* <td className="px-1 py-1 w-28">
                             <Input
                               type="number" min="0"
                               value={line.qty}
@@ -553,7 +557,19 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
                               disabled={isSubmitting}
                               className={editableCell + " w-full"}
                             />
-                          </td>
+                          </td> */}
+                          <td className="px-3 py-1 w-28 text-center tabular-nums font-medium">
+  {Number(line.qty || 0).toLocaleString()}
+</td>
+                           <td className="px-1 py-1 w-28">
+        <Input
+          type="number" min="0"
+          value={line.saleQty}
+          onChange={(e) => updateLine(idx, "saleQty", e.target.value)}
+          disabled={isSubmitting}
+          className={yellowCell + " w-full"}
+        />
+      </td>
 
                           <td className="px-1 py-1 w-28">
                             <Input
