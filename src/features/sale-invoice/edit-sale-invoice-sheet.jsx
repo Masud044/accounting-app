@@ -49,6 +49,34 @@ const today = () => new Date().toISOString().split("T")[0];
   return d.toISOString().split("T")[0];
 };
 
+// ── Distribute a total quantity across components proportionally,
+//    guaranteeing the distributed amounts sum EXACTLY to targetTotal
+//    (uses the "largest remainder" method to avoid rounding drift) ──────────
+function distributeQty(components, targetTotal) {
+  const originalSum = components.reduce((s, c) => s + c.qty, 0) || 1;
+
+  if (targetTotal === originalSum) {
+    // No change needed — return original qtys as-is
+    return components.map((c) => c.qty);
+  }
+
+  // Floor each proportional share, track remainders
+  const raw = components.map((c) => (c.qty / originalSum) * targetTotal);
+  const floored = raw.map(Math.floor);
+  let remainder = targetTotal - floored.reduce((s, v) => s + v, 0);
+
+  // Sort indices by fractional part (largest remainder first)
+  const order = raw
+    .map((v, i) => ({ i, frac: v - floored[i] }))
+    .sort((a, b) => b.frac - a.frac);
+
+  const result = [...floored];
+  for (let k = 0; k < remainder; k++) {
+    result[order[k].i] += 1;
+  }
+  return result;
+}
+
 
 const fmtDate = (val) => {
   if (!val) return "—";
@@ -258,22 +286,17 @@ if (rawLines.length > 0) {
       toast.error("Enter unit price for all lines."); return;
     }
 
-   const backendLines = lines.flatMap((l) => {
-  const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
-  const editedQty    = Number(l.qty || 0);
-  const ratio        = editedQty / originalSum;
+  const backendLines = lines.flatMap((l) => {
+  const productionQtys = distributeQty(l.components, Number(l.qty || 0));
+  const saleQtys        = distributeQty(l.components, Number(l.saleQty || 0));
 
-  const saleQtyTotal = Number(l.saleQty || 0);
-  const saleRatio     = saleQtyTotal / originalSum;
-
-  return l.components.map((c) => ({
+  return l.components.map((c, i) => ({
     productionId:  Number(c.productionId),
-    productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
-    saleQty:       saleRatio === 1 ? c.qty : Math.round(c.qty * saleRatio),
+    productionQty: productionQtys[i],
+    saleQty:       saleQtys[i],
     price:         Number(l.unitPrice),
   }));
 });
-
     try {
       await updateMutation.mutateAsync({
         customerId:  Number(customerId),
@@ -507,7 +530,7 @@ if (rawLines.length > 0) {
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr style={{ background: "#1a3c34" }}>
-                      {["Date", "Description", "Quantity (Eggs)", "Sale Qty", "Unit Price/Egg", "Amount", ""].map((h) => (
+                      {["Date", "Description", "Quantity (Eggs)", "Sales Qty", "Unit Price/Egg", "Amount", ""].map((h) => (
   <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-white whitespace-nowrap">
     {h}
   </th>

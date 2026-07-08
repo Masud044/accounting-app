@@ -146,3 +146,15 @@ export const usePaymentCodes = () =>
     },
     staleTime: 10 * 60 * 1000,
   });
+
+
+  export const useLockRecognitionAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formId) => (await axios.put(`${BASE}/${formId}/lock`)).data,
+    onSuccess: (_data, formId) => {
+      queryClient.invalidateQueries(["purchaseRecognitions"]);
+      queryClient.invalidateQueries(["purchaseRecognition", formId]);
+    },
+  });
+};

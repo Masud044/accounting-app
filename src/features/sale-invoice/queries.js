@@ -122,3 +122,13 @@ export const useInvoiceMonthlySummary = (year) =>
     },
     staleTime: 2 * 60 * 1000,
   });
+
+  export const useLockInvoiceForReceive = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (hid) =>
+      fetchJSON(`${BASE}/api/sal-invoice/${hid}/lock`, { method: "PUT" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invoiceKeys.lists() }),
+    onError: (err) => console.error("Lock invoice failed:", err),
+  });
+};

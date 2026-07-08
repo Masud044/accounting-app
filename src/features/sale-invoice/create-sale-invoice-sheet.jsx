@@ -29,6 +29,34 @@ const fmtDate = (val) => {
   });
 };
 
+
+// ── Distribute a total quantity across components proportionally,
+//    guaranteeing the distributed amounts sum EXACTLY to targetTotal
+//    (uses the "largest remainder" method to avoid rounding drift) ──────────
+function distributeQty(components, targetTotal) {
+  const originalSum = components.reduce((s, c) => s + c.qty, 0) || 1;
+
+  if (targetTotal === originalSum) {
+    // No change needed — return original qtys as-is
+    return components.map((c) => c.qty);
+  }
+
+  // Floor each proportional share, track remainders
+  const raw = components.map((c) => (c.qty / originalSum) * targetTotal);
+  const floored = raw.map(Math.floor);
+  let remainder = targetTotal - floored.reduce((s, v) => s + v, 0);
+
+  // Sort indices by fractional part (largest remainder first)
+  const order = raw
+    .map((v, i) => ({ i, frac: v - floored[i] }))
+    .sort((a, b) => b.frac - a.frac);
+
+  const result = [...floored];
+  for (let k = 0; k < remainder; k++) {
+    result[order[k].i] += 1;
+  }
+  return result;
+}
 // ── Editable cell styles ───────────────────────────────────────────────────────
 const editableCell =
   "h-8 text-sm border-0 rounded-none bg-blue-50 dark:bg-blue-950/40 " +
@@ -202,18 +230,14 @@ return [
     // production, so quantities stay traceable to their source production.
     // If the displayed qty was edited away from the auto-summed total, the
     // difference is distributed proportionally across the merged components.
-   const backendLines = lines.flatMap((l) => {
-  const originalSum = l.components.reduce((s, c) => s + c.qty, 0) || 1;
-  const editedQty    = Number(l.qty || 0);
-  const ratio        = editedQty / originalSum;
+ const backendLines = lines.flatMap((l) => {
+  const productionQtys = distributeQty(l.components, Number(l.qty || 0));
+  const saleQtys        = distributeQty(l.components, Number(l.saleQty || 0));
 
-  const saleQtyTotal = Number(l.saleQty || 0);
-  const saleRatio     = saleQtyTotal / originalSum;
-
-  return l.components.map((c) => ({
+  return l.components.map((c, i) => ({
     productionId:  Number(c.productionId),
-    productionQty: ratio === 1 ? c.qty : Math.round(c.qty * ratio),
-    saleQty:       saleRatio === 1 ? c.qty : Math.round(c.qty * saleRatio),
+    productionQty: productionQtys[i],
+    saleQty:       saleQtys[i],
     price:         Number(l.unitPrice),
   }));
 });
@@ -420,7 +444,7 @@ return [
               {/* Table head */}
               <thead>
                 <tr style={{ background: "#1a3c34" }}>
-                 {["Date", "Description", "Quantity (Eggs)", "Sale Qty", "Unit Price/Egg", "Amount", ""].map((h) => (
+                 {["Date", "Description", "Quantity (Eggs)", "Sales Qty", "Unit Price/Egg", "Amount", ""].map((h) => (
   <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-white whitespace-nowrap">
     {h}
   </th>

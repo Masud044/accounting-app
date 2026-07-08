@@ -943,6 +943,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import {
   Sheet,
   SheetContent,
@@ -1121,6 +1122,17 @@ export default function AddInventorySheet({
   const { data: invoiceData } = useNextInvoiceNo(open);
   const { data: suppliers = [] } = useSuppliers();
 
+  // ✅ Purchase Recognition theke ashle, create success er por oi form-take lock kore dao
+  //    jate double inventory create na hoy
+  const lockRecognitionForm = async (purchaseFormId) => {
+    if (!purchaseFormId) return;
+    try {
+      await axios.put(`${BASE}/api/purchase-recognition/${purchaseFormId}/lock`);
+    } catch (err) {
+      console.error("Failed to lock recognition form:", err);
+    }
+  };
+
   const [storeId, setStoreId] = useState("1");
   const [invDate, setInvDate] = useState("");
   const [poNo, setPoNo] = useState("");
@@ -1239,6 +1251,11 @@ export default function AddInventorySheet({
           invoiceStatus: 0,
         })),
       });
+
+      // ✅ Purchase Recognition theke ashle, oi form-take lock kore dao
+      //    jate ei "Inventory" button abar click kore double GRN create na hoy
+      await lockRecognitionForm(initialData?.purchaseFormId);
+
       toast.success(
         `${rows.length} item(s) inventory-te add hoise! GRN: ${grnNo}`,
       );
