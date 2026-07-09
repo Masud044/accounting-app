@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 import { FileText, Trash2, ChevronDown, Plus, X, PlusIcon } from "lucide-react";
 import { useInvoiceById, useUpdateInvoice } from "./queries";
 import { useCustomers } from "@/features/customer/queries";
-import { useAllEggProductions } from "@/features/egg-production/queries";
+import { useAvailableEggProductions } from "@/features/egg-production/queries";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 const today = () => new Date().toISOString().split("T")[0];
@@ -105,7 +105,7 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
   const { data: invoiceData, isLoading: isLoadingInvoice } = useInvoiceById(hid);
   const updateMutation = useUpdateInvoice(hid);
   const { data: customers   = [] } = useCustomers();
-  const { data: productions = [] } = useAllEggProductions();
+const { data: productions = [] } = useAvailableEggProductions();
 
   const [customerId,     setCustomerId]     = useState("");
   const [invoiceDate,    setInvoiceDate]    = useState(today());
@@ -140,6 +140,7 @@ if (rawLines.length > 0) {
   const components = rawLines.map((l) => ({
     productionId: l.PRODUTION_ID,
     qty: Number(l.PRODUCTION_QTY || 0),
+    productionDate: l.PRODUCTION_DATE,
   }));
   const totalQty     = components.reduce((s, c) => s + c.qty, 0);
   const totalSaleQty = rawLines.reduce((s, l) => s + Number(l.SALE_QTY || 0), 0);
@@ -174,54 +175,108 @@ if (rawLines.length > 0) {
 
  
 
-  const handleAddSelected = () => {
-    if (checkedProdIds.length === 0) return;
+  // const handleAddSelected = () => {
+  //   if (checkedProdIds.length === 0) return;
 
-    const chosen = productions.filter((p) => checkedProdIds.includes(String(p.ID)));
-    if (chosen.length === 0) return;
+  //   const chosen = productions.filter((p) => checkedProdIds.includes(String(p.ID)));
+  //   if (chosen.length === 0) return;
 
-    setLines((prev) => {
-      if (prev.length > 0) {
-        const existing = prev[0];
-        const newComponents = [
-          ...existing.components,
-          ...chosen.map((p) => ({ productionId: p.ID, qty: Number(p.QTY || 0) })),
-        ];
-        const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
+  //   setLines((prev) => {
+  //     if (prev.length > 0) {
+  //       const existing = prev[0];
+  //       const newComponents = [
+  //         ...existing.components,
+  //         ...chosen.map((p) => ({ productionId: p.ID, qty: Number(p.QTY || 0) })),
+  //       ];
+  //       const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
 
-        return [{
-          ...existing,
-          components: newComponents,
-          qty: totalQty,
-          saleQty: totalQty,
-          description:
-            newComponents.length > 1
-              ? `Egg sale - ${newComponents.length} production dates`
-              : "Egg sale - daily production",
-        }];
-      }
+  //       return [{
+  //         ...existing,
+  //         components: newComponents,
+  //         qty: totalQty,
+  //         saleQty: totalQty,
+  //         description:
+  //           newComponents.length > 1
+  //             ? `Egg sale - ${newComponents.length} production dates`
+  //             : "Egg sale - daily production",
+  //       }];
+  //     }
 
-      const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
-      return [{
-        components: chosen.map((p) => ({
+  //     const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
+  //     return [{
+  //       components: chosen.map((p) => ({
+  //         productionId: p.ID,
+  //         qty: Number(p.QTY || 0),
+  //       })),
+  //       date: today(),
+  //       description:
+  //         chosen.length > 1
+  //           ? `Egg sale - ${chosen.length} production dates`
+  //           : "Egg sale - daily production",
+  //       qty: totalQty,
+  //       saleQty: totalQty,
+  //       unitPrice: "",
+  //     }];
+  //   });
+
+  //   setCheckedProdIds([]);
+  //   setPickerOpen(false);
+  //   setIsDirty(true);
+  // };
+
+const handleAddSelected = () => {
+  if (checkedProdIds.length === 0) return;
+
+  const chosen = productions.filter((p) => checkedProdIds.includes(String(p.ID)));
+  if (chosen.length === 0) return;
+
+  setLines((prev) => {
+    if (prev.length > 0) {
+      const existing = prev[0];
+      const newComponents = [
+        ...existing.components,
+        ...chosen.map((p) => ({
           productionId: p.ID,
           qty: Number(p.QTY || 0),
+          productionDate: p.PRODUCTION_DATE,   // ← নতুন
         })),
-        date: today(),
-        description:
-          chosen.length > 1
-            ? `Egg sale - ${chosen.length} production dates`
-            : "Egg sale - daily production",
+      ];
+      const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
+
+      return [{
+        ...existing,
+        components: newComponents,
         qty: totalQty,
         saleQty: totalQty,
-        unitPrice: "",
+        description:
+          newComponents.length > 1
+            ? `Egg sale - ${newComponents.length} production dates`
+            : "Egg sale - daily production",
       }];
-    });
+    }
 
-    setCheckedProdIds([]);
-    setPickerOpen(false);
-    setIsDirty(true);
-  };
+    const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
+    return [{
+      components: chosen.map((p) => ({
+        productionId: p.ID,
+        qty: Number(p.QTY || 0),
+        productionDate: p.PRODUCTION_DATE,   // ← নতুন
+      })),
+      date: today(),
+      description:
+        chosen.length > 1
+          ? `Egg sale - ${chosen.length} production dates`
+          : "Egg sale - daily production",
+      qty: totalQty,
+      saleQty: totalQty,
+      unitPrice: "",
+    }];
+  });
+
+  setCheckedProdIds([]);
+  setPickerOpen(false);
+  setIsDirty(true);
+};
 
   // ── Remove a single production date chip ────────────────────────────────────
   // Removes one production from the merged line's components, recalculates
@@ -327,15 +382,25 @@ if (rawLines.length > 0) {
 
   // ── Data to pass to Create Receive Voucher page ─────────────────────────────
   // ── Data to pass to Create Receive Voucher page ─────────────────────────────
-  const productionDatesText = lines
-    .flatMap((l) => l.components)
-    .map((c) => {
-      const prod = productions.find((p) => String(p.ID) === String(c.productionId));
-      return prod ? fmtDate(prod.PRODUCTION_DATE) : null;
-    })
-    .filter(Boolean)
-    .join(", ");
+  // const productionDatesText = lines
+  //   .flatMap((l) => l.components)
+  //   .map((c) => {
+  //     const prod = productions.find((p) => String(p.ID) === String(c.productionId));
+  //     return prod ? fmtDate(prod.PRODUCTION_DATE) : null;
+  //   })
+  //   .filter(Boolean)
+  //   .join(", ");
+const productionDatesText = lines
+  .flatMap((l) => l.components)
+  .map((c) => {
+    if (c.productionDate) return fmtDate(c.productionDate);
+    const prod = productions.find((p) => String(p.ID) === String(c.productionId));
+    return prod ? fmtDate(prod.PRODUCTION_DATE) : null;
+  })
+  .filter(Boolean)
+  .join(", ");
 
+  
  const receiveVoucherState = {
   customer: customerId,
   invoiceDate,
@@ -498,7 +563,7 @@ if (rawLines.length > 0) {
                     added to the invoice line. Clicking × pulls that date back
                     out of the line and it becomes available in the dropdown
                     again. */}
-                {lines.length > 0 && lines[0].components.length > 0 && (
+                {/* {lines.length > 0 && lines[0].components.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {lines[0].components.map((c) => {
                       const prod = productions.find(
@@ -522,7 +587,36 @@ if (rawLines.length > 0) {
                       );
                     })}
                   </div>
-                )}
+                )} */}
+
+                {lines.length > 0 && lines[0].components.length > 0 && (
+  <div className="flex flex-wrap gap-2 pt-1">
+    {lines[0].components.map((c) => {
+      const displayDate = c.productionDate
+        ? fmtDate(c.productionDate)
+        : (() => {
+            const prod = productions.find((p) => String(p.ID) === String(c.productionId));
+            return prod ? fmtDate(prod.PRODUCTION_DATE) : `#${c.productionId}`;
+          })();
+      return (
+        <span
+          key={c.productionId}
+          className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-md bg-blue-900 text-white text-xs font-bold"
+        >
+          {displayDate}
+          <button
+            type="button"
+            onClick={() => removeComponent(c.productionId)}
+            disabled={isSubmitting}
+            className="rounded-sm p-0.5 hover:text-red-700"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      );
+    })}
+  </div>
+)}
               </div>
 
               {/* ── Invoice Table ── */}

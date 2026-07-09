@@ -48,6 +48,20 @@ export const useAllEggProductions = () =>
     throwOnError: false,
   });
 
+  // শুধু invoice sheet গুলার জন্য — already-invoiced date বাদ দিয়ে
+export const useAvailableEggProductions = () =>
+  useQuery({
+    queryKey: [...eggProductionKeys.all, "available"],
+    queryFn:  () => fetchJSON(`${BASE}/api/egg-production?limit=0&excludeInvoiced=true`),
+    staleTime: 2 * 60 * 1000,        // ছোট staleTime, কারণ invoice create/delete হলে দ্রুত reflect করা দরকার
+    gcTime:    5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+    throwOnError: false,
+  });
+
 export const useEggProductionByDateRange = (fromDate, toDate) =>
   useQuery({
     queryKey: [...eggProductionKeys.lists(), { fromDate, toDate }],
