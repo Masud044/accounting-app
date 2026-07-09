@@ -319,7 +319,7 @@ export default function RecognitionListPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline">
-              <Link to="/dashboard/overview">Approval Dashboard</Link>
+              <Link to="/dashboard/approval-dashboard">Approval Dashboard</Link>
             </Button>
             <Button onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /> New Form

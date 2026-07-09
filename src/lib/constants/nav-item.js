@@ -133,8 +133,15 @@ export const NAV_ITEMS = [
   {
     label: "Dashboard",
     roles: ["Admin"],
-    to: "/dashboard/overview",
-    Icon: Home,
+     links: [
+      { to: "/dashboard/overview", label: "Expense & Income", Icon: Home },
+      { to: "/dashboard/sale-dashboard", label: "Sales and  Invoice", Icon: Home },
+      { to: "/dashboard/egg-dashboard", label: "Egg Production Summary", Icon: FileText },
+      { to: "/dashboard/approval-dashboard", label: "Approval Dashboard", Icon: Plus },
+     
+    ],
+    // to: "/dashboard/overview",
+    // Icon: Home,
   },
 
   {
