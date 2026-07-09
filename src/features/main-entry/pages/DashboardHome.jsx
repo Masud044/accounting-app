@@ -28,6 +28,8 @@ import InvoiceDashboardPanel from "@/features/sale-invoice/invoice-dashboard-pan
 import InvoiceMonthlyChart from "@/features/sale-invoice/invoice-monthly-chart";
 
 import InvoiceDailyTrendChart from "@/features/sale-invoice/invoice-daily-chart";
+import InvoiceSalesDashboard from "@/features/sale-invoice/invoice-sale-dashboard";
+import FinancialDashboardPage from "./financial-dashboard-page";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -375,25 +377,31 @@ const [incomeFilters, setIncomeFilters] = useState({
           <StatCard title="Banking Balance" value={cash?.data?.balance}   icon={Landmark}        type="balance" />
         </div> */}
 
-        {/* Charts */}
+        {/* Charts
         <div className="grid grid-cols-3 gap-4">
           <MonthlyProductionChart />
           <MonthlySummaryChart />
           <DailyTrendChart />
-        </div>
+        </div> */}
         {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
   <InvoiceDashboardPanel className="col-span-2"/>
   <InvoiceMonthlyChart />
   <InvoiceDailyTrendChart></InvoiceDailyTrendChart>
 </div> */}
 
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+{/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
   <InvoiceDashboardPanel  />
   <InvoiceMonthlyChart />
   <InvoiceDailyTrendChart  />
-</div>
-        <div>
+</div> */}
+        {/* <div>
           <ApprovalDashboardPage></ApprovalDashboardPage>
+        </div>
+        <div>
+         <InvoiceSalesDashboard></InvoiceSalesDashboard>
+        </div> */}
+        <div>
+        <FinancialDashboardPage></FinancialDashboardPage>
         </div>
 
       </div>

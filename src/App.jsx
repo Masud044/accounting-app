@@ -47,6 +47,10 @@ import { DashboardHomeTable } from "./features/main-entry/components/DashboardHo
 import GRN from "./features/grn-master";
 import InvoicePage from "./features/sale-invoice/sale-invoice-page";
 import RecognitionPage from "./features/purchase-recognition/recognition-page";
+import InvoiceSalesDashboard from "./features/sale-invoice/invoice-sale-dashboard";
+
+import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
+import EggDashboardPage from "./features/egg-production/egg-dashboard-home";
 // import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
 
 
@@ -100,6 +104,31 @@ function App() {
     </ProtectedRoute>
   }
 />
+
+ <Route
+                path="sale-dashboard"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                   <InvoiceSalesDashboard></InvoiceSalesDashboard>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="egg-dashboard"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                  <EggDashboardPage></EggDashboardPage>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="approval-dashboard"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                 <ApprovalDashboardPage></ApprovalDashboardPage>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Admin + Inventory উভয়ই */}
               <Route path="inventory" element={<InventoriesPage />} />

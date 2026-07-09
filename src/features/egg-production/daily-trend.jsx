@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useDailyTrend } from "./queries";
 
+
 Chart.register(...registerables);
 
 const currentYear  = new Date().getFullYear();
@@ -238,6 +239,8 @@ export default function DailyTrendChart() {
           </div>
         </div>
       )}
+
+         
     </div>
   );
 }
