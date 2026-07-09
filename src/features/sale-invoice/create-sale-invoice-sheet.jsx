@@ -17,7 +17,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { FileText, Trash2, ChevronDown, Plus, X } from "lucide-react";
 import { useCreateInvoice } from "./queries";
 import { useCustomers } from "@/features/customer/queries";
-import { useAllEggProductions } from "@/features/egg-production/queries";
+
+import { useAvailableEggProductions } from "@/features/egg-production/queries";
+
+
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 const today = () => new Date().toISOString().split("T")[0];
@@ -71,7 +74,7 @@ const yellowCell =
 export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }) {
   const createMutation = useCreateInvoice();
   const { data: customers   = [] } = useCustomers();
-  const { data: productions = [] } = useAllEggProductions();
+const { data: productions = [] } = useAvailableEggProductions();
 
   const [customerId,     setCustomerId]     = useState("");
   const [invoiceDate,    setInvoiceDate]    = useState(today());
@@ -119,7 +122,7 @@ export default function AddInvoiceSheet({ open, onOpenChange, showConfirmation }
         const existing = prev[0];
         const newComponents = [
           ...existing.components,
-          ...chosen.map((p) => ({ productionId: p.ID, qty: Number(p.QTY || 0) })),
+          ...chosen.map((p) => ({ productionId: p.ID,productionDate: p.PRODUCTION_DATE, qty: Number(p.QTY || 0) })),
         ];
         const totalQty = newComponents.reduce((s, c) => s + c.qty, 0);
 

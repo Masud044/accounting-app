@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { eggProductionKeys } from "@/features/egg-production/queries";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -44,6 +45,22 @@ export const useInvoiceById = (hid) =>
     throwOnError: false,
   });
 
+// export const useCreateInvoice = () => {
+//   const qc = useQueryClient();
+//   return useMutation({
+//     mutationFn: (data) =>
+//       fetchJSON(`${BASE}/api/sal-invoice`, {
+//         method:  "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body:    JSON.stringify(data),
+//       }),
+//     onSuccess: () => qc.invalidateQueries({ queryKey: invoiceKeys.lists() }),
+//     onError: (err) => console.error("Create invoice failed:", err),
+//   });
+// };
+
+
+
 export const useCreateInvoice = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -53,7 +70,10 @@ export const useCreateInvoice = () => {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify(data),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: invoiceKeys.lists() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      qc.invalidateQueries({ queryKey: eggProductionKeys.all });   // ← নতুন
+    },
     onError: (err) => console.error("Create invoice failed:", err),
   });
 };
@@ -63,7 +83,10 @@ export const useDeleteInvoice = () => {
   return useMutation({
     mutationFn: (hid) =>
       fetchJSON(`${BASE}/api/sal-invoice/${hid}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: invoiceKeys.lists() }),
+   onSuccess: () => {
+      qc.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      qc.invalidateQueries({ queryKey: eggProductionKeys.all });   // ← নতুন
+    },
     onError: (err) => console.error("Delete invoice failed:", err),
   });
 };
@@ -79,6 +102,7 @@ export const useUpdateInvoice = (hid) => {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: invoiceKeys.lists() });
+       qc.invalidateQueries({ queryKey: eggProductionKeys.all }); 
       qc.invalidateQueries({ queryKey: invoiceKeys.detail(hid) });
     },
     onError: (err) => console.error("Update invoice failed:", err),
