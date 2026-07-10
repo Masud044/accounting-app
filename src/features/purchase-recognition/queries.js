@@ -99,11 +99,23 @@ export const useApprovalTracking = () =>
     },
   });
 
+// export const useUpdateApprovalStatus = () => {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: async ({ formId, status }) =>
+//       (await axios.patch(`${BASE}/approvals/${formId}/status`, { status })).data,
+//     onSuccess: () => {
+//       queryClient.invalidateQueries(["approvalTracking"]);
+//       queryClient.invalidateQueries(["purchaseRecognitions"]);
+//     },
+//   });
+// };
+
 export const useUpdateApprovalStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ formId, status }) =>
-      (await axios.patch(`${BASE}/approvals/${formId}/status`, { status })).data,
+    mutationFn: async ({ formId, status, reason }) =>
+      (await axios.patch(`${BASE}/approvals/${formId}/status`, { status, reason })).data,
     onSuccess: () => {
       queryClient.invalidateQueries(["approvalTracking"]);
       queryClient.invalidateQueries(["purchaseRecognitions"]);
@@ -155,6 +167,18 @@ export const usePaymentCodes = () =>
     onSuccess: (_data, formId) => {
       queryClient.invalidateQueries(["purchaseRecognitions"]);
       queryClient.invalidateQueries(["purchaseRecognition", formId]);
+    },
+  });
+};
+
+export const useSendForApproval = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formId) => (await axios.put(`${BASE}/${formId}/send-for-approval`)).data,
+    onSuccess: (_data, formId) => {
+      queryClient.invalidateQueries(["purchaseRecognitions"]);
+      queryClient.invalidateQueries(["purchaseRecognition", formId]);
+      queryClient.invalidateQueries(["approvalTracking"]);
     },
   });
 };

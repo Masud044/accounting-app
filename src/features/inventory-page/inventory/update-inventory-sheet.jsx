@@ -977,12 +977,13 @@ export default function UpdateInventorySheet({
     description: `Payment against Inventory GRN ${grnNo}`,
     invoiceNo: invoiceNo || "",
     poNumber: poNo || "",
-    rows: [
-      {
-        particulars: `Inventory GRN ${grnNo}`,
-        amount: total,
-      },
-    ],
+    grnNo: grnNo || "",
+    // rows: [
+    //   {
+    //     particulars: `Inventory GRN ${grnNo}`,
+    //     amount: total,
+    //   },
+    // ],
   };
 
   return (
