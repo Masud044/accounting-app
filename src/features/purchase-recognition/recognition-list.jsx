@@ -195,14 +195,17 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, Package, Wallet, Lock } from "lucide-react";
+
+import { Plus, Pencil, Trash2, Package, Wallet, Lock, Info } from "lucide-react";
 import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { usePurchaseRecognitions, useDeletePurchaseRecognition } from "./queries";
+
 import AddRecognitionSheet from "./create-recognition-sheet";
 import EditRecognitionSheet from "./update-recognition-sheet";
+import { Send, Clock, CheckCircle2 } from "lucide-react";
+import { usePurchaseRecognitions, useDeletePurchaseRecognition, useSendForApproval } from "./queries";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const BASE = `${url}/api/purchase-recognition`;
@@ -225,7 +228,19 @@ export default function RecognitionListPage() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [editFormId, setEditFormId] = useState(null);
-  const [actionLoadingId, setActionLoadingId] = useState(null); // form-level spinner for inv/payment nav
+  const [actionLoadingId, setActionLoadingId] = useState(null); 
+  // form-level spinner for inv/payment nav
+
+  const sendForApprovalMutation = useSendForApproval();
+
+const handleSendForApproval = async (formId) => {
+  try {
+    await sendForApprovalMutation.mutateAsync(formId);
+    toast.success(`Form ${formId} sent for approval.`);
+  } catch (err) {
+    toast.error(err?.response?.data?.message || "Failed to send for approval.");
+  }
+};
 
   const handleDelete = async (formId) => {
     if (!window.confirm(`Delete form ${formId}? This cannot be undone.`)) return;
@@ -359,7 +374,7 @@ export default function RecognitionListPage() {
               )}
 
               {forms.map((form) => {
-                const isApproved = form.OVERALL_STATUS === "Approved";
+               const isApproved = Number(form.STATUS) === 3;
                 // ✅ /lock hit hoye gele backend theke ACTION_CREATED = 1 ashe
                 const isLocked = Number(form.ACTION_CREATED) === 1;
                 const isActionBusy = actionLoadingId === form.FORM_ID;
@@ -374,11 +389,44 @@ export default function RecognitionListPage() {
                     <td className="px-3 py-2">{form.VENDOR_NAME}</td>
                     <td className="px-3 py-2 text-center text-muted-foreground">{form.ITEM_COUNT} items</td>
                     <td className="px-3 py-2 text-right tabular-nums">{fmtMoney(form.TOTAL_AMOUNT)}</td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeCls(form.OVERALL_STATUS)}`}>
-                        {form.OVERALL_STATUS || "Pending"}
-                      </span>
-                    </td>
+                   {/* <td className="px-3 py-2">
+  <span
+    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeCls(form.OVERALL_STATUS)}`}
+    title={form.OVERALL_STATUS === "Rejected" ? form.REJECT_REASON || "" : undefined}
+  >
+    {form.OVERALL_STATUS || "Pending"}
+    {form.OVERALL_STATUS === "Rejected" && form.REJECT_REASON && (
+      <Info className="h-3 w-3" />
+    )}
+  </span>
+</td> */}
+
+<td className="px-3 py-2">
+  {Number(form.STATUS) === 1 && (
+    <Button
+      size="sm" variant="outline" className="h-7 px-2"
+      disabled={sendForApprovalMutation.isPending}
+      onClick={() => handleSendForApproval(form.FORM_ID)}
+    >
+      <Send className="h-3.5 w-3.5 mr-1" /> Send for Approval
+    </Button>
+  )}
+  {Number(form.STATUS) === 2 && (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+      <Clock className="h-3 w-3" /> Waiting for Approval
+    </span>
+  )}
+  {Number(form.STATUS) === 3 && (
+    <span
+      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+      title={form.REJECT_REASON || undefined}
+    >
+      <CheckCircle2 className="h-3 w-3" /> Completed
+    </span>
+  )}
+</td>
+
+
                     <td className="px-3 py-2 text-right">
                       <div className="flex items-center justify-end gap-1">
                         {/* ✅ Pending hole eibar kichu dekhabe na, Approved hole type onujayi ekta button */}
@@ -421,12 +469,10 @@ export default function RecognitionListPage() {
                             Payment
                           </Button>
                         )}
-
-                        <Button
+<Button
   variant="ghost" size="icon" className="h-8 w-8"
   onClick={() => setEditFormId(form.FORM_ID)}
-  disabled={isApproved}
-  title={isApproved ? "Approved form cannot be edited" : "Edit"}
+  title={isApproved ? "View (Approved — read-only)" : "Edit"}
 >
   <Pencil className="h-3.5 w-3.5" />
 </Button>

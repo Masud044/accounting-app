@@ -179,8 +179,7 @@ export default function InvoiceList() {
         <Button
           variant="ghost" size="icon" className="h-8 w-8"
           onClick={() => handleView(inv.HID)}
-          disabled={isLocked}
-          title={isLocked ? "Receive Voucher already created — locked" : "Edit"}
+          title={isLocked ? "View only — Receive Voucher already created" : "Edit"}
         >
           <IconEdit className="h-4 w-4" />
           <span className="sr-only">View</span>

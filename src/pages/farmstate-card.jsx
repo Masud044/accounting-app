@@ -1,5 +1,23 @@
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { Fish, Egg } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
+const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+// ── Data fetching ──────────────────────────────────────────────────────────────
+const useFarmSummary = () =>
+  useQuery({
+    queryKey: ["farmSummary"],
+    queryFn: async () => {
+      const res = await axios.get(`${url}/api/farm-dashboard/summary`);
+      return res.data.success ? res.data.data : null;
+    },
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+// ── Icons ────────────────────────────────────────────────────────────────────
 function CowIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -16,12 +34,11 @@ function ChickenIcon({ className }) {
   );
 }
 
-
-
-const stats = [
+// ── Card config — value comes from live data, everything else stays static ──
+const buildStats = (data) => [
   {
     label: "Number of Cow",
-    value: "5",
+    value: Number(data?.totalCows ?? 0).toLocaleString(),
     caption: "Total Cows",
     valueColor: "text-emerald-700",
     iconBg: "bg-emerald-100",
@@ -30,7 +47,7 @@ const stats = [
   },
   {
     label: "Chicken",
-    value: "1,322",
+    value: Number(data?.totalChicken ?? 0).toLocaleString(),
     caption: "Total Chicken",
     valueColor: "text-orange-500",
     iconBg: "bg-orange-100",
@@ -39,7 +56,7 @@ const stats = [
   },
   {
     label: "Fish",
-    value: "0",
+    value: Number(data?.totalFish ?? 0).toLocaleString(),
     caption: "Total Fish",
     valueColor: "text-sky-800",
     iconBg: "bg-sky-100",
@@ -48,7 +65,7 @@ const stats = [
   },
   {
     label: "Egg Ratio",
-    value: "90%",
+    value: `${Number(data?.eggRatio ?? 0)}%`,
     caption: "Production Ratio",
     valueColor: "text-orange-500",
     iconBg: "bg-orange-100",
@@ -58,27 +75,51 @@ const stats = [
 ];
 
 export default function FarmStatsCards() {
+  const { data, isLoading, isError } = useFarmSummary();
+  const stats = buildStats(data);
+
   return (
     <div className="bg-neutral-100 py-5">
-        
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {stats.map(({ label, value, caption, valueColor, iconBg, iconColor, Icon }) => (
-          <div
-            key={label}
-            className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-5"
-          >
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
-              <Icon className={`w-10 h-10 ${iconColor}`} />
+        {isLoading &&
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-5"
+            >
+              <Skeleton className="w-20 h-20 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-3 w-20" />
+              </div>
             </div>
-            <div>
-              <p className="text-base font-semibold text-neutral-800">{label}</p>
-              <p className={`text-4xl font-bold leading-tight ${valueColor}`}>{value}</p>
-              <p className="text-sm text-neutral-400">{caption}</p>
-            </div>
+          ))}
+
+        {!isLoading && isError && (
+          <div className="col-span-full bg-white rounded-2xl shadow-sm p-5 text-center text-sm text-destructive">
+            Failed to load farm summary.
           </div>
-        ))}
+        )}
+
+        {!isLoading &&
+          !isError &&
+          stats.map(({ label, value, caption, valueColor, iconBg, iconColor, Icon }) => (
+            <div
+              key={label}
+              className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-5"
+            >
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
+                <Icon className={`w-10 h-10 ${iconColor}`} />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-neutral-800">{label}</p>
+                <p className={`text-4xl font-bold leading-tight ${valueColor}`}>{value}</p>
+                <p className="text-sm text-neutral-400">{caption}</p>
+              </div>
+            </div>
+          ))}
       </div>
-     
     </div>
   );
 }

@@ -123,9 +123,10 @@
 //   );
 // }
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, X, Info } from "lucide-react";
 import { SectionContainer } from "@/components/SectionContainer";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -146,13 +147,35 @@ export default function ApprovalDashboardPage() {
   const { data: rows = [], isLoading } = useApprovalTracking();
   const updateStatusMutation = useUpdateApprovalStatus();
 
-  const handleStatusChange = async (formId, status) => {
+  const [rejectModal, setRejectModal] = useState({ open: false, formId: null });
+  const [rejectReason, setRejectReason] = useState("");
+
+  const handleStatusChange = async (formId, status, reason = null) => {
     try {
-      await updateStatusMutation.mutateAsync({ formId, status });
+      await updateStatusMutation.mutateAsync({ formId, status, reason });
       toast.success(`${formId} — status updated to ${status}.`);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to update status.");
     }
+  };
+
+  const openRejectModal = (formId) => {
+    setRejectModal({ open: true, formId });
+    setRejectReason("");
+  };
+
+  const closeRejectModal = () => {
+    setRejectModal({ open: false, formId: null });
+    setRejectReason("");
+  };
+
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) {
+      toast.error("Please provide a rejection reason.");
+      return;
+    }
+    await handleStatusChange(rejectModal.formId, "Rejected", rejectReason.trim());
+    closeRejectModal();
   };
 
   return (
@@ -165,7 +188,7 @@ export default function ApprovalDashboardPage() {
             <h2 className="font-semibold text-base text-gray-800 dark:text-foreground">
               Purchase Recognition — Approval Dashboard
             </h2>
-            <p className="text-sm text-muted-foreground">Update the status below</p>
+            <p className="text-sm text-muted-foreground">Approve or reject below</p>
           </div>
           <Button asChild variant="outline">
             <Link to="/dashboard/purchase-recognition">
@@ -210,21 +233,38 @@ export default function ApprovalDashboardPage() {
                   <td className="px-3 py-2">{row.VENDOR_NAME}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{fmtMoney(row.TOTAL_AMOUNT)}</td>
                   <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={row.OVERALL_STATUS}
-                        onChange={(e) => handleStatusChange(row.FORM_ID, e.target.value)}
-                        disabled={updateStatusMutation.isPending}
-                        className="h-8 text-sm border rounded px-2 bg-white dark:bg-background"
+                    {row.OVERALL_STATUS === "Pending" ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-green-700 border-green-300 hover:bg-green-50"
+                          disabled={updateStatusMutation.isPending}
+                          onClick={() => handleStatusChange(row.FORM_ID, "Approved")}
+                        >
+                          <Check className="h-3.5 w-3.5 mr-1" /> Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-red-700 border-red-300 hover:bg-red-50"
+                          disabled={updateStatusMutation.isPending}
+                          onClick={() => openRejectModal(row.FORM_ID)}
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    ) : (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeCls(row.OVERALL_STATUS)}`}
+                        title={row.OVERALL_STATUS === "Rejected" ? row.REJECT_REASON || "" : undefined}
                       >
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        {/* <option value="Rejected">Rejected</option> */}
-                      </select>
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeCls(row.OVERALL_STATUS)}`}>
                         {row.OVERALL_STATUS}
+                        {row.OVERALL_STATUS === "Rejected" && row.REJECT_REASON && (
+                          <Info className="h-3 w-3" />
+                        )}
                       </span>
-                    </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -232,6 +272,40 @@ export default function ApprovalDashboardPage() {
           </table>
         </div>
       </div>
+
+     {/* ── Reject Reason Modal ── */}
+{rejectModal.open && (
+  <div className="fixed inset-0 flex justify-center items-center z-50">
+    <div className="bg-white dark:bg-background rounded-2xl p-6 w-11/12 md:w-[420px] shadow-2xl border border-border">
+      <h3 className="text-base font-bold mb-1">Reject Form {rejectModal.formId}</h3>
+      <p className="text-sm text-muted-foreground mb-3">Please provide a reason for rejection.</p>
+      <textarea
+        value={rejectReason}
+        onChange={(e) => setRejectReason(e.target.value)}
+        rows={3}
+        autoFocus
+        placeholder="Reason for rejection..."
+        className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-red-400"
+      />
+      <div className="flex justify-end gap-2 mt-4">
+        <button
+          onClick={closeRejectModal}
+          disabled={updateStatusMutation.isPending}
+          className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={confirmReject}
+          disabled={updateStatusMutation.isPending}
+          className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm disabled:opacity-60"
+        >
+          {updateStatusMutation.isPending ? "Rejecting..." : "Confirm Reject"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </SectionContainer>
   );
 }

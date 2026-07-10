@@ -2697,6 +2697,33 @@ const supplierDefault = {
   status: "1",
 };
 
+const MONTHS = {
+  JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
+  JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+};
+
+const toDateInputValue = (val) => {
+  if (!val) return "";
+  const str = String(val).trim();
+
+  // ✅ Already ISO: "2026-07-03" or "2026-07-03T00:00:00.000Z"
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.split("T")[0];
+
+  // ✅ Oracle default format: "03-JUL-26"
+  const match = str.match(/^(\d{2})-([A-Za-z]{3})-(\d{2})$/);
+  if (match) {
+    const [, day, mon, yy] = match;
+    const month = MONTHS[mon.toUpperCase()];
+    if (!month) return "";
+    return `20${yy}-${month}-${day}`;
+  }
+
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+
+  return "";
+};
+
 const PaymentCreate = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -2713,13 +2740,12 @@ const PaymentCreate = () => {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierForm, setSupplierForm] = useState(supplierDefault);
   const [supplierErrors, setSupplierErrors] = useState({});
-  // component এর উপরে বা useEffect এর আগে
-const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
 
   const [form, setForm] = useState({
     entryDate: today,
     invoiceNo: "",
     poNumber: "",
+    grnNo: "",          // 👈 নতুন
     supporting: "",
     description: "",
     supplier: "",
@@ -2802,9 +2828,6 @@ const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
     onSuccess: async (data) => {
       if (data.status === "success") {
         await uploadBills(data.masterID || data.id);
-
-        // ✅ Purchase Recognition theke ashle, oi form-take lock kore dao
-        //    jate double payment create na hoy
         await lockRecognitionForm(location.state?.purchaseFormId);
 
         toast.success("Voucher created successfully!");
@@ -2813,6 +2836,7 @@ const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
           entryDate: today,
           invoiceNo: "",
           poNumber: "",
+          grnNo: "",
           supporting: "",
           description: "",
           supplier: "",
@@ -2925,24 +2949,38 @@ const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
   // ── Prefill from Purchase Recognition's "Create Payment" OR
   //    Inventory's "Payment Voucher" button ─────────────────────────────────
   useEffect(() => {
-  const incoming = location.state;
-  if (!incoming) return;
+    const incoming = location.state;
+    if (!incoming) return;
 
-  setForm((f) => ({
-    ...f,
-    supplier: incoming.supplier ? String(incoming.supplier) : f.supplier,
-    entryDate: incoming.entryDate ? toDateInputValue(incoming.entryDate) : f.entryDate,
-    glDate: incoming.glDate ? toDateInputValue(incoming.glDate) : f.glDate,
-    description: incoming.description || f.description,
-    invoiceNo: incoming.invoiceNo || f.invoiceNo,
-    poNumber: incoming.poNumber || f.poNumber,
-    inv_type: incoming.invType || f.inv_type,
-    paymentCode: incoming.paymentCode || f.paymentCode,
-  }));
+    setForm((f) => ({
+      ...f,
+      supplier: incoming.supplier ? String(incoming.supplier) : f.supplier,
+      entryDate: incoming.entryDate ? toDateInputValue(incoming.entryDate) : f.entryDate,
+      glDate: incoming.glDate ? toDateInputValue(incoming.glDate) : f.glDate,
+      description: incoming.description || f.description,
+      invoiceNo: incoming.invoiceNo || f.invoiceNo,
+      poNumber: incoming.poNumber || f.poNumber,
+      grnNo: incoming.grnNo || f.grnNo,          // 👈 নতুন
+      inv_type: incoming.invType || f.inv_type,
+      paymentCode: incoming.paymentCode || f.paymentCode,
+    }));
 
-  // ⬇️ rows auto-fill logic পুরোটাই বাদ দিলাম, নিচে পয়েন্ট ৩ দেখুন
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+    // ✅ Inventory theke row (total amount) ashle prefill hobe
+    if (incoming.rows?.length > 0) {
+      const mappedRows = incoming.rows.map((r, i) => ({
+        id: Date.now() + i,
+        accountCode: "",
+        particulars: r.particulars || "",
+        amount: Number(r.amount || 0),
+      }));
+      setRows(mappedRows);
+      setForm((f) => ({
+        ...f,
+        totalAmount: mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0),
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Voucher Submit ───────────────────────────────────────────────────────────
   const handleSubmit = () => {
@@ -2974,6 +3012,7 @@ const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
       amount2: rows.map((r) => String(r.amount || 0)),
       inv_type: form.inv_type ? Number(form.inv_type) : null,
       po_number: form.poNumber || null,
+      grn_no: form.grnNo || null,   // 👈 নতুন — backend এ GRN_NO কলাম থাকলে সেভ হবে
     });
   };
 
@@ -3055,6 +3094,12 @@ const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
                 label: "PO Number",
                 type: "text",
                 key: "poNumber",
+                readOnly: true,
+              },
+              {
+                label: "GRN No",           // 👈 নতুন field
+                type: "text",
+                key: "grnNo",
                 readOnly: true,
               },
               {
@@ -3301,6 +3346,7 @@ const toDateInputValue = (val) => (val ? String(val).split("T")[0] : "");
             <div className="space-y-2">
               <p><strong>Entry Date:</strong> {form.entryDate}</p>
               <p><strong>PO Number:</strong> {form.poNumber || "—"}</p>
+              <p><strong>GRN No:</strong> {form.grnNo || "—"}</p>
               <p><strong>No. of Supporting:</strong> {form.supporting}</p>
               <p><strong>Description:</strong> {form.description}</p>
               <p>
