@@ -51,8 +51,10 @@ import InvoiceSalesDashboard from "./features/sale-invoice/invoice-sale-dashboar
 
 import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
 import EggDashboardPage from "./features/egg-production/egg-dashboard-home";
+import ChickenProjectPage from "./features/chicken-project";
+import CowProjectPage from "./features/cow-project";
+import FishProjectPage from "./features/fish-project";
 // import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
-
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -97,19 +99,19 @@ function App() {
               {/* Inventory welcome page */}
               <Route path="welcome" element={<WelcomePage />} />
               <Route
-  path="overview"
-  element={
-    <ProtectedRoute anyRole={ADMIN}>
-      <DashboardHome />
-    </ProtectedRoute>
-  }
-/>
+                path="overview"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                    <DashboardHome />
+                  </ProtectedRoute>
+                }
+              />
 
- <Route
+              <Route
                 path="sale-dashboard"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
-                   <InvoiceSalesDashboard></InvoiceSalesDashboard>
+                    <InvoiceSalesDashboard></InvoiceSalesDashboard>
                   </ProtectedRoute>
                 }
               />
@@ -117,15 +119,41 @@ function App() {
                 path="egg-dashboard"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
-                  <EggDashboardPage></EggDashboardPage>
+                    <EggDashboardPage></EggDashboardPage>
                   </ProtectedRoute>
                 }
               />
-               <Route
+
+              <Route
+                path="/dashboard/chicken-project"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                   <ChickenProjectPage></ChickenProjectPage>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/cow-project"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                  <CowProjectPage></CowProjectPage>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/fish-project"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                  <FishProjectPage></FishProjectPage>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
                 path="approval-dashboard"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
-                 <ApprovalDashboardPage></ApprovalDashboardPage>
+                    <ApprovalDashboardPage></ApprovalDashboardPage>
                   </ProtectedRoute>
                 }
               />
@@ -146,7 +174,7 @@ function App() {
                 }
               />
 
-               <Route
+              <Route
                 path="home-table"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -215,7 +243,7 @@ function App() {
                 }
               />
 
-               <Route
+              <Route
                 path="payment-edit/:voucherId"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -305,7 +333,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
- <Route
+              <Route
                 path="egg-production"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -314,7 +342,7 @@ function App() {
                 }
               />
 
-               <Route
+              <Route
                 path="purchase-recognition"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -322,7 +350,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-               {/* <Route
+              {/* <Route
                 path="purchase-approve"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
@@ -347,7 +375,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-               <Route
+              <Route
                 path="customer"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>

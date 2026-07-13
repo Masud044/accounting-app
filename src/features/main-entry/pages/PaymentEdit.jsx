@@ -1057,7 +1057,7 @@ const PaymentEdit = () => {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierForm, setSupplierForm] = useState(supplierDefault);
   const [supplierErrors, setSupplierErrors] = useState({});
-
+ const [deletedDebitIds, setDeletedDebitIds] = useState([]);
   const [form, setForm] = useState({
     entryDate: today,
     invoiceNo: "",
@@ -1217,6 +1217,7 @@ const PaymentEdit = () => {
         await queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
         await queryClient.invalidateQueries(["voucher", voucherId]);
         await queryClient.invalidateQueries(["gldocs", voucherId]);
+        setDeletedDebitIds([]);
         setShowModal(false);
         navigate("/dashboard/payment-voucher");
       } else {
@@ -1318,14 +1319,29 @@ const PaymentEdit = () => {
     }));
   };
 
-  const removeRow = (id) => {
-    const updated = rows.filter((r) => r.id !== id);
-    setRows(updated);
-    setForm({
-      ...form,
-      totalAmount: updated.reduce((s, r) => s + Number(r.amount || 0), 0),
-    });
-  };
+ 
+
+const removeRow = (id) => {
+  const rowToRemove = rows.find((r) => r.id === id);
+  if (rowToRemove?.isExisting && rowToRemove.debitId) {
+    setDeletedDebitIds((prev) => [...prev, rowToRemove.debitId]);
+  }
+  const updated = rows.filter((r) => r.id !== id);
+  setRows(updated);
+  setForm({
+    ...form,
+    totalAmount: updated.reduce((s, r) => s + Number(r.amount || 0), 0),
+  });
+};
+
+  // const removeRow = (id) => {
+  //   const updated = rows.filter((r) => r.id !== id);
+  //   setRows(updated);
+  //   setForm({
+  //     ...form,
+  //     totalAmount: updated.reduce((s, r) => s + Number(r.amount || 0), 0),
+  //   });
+  // };
 
   const handleSubmit = () => {
     if (
@@ -1347,49 +1363,41 @@ const PaymentEdit = () => {
     const newRows = rows.filter((r) => !r.isExisting);
 
     const payload = {
-      masterID: Number(voucherId),
-      trans_date: form.entryDate,
-      gl_date: form.glDate,
-      receive_desc: form.description,
-      pcode: form.paymentCode,
-      credit_id: form.creditId,
-      supplierid: form.supplier,
-      totalAmount: Number(form.totalAmount),
-      supporting: String(form.supporting),
-      inv_type: form.inv_type ? Number(form.inv_type) : null,
-      po_number: form.poNumber || null,      // 👈 নতুন
+  masterID: Number(voucherId),
+  trans_date: form.entryDate,
+  gl_date: form.glDate,
+  receive_desc: form.description,
+  pcode: form.paymentCode,
+  credit_id: form.creditId,
+  supplierid: form.supplier,
+  totalAmount: Number(form.totalAmount),
+  supporting: String(form.supporting),
+  inv_type: form.inv_type ? Number(form.inv_type) : null,
+  po_number: form.poNumber || null,
 
-      ...(existingRows.length
-        ? {
-            DEBIT_ID: existingRows.map((r) => Number(r.debitId)),
-            acode: existingRows.map((r) => r.accountCode),
-            amount2: existingRows.map((r) => Number(r.amount)),
-            CODEDESCRIPTION: existingRows.map((r) => {
-              const p = r.particulars.split(" - ");
-              return p.length > 1 ? p[1] : r.particulars;
-            }),
-            DESCRIPTION: existingRows.map((r) => {
-              const p = r.particulars.split(" - ");
-              return p.length > 1 ? p[1] : r.particulars;
-            }),
-          }
-        : {}),
+  ...(deletedDebitIds.length
+    ? { DELETED_DEBIT_ID: deletedDebitIds }
+    : {}),
 
-      ...(newRows.length
-        ? {
-            NEW_ACODE: newRows.map((r) => r.accountCode),
-            NEW_AMOUNT: newRows.map((r) => Number(r.amount)),
-            NEW_CODEDESCRIPTION: newRows.map((r) => {
-              const p = r.particulars.split(" - ");
-              return p.length > 1 ? p[1] : r.particulars;
-            }),
-            NEW_DESCRIPTION: newRows.map((r) => {
-              const p = r.particulars.split(" - ");
-              return p.length > 1 ? p[1] : r.particulars;
-            }),
-          }
-        : {}),
-    };
+  ...(existingRows.length
+    ? {
+        DEBIT_ID: existingRows.map((r) => Number(r.debitId)),
+        acode: existingRows.map((r) => r.accountCode),
+        amount2: existingRows.map((r) => Number(r.amount)),
+        CODEDESCRIPTION: existingRows.map((r) => r.particulars),
+        DESCRIPTION: existingRows.map((r) => r.particulars),
+      }
+    : {}),
+
+  ...(newRows.length
+    ? {
+        NEW_ACODE: newRows.map((r) => r.accountCode),
+        NEW_AMOUNT: newRows.map((r) => Number(r.amount)),
+        NEW_CODEDESCRIPTION: newRows.map((r) => r.particulars),
+        NEW_DESCRIPTION: newRows.map((r) => r.particulars),
+      }
+    : {}),
+};
 
     mutation.mutate(payload);
   };
