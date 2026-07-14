@@ -2807,6 +2807,18 @@ const PaymentCreate = () => {
     await Promise.allSettled(uploads);
   };
 
+
+  // ── Lock the Inventory (if this payment came from Inventory) ──────────────
+const lockInventory = async (inventoryHid) => {
+  if (!inventoryHid) return;
+  try {
+    await axios.put(`${url}/api/inventory/${inventoryHid}/lock`);
+    queryClient.invalidateQueries(["inventories"]);
+  } catch (err) {
+    console.error("Failed to lock inventory:", err);
+  }
+};
+
   // ── Lock the Purchase Recognition form (if this payment came from PR) ────────
   const lockRecognitionForm = async (purchaseFormId) => {
     if (!purchaseFormId) return;
@@ -2829,6 +2841,7 @@ const PaymentCreate = () => {
       if (data.status === "success") {
         await uploadBills(data.masterID || data.id);
         await lockRecognitionForm(location.state?.purchaseFormId);
+        await lockInventory(location.state?.inventoryHid);
 
         toast.success("Voucher created successfully!");
         setBillFiles([]);

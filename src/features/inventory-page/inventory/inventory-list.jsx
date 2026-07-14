@@ -379,15 +379,24 @@ export default function InventoryList() {
       cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(v) => row.toggleSelected(!!v)} />,
       enableSorting: false, enableHiding: false,
     },
-    {
-      accessorKey: "GRN_NO",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          GRN No <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <Badge variant="outline" className="font-mono text-xs">{row.getValue("GRN_NO") || "—"}</Badge>,
-    },
+   {
+  accessorKey: "GRN_NO",
+  header: ({ column }) => (
+    <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      GRN No <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  ),
+  cell: ({ row }) => (
+    <div className="flex items-center gap-2">
+      <Badge variant="outline" className="font-mono text-xs">{row.getValue("GRN_NO") || "—"}</Badge>
+      {Number(row.original.PAYMENT_CREATED) === 1 && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">
+          Payment
+        </span>
+      )}
+    </div>
+  ),
+},
     {
       accessorKey: "PO_NO",
       header: "PO No",

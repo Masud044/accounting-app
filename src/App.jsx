@@ -54,6 +54,11 @@ import EggDashboardPage from "./features/egg-production/egg-dashboard-home";
 import ChickenProjectPage from "./features/chicken-project";
 import CowProjectPage from "./features/cow-project";
 import FishProjectPage from "./features/fish-project";
+import TrialBalancePage from "./features/account-report/trail-balance-report";
+import GeneralLedgerPage from "./features/general-ledger-report";
+import CashFlowPage from "./features/cash-flow-report";
+import ExpenseStatementPage from "./features/expense-report";
+import IncomeStatementPage from "./features/income-report";
 // import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
 
 const ADMIN = ["Admin"];
@@ -137,6 +142,47 @@ function App() {
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
                   <CowProjectPage></CowProjectPage>
+                  </ProtectedRoute>
+                }
+              />
+      // report all 
+               <Route
+                path="/dashboard/trail-balance"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                 <TrialBalancePage></TrialBalancePage>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="/dashboard/general-ledger"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                <GeneralLedgerPage></GeneralLedgerPage>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="/dashboard/cash-flow"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                <CashFlowPage></CashFlowPage>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="/dashboard/expense-report"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                <ExpenseStatementPage></ExpenseStatementPage>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="/dashboard/income-report"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+              <IncomeStatementPage></IncomeStatementPage>
                   </ProtectedRoute>
                 }
               />

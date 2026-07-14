@@ -667,6 +667,7 @@ import {
   Check,
   ChevronsUpDown,
   Wallet,
+  Lock,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -674,6 +675,7 @@ import {
   useUpdateInventory,
   useSuppliers,
 } from "./queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const fetchJSON = async (url) => {
@@ -817,6 +819,7 @@ export default function UpdateInventorySheet({
   const [rows, setRows] = useState([]);
   const [dirty, setDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const userId =useAuthUserId();
 
   useEffect(() => {
     if (!inv) return;
@@ -847,6 +850,7 @@ export default function UpdateInventorySheet({
   }, [inv]);
 
   const updateRow = (idx, field, value) => {
+    if (isReadOnly) return;
     setDirty(true);
     setRows((prev) => {
       const next = [...prev];
@@ -866,6 +870,7 @@ export default function UpdateInventorySheet({
   };
 
   const addRow = () => {
+    if (isReadOnly) return; 
     setDirty(true);
     setRows((prev) => [...prev, newRow()]);
   };
@@ -873,6 +878,7 @@ export default function UpdateInventorySheet({
   // ✅ Existing row hole simply list theke shore jabe (backend diff-based delete korbe)
   //    Notun (unsaved) row hole shudhu local remove
   const removeRow = (idx) => {
+    if (isReadOnly) return; 
     setDirty(true);
     setRows((prev) => prev.filter((_, i) => i !== idx));
   };
@@ -909,6 +915,7 @@ export default function UpdateInventorySheet({
           poNo: poNo || null,
           supplierId: supplierId ? Number(supplierId) : null,
           items: buildItemsPayload(),
+           updateBy: userId,      
         },
       });
       toast.success("Inventory updated successfully!");
@@ -941,6 +948,7 @@ export default function UpdateInventorySheet({
           poNo: poNo || null,
           supplierId: supplierId ? Number(supplierId) : null,
           items: buildItemsPayload(idx, 2),
+           updateBy: userId,      
         },
       });
       updateRow(idx, "invStatus", 2);
@@ -965,12 +973,15 @@ export default function UpdateInventorySheet({
     }
     onOpenChange(false);
   };
-
-  const isSubmitting = submitting || updateMutation.isPending;
+// ── Lock state: PAYMENT_CREATED = 1 hole পুরো ফর্ম view-only ──────────────
+const isLocked      = Number(inv?.PAYMENT_CREATED) === 1;
+const isSubmitting  = submitting || updateMutation.isPending;
+const isReadOnly    = isSubmitting || isLocked;
   const total = rows.reduce((sum, r) => sum + (Number(r.price) || 0), 0);
 
   // ✅ Payment Voucher button — Invoice No, Supplier, Total niye Payment Create e jabe
   const paymentState = {
+     inventoryHid: hid,        
     supplier: supplierId ?? "",
     entryDate: invDate || format(new Date(), "yyyy-MM-dd"),
     glDate: invDate || format(new Date(), "yyyy-MM-dd"),
@@ -1000,13 +1011,19 @@ export default function UpdateInventorySheet({
               <ArchiveIcon className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <SheetTitle>
-                Update Inventory — GRN {grnNo || `#${hid}`}
-              </SheetTitle>
-              <SheetDescription>
-                Header o {rows.length} item edit korun, notun item o add korte
-                paren
-              </SheetDescription>
+              <SheetTitle className="flex items-center gap-2">
+  Update Inventory — GRN {grnNo || `#${hid}`}
+  {isLocked && (
+    <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">
+      <Lock className="h-3 w-3" /> Locked
+    </span>
+  )}
+</SheetTitle>
+<SheetDescription>
+  {isLocked
+    ? "Payment Voucher already created — view only, editing disabled."
+    : `Header o ${rows.length} item edit and new item  add`}
+</SheetDescription>
             </div>
           </div>
         </SheetHeader>
@@ -1283,37 +1300,39 @@ export default function UpdateInventorySheet({
                 variant="outline"
                 size="sm"
                 onClick={addRow}
-                disabled={isSubmitting}
+                // disabled={isSubmitting}
+                disabled={isReadOnly} 
               >
                 <Plus className="h-4 w-4 mr-1" /> Add Item
               </Button>
             </div>
 
-            <div className="flex justify-end gap-2 px-6 py-4 border-t border-border shrink-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Spinner className="mr-2 h-4 w-4" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
-              <Link to="/dashboard/payment-create" state={paymentState}>
-                <Button type="button" variant="secondary">
-                  <Wallet className="h-4 w-4 mr-1" /> Payment Voucher
-                </Button>
-              </Link>
-            </div>
+           <div className="grid grid-cols-3 gap-2 px-6 py-4 border-t border-border shrink-0">
+  <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+    {isLocked ? "Close" : "Cancel"}
+  </Button>
+
+  {!isLocked && (
+    <Button onClick={handleSave} disabled={isSubmitting}>
+      {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Saving...</> : "Save Changes"}
+    </Button>
+  )}
+
+  {isLocked ? (
+    <Button
+      type="button" variant="secondary" className="w-full col-start-3"
+      disabled title="Payment Voucher already created for this inventory"
+    >
+      Payment Voucher Created
+    </Button>
+  ) : (
+    <Link to="/dashboard/payment-create" state={paymentState}>
+      <Button type="button" variant="secondary" className="w-full">
+        <Wallet className="h-4 w-4 mr-1" /> Payment Voucher
+      </Button>
+    </Link>
+  )}
+</div>
           </>
         )}
       </SheetContent>

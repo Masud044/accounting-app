@@ -159,11 +159,12 @@ export const NAV_ITEMS = [
     label: "Account Report",
     roles: ["Admin"],
     links: [
-      { to: "/dashboard/daily-expense", label: "Daily Expense Report", Icon: ClipboardList },
-      { to: "/dashboard/daily-income", label: "Daily Income Report", Icon: ClipboardList },
+      { to: "/dashboard/expense-report", label: " Expense Report", Icon: ClipboardList },
+      { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList },
       { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList },
-      { to: "/dashboard/ledger", label: "Ledger", Icon: FileText },
-      { to: "/dashboard/cash-book", label: "Cash Book", Icon: FileText },
+      { to: "/dashboard/general-ledger", label: "General Ledger", Icon: FileText },
+      { to: "/dashboard/trail-balance", label: "Trail Balance", Icon: FileText },
+      { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText },
     ],
   },
   {

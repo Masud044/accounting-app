@@ -223,3 +223,17 @@ export const useDeleteInventory = () => {
     onError: (err) => console.error("Delete inventory failed:", err),
   });
 };
+
+// ✅ Payment Voucher successful hobar por inventory lock korte
+export const useLockInventoryForPayment = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (hid) =>
+      fetchJSON(`${BASE}/api/inventory/${hid}/lock`, { method: "PUT" }),
+    onSuccess: (_, hid) => {
+      qc.invalidateQueries({ queryKey: inventoryKeys.lists() });
+      qc.invalidateQueries({ queryKey: inventoryKeys.detail(hid) });
+    },
+    onError: (err) => console.error("Lock inventory failed:", err),
+  });
+};

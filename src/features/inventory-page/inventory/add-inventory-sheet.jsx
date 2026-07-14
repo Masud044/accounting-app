@@ -985,6 +985,7 @@ import {
   useNextInvoiceNo,
   useSuppliers,
 } from "./queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -1121,6 +1122,7 @@ export default function AddInventorySheet({
   const { data: poData } = useNextPoNo(open);
   const { data: invoiceData } = useNextInvoiceNo(open);
   const { data: suppliers = [] } = useSuppliers();
+  const userId = useAuthUserId();
 
   // ✅ Purchase Recognition theke ashle, create success er por oi form-take lock kore dao
   //    jate double inventory create na hoy
@@ -1239,6 +1241,7 @@ export default function AddInventorySheet({
         grnNo: grnNo || null,
         invoiceNumber: invoiceNo || null,
         supplierId: supplierId ? Number(supplierId) : null,
+        creationBy: userId,
         items: rows.map((r) => ({
           item: r.item.id,
           invQty: r.invQty ? Number(r.invQty) : null,
