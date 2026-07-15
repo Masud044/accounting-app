@@ -14,8 +14,10 @@ import {
   AlertCircle,
   RefreshCw,
   Bird,
+  Eye,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import { IconCircleDashedPlus, IconEdit } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
@@ -60,6 +67,8 @@ export default function ChickenProjectList() {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
+
+  const navigate = useNavigate();
 
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const [isUpdateSheetOpen, setIsUpdateSheetOpen] = useState(false);
@@ -162,27 +171,62 @@ export default function ChickenProjectList() {
         const record = row.original;
         return (
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => handleEdit(record)}
-            >
-              <IconEdit className="h-4 w-4" />
-              <span className="sr-only">Edit</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={() => handleDelete(record)}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending
-                ? <Spinner className="h-4 w-4" />
-                : <Trash2 className="h-4 w-4" />}
-              <span className="sr-only">Delete</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/dashboard/chicken-project/${record.ID}`);
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                  <span className="sr-only">Detail</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Detail</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(record);
+                  }}
+                >
+                  <IconEdit className="h-4 w-4" />
+                  <span className="sr-only">Edit</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(record);
+                  }}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending
+                    ? <Spinner className="h-4 w-4" />
+                    : <Trash2 className="h-4 w-4" />}
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
           </div>
         );
       },
@@ -320,7 +364,11 @@ export default function ChickenProjectList() {
               <TableBody>
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className="hover:bg-muted/50"
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}

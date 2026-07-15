@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { Fish, Egg } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -35,6 +36,7 @@ function ChickenIcon({ className }) {
 }
 
 // ── Card config — value comes from live data, everything else stays static ──
+// `path` thakle card clickable hobe; na thakle normal (non-clickable) card thakbe
 const buildStats = (data) => [
   {
     label: "Number of Cow",
@@ -44,6 +46,7 @@ const buildStats = (data) => [
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-700",
     Icon: CowIcon,
+    path: "/dashboard/cow-project",
   },
   {
     label: "Chicken",
@@ -53,6 +56,7 @@ const buildStats = (data) => [
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
     Icon: ChickenIcon,
+    path: "/dashboard/chicken-project",
   },
   {
     label: "Fish",
@@ -62,6 +66,7 @@ const buildStats = (data) => [
     iconBg: "bg-sky-100",
     iconColor: "text-sky-800",
     Icon: Fish,
+    path: "/dashboard/fish-project",
   },
   {
     label: "Egg Ratio",
@@ -71,12 +76,14 @@ const buildStats = (data) => [
     iconBg: "bg-orange-100",
     iconColor: "text-orange-500",
     Icon: Egg,
+   path: "/dashboard/chicken-project",
   },
 ];
 
 export default function FarmStatsCards() {
   const { data, isLoading, isError } = useFarmSummary();
   const stats = buildStats(data);
+  const navigate = useNavigate();
 
   return (
     <div className="bg-neutral-100 py-5">
@@ -104,10 +111,24 @@ export default function FarmStatsCards() {
 
         {!isLoading &&
           !isError &&
-          stats.map(({ label, value, caption, valueColor, iconBg, iconColor, Icon }) => (
+          stats.map(({ label, value, caption, valueColor, iconBg, iconColor, Icon, path }) => (
             <div
               key={label}
-              className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-5"
+              role={path ? "button" : undefined}
+              tabIndex={path ? 0 : undefined}
+              onClick={path ? () => navigate(path) : undefined}
+              onKeyDown={
+                path
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") navigate(path);
+                    }
+                  : undefined
+              }
+              className={`bg-white rounded-2xl shadow-sm p-5 flex items-center gap-5 transition-all ${
+                path
+                  ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm"
+                  : ""
+              }`}
             >
               <div className={`w-20 h-20 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}>
                 <Icon className={`w-10 h-10 ${iconColor}`} />

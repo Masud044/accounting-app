@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   flexRender,
   getCoreRowModel,
@@ -14,6 +15,7 @@ import {
   AlertCircle,
   RefreshCw,
   Beef,
+  Eye,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { IconCircleDashedPlus, IconEdit } from "@tabler/icons-react";
@@ -60,6 +62,8 @@ const fmtAmt = (v) =>
     : Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function CowProjectList() {
+  const navigate = useNavigate();
+
   const [sorting, setSorting] = useState([{ id: "ID", desc: true }]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -88,6 +92,10 @@ export default function CowProjectList() {
     setIsUpdateSheetOpen(true);
   };
 
+  const handleViewDetail = (record) => {
+    navigate(`/dashboard/cow-project/${record.ID}`);
+  };
+
   const handleDelete = async (record) => {
     const confirmed = await showConfirmation({
       title: "Delete record?",
@@ -107,17 +115,6 @@ export default function CowProjectList() {
   };
 
   const columns = [
-    // {
-    //   accessorKey: "ID",
-    //   header: ({ column }) => (
-    //     <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-    //       ID <ArrowUpDown className="ml-2 h-4 w-4" />
-    //     </Button>
-    //   ),
-    //   cell: ({ row }) => (
-    //     <div className="font-mono text-sm ps-2 font-medium">#{row.getValue("ID")}</div>
-    //   ),
-    // },
     {
       accessorKey: "COW_NUMBER",
       header: ({ column }) => (
@@ -188,6 +185,15 @@ export default function CowProjectList() {
         const record = row.original;
         return (
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleViewDetail(record)}
+            >
+              <Eye className="h-4 w-4" />
+              <span className="sr-only">View Detail</span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
