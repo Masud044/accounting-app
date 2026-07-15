@@ -59,6 +59,8 @@ import GeneralLedgerPage from "./features/general-ledger-report";
 import CashFlowPage from "./features/cash-flow-report";
 import ExpenseStatementPage from "./features/expense-report";
 import IncomeStatementPage from "./features/income-report";
+import ChickenProjectDetailPage from "./features/chicken-project/chicken-detail-page";
+import CowProjectDetail from "./features/cow-project/cow-project-detail";
 // import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
 
 const ADMIN = ["Admin"];
@@ -137,11 +139,27 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+               <Route
+                path="/dashboard/chicken-project/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                 <ChickenProjectDetailPage></ChickenProjectDetailPage>
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/dashboard/cow-project"
                 element={
                   <ProtectedRoute anyRole={ADMIN}>
                   <CowProjectPage></CowProjectPage>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="/dashboard/cow-project/:id"
+                element={
+                  <ProtectedRoute anyRole={ADMIN}>
+                 <CowProjectDetail></CowProjectDetail>
                   </ProtectedRoute>
                 }
               />
