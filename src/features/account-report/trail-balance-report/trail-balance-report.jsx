@@ -14,7 +14,9 @@ import {
   RefreshCw,
   Calculator,
   Printer,
+  FileSpreadsheet,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -81,6 +83,47 @@ export default function TrialBalanceList() {
       { openingDr: 0, openingCr: 0, periodDr: 0, periodCr: 0, closingDr: 0, closingCr: 0 }
     );
   }, [records]);
+
+  // ── Excel export ─────────────────────────────────────────────────────────
+  const handleExportExcel = () => {
+    if (!records.length) return;
+
+    const exportData = records.map((r) => ({
+      "Code": r.CODE,
+      "Account Name": r.ACCOUNT_NAME,
+      "Opening Dr": Number(r.OPENING_DR || 0),
+      "Opening Cr": Number(r.OPENING_CR || 0),
+      "Period Dr": Number(r.PERIOD_DR || 0),
+      "Period Cr": Number(r.PERIOD_CR || 0),
+      "Closing Dr": Number(r.CLOSING_DR || 0),
+      "Closing Cr": Number(r.CLOSING_CR || 0),
+    }));
+
+    if (totals) {
+      exportData.push({
+        "Code": "",
+        "Account Name": "TOTAL",
+        "Opening Dr": totals.openingDr,
+        "Opening Cr": totals.openingCr,
+        "Period Dr": totals.periodDr,
+        "Period Cr": totals.periodCr,
+        "Closing Dr": totals.closingDr,
+        "Closing Cr": totals.closingCr,
+      });
+    }
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    ws["!cols"] = [
+      { wch: 14 }, { wch: 35 }, { wch: 14 }, { wch: 14 },
+      { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Trial Balance");
+
+    const fileName = `Trial_Balance_${applied.fromDate}_to_${applied.toDate}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
 
   const columns = [
     {
@@ -169,7 +212,7 @@ export default function TrialBalanceList() {
 
   // ── Filter bar (always visible) ───────────────────────────────────────────
   const FilterBar = (
-    <div className="bg-card rounded-md shadow-sm p-4 mb-4">
+    <div className="bg-card rounded-md shadow-sm p-4 mb-4 print:hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Trial Balance</h1>
         <div className="flex flex-wrap items-end gap-2">
@@ -188,6 +231,11 @@ export default function TrialBalanceList() {
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="h-4 w-4" />
               <span className="sr-only">Print</span>
+            </Button>
+          )}
+          {applied && records?.length > 0 && (
+            <Button variant="outline" onClick={handleExportExcel}>
+              <FileSpreadsheet className="mr-1 h-4 w-4" /> Excel
             </Button>
           )}
         </div>
@@ -255,9 +303,17 @@ export default function TrialBalanceList() {
     <div>
       {FilterBar}
 
+      {/* Print header — only visible on print */}
+      <div className="hidden print:block mb-4 text-center">
+        <h1 className="text-xl font-bold">Trial Balance</h1>
+        <p className="text-sm text-muted-foreground">
+          {applied.fromDate} to {applied.toDate}
+        </p>
+      </div>
+
       {/* Summary cards */}
       {totals && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 print:hidden">
           <div className="bg-card rounded-md shadow-sm p-4">
             <p className="text-sm text-muted-foreground">Opening (Dr / Cr)</p>
             <p className="text-lg font-semibold tabular-nums">{fmt(totals.openingDr)} / {fmt(totals.openingCr)}</p>
@@ -276,7 +332,7 @@ export default function TrialBalanceList() {
       {/* Table */}
       <div className="bg-card rounded-md shadow-sm p-4">
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 print:hidden">
             <Input
               placeholder="Search account..."
               value={globalFilter ?? ""}
@@ -349,7 +405,9 @@ export default function TrialBalanceList() {
               </TableBody>
             </Table>
           </div>
-          <DataTablePagination table={table} />
+          <div className="print:hidden">
+            <DataTablePagination table={table} />
+          </div>
         </div>
       </div>
     </div>
