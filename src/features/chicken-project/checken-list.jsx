@@ -51,16 +51,6 @@ import { useChickenProjects, useDeleteChickenProject } from "./queries";
 import AddChickenProjectSheet from "./add-chicken-sheet";
 import UpdateChickenProjectSheet from "./update-chicken-sheet";
 
-// ── Date formatter — backend already sends 'YYYY-MM-DD' ─────────────────────
-const formatDate = (val) => {
-  if (!val) return "—";
-  const isoMatch = String(val).match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (!isoMatch) return "—";
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const [, year, month, day] = isoMatch;
-  return `${day} ${months[Number(month) - 1]} ${year}`;
-};
-
 export default function ChickenProjectList() {
   const [sorting, setSorting] = useState([{ id: "ID", desc: true }]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -136,17 +126,10 @@ export default function ChickenProjectList() {
       ),
     },
     {
-      accessorKey: "FROM_DATE",
-      header: "From Date",
+      accessorKey: "SHADE",
+      header: "Shade",
       cell: ({ row }) => (
-        <div className="ps-2">{formatDate(row.getValue("FROM_DATE"))}</div>
-      ),
-    },
-    {
-      accessorKey: "TODATE",
-      header: "To Date",
-      cell: ({ row }) => (
-        <div className="ps-2">{formatDate(row.getValue("TODATE"))}</div>
+        <div className="ps-2">{row.getValue("SHADE") || "—"}</div>
       ),
     },
     {

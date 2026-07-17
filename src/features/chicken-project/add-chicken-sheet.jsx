@@ -29,18 +29,16 @@ import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 const formSchema = z.object({
   chickenNumber: z.coerce.number({ invalid_type_error: "Chicken number must be a number" })
                     .min(0, "Cannot be negative"),
-  fromDate:      z.string().min(1, "From date is required"),
-  toDate:        z.string().min(1, "To date is required"),
   lot:           z.coerce.number().optional().or(z.literal("")),
   description:   z.string().max(500).optional(),
+  shade:         z.string().max(100).optional(),
 });
 
 const defaultValues = {
   chickenNumber: "",
-  fromDate:      "",
-  toDate:        "",
   lot:           "",
   description:   "",
+  shade:         "",
 };
 
 export default function AddChickenProjectSheet({ open, onOpenChange, showConfirmation }) {
@@ -62,10 +60,9 @@ export default function AddChickenProjectSheet({ open, onOpenChange, showConfirm
     try {
       await createMutation.mutateAsync({
         chickenNumber: data.chickenNumber,
-        fromDate:      data.fromDate,
-        toDate:        data.toDate,
         lot:           data.lot === "" ? null : data.lot,
         description:   data.description || null,
+        shade:         data.shade || null,
         creationBy:     userId, 
       });
       toast.success("Chicken project created successfully!");
@@ -126,23 +123,12 @@ export default function AddChickenProjectSheet({ open, onOpenChange, showConfirm
                 </FormItem>
               )} />
 
-              {/* From Date */}
-              <FormField control={form.control} name="fromDate" render={({ field }) => (
+              {/* Shade */}
+              <FormField control={form.control} name="shade" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>From Date <span className="text-destructive">*</span></FormLabel>
+                  <FormLabel>Shade</FormLabel>
                   <FormControl>
-                    <Input type="date" disabled={isSubmitting} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              {/* To Date */}
-              <FormField control={form.control} name="toDate" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>To Date <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input type="date" disabled={isSubmitting} {...field} />
+                    <Input type="text" placeholder="Optional" disabled={isSubmitting} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

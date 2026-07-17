@@ -11,6 +11,7 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanel from "@/components/shared/bill-upload-panel";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -28,6 +29,7 @@ const ReceiveCreate = () => {
   const queryClient = useQueryClient();
   const today       = new Date().toISOString().split("T")[0];
   const location = useLocation();
+  const userId = useAuthUserId();
 
   // ── Bill files ───────────────────────────────────────────────────────────────
   const [billFiles, setBillFiles] = useState([]);
@@ -261,6 +263,7 @@ const ReceiveCreate = () => {
       amount2:      rows.map((r) => Number(r.amount || 0)),
       inv_type: form.inv_type ? Number(form.inv_type) : null,
        sale_invoice_no: form.sale_invoice_no ? Number(form.sale_invoice_no) : null, 
+       entry_by: userId,
     });
   };
 

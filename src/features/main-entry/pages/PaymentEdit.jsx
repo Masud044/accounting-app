@@ -1028,6 +1028,7 @@ import { PaymentService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
 import { useCreateSupplier } from "@/features/supplier/queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -1053,6 +1054,8 @@ const PaymentEdit = () => {
 
   const [rows, setRows] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
+  const userId = useAuthUserId();
 
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [supplierForm, setSupplierForm] = useState(supplierDefault);
@@ -1374,6 +1377,7 @@ const removeRow = (id) => {
   supporting: String(form.supporting),
   inv_type: form.inv_type ? Number(form.inv_type) : null,
   po_number: form.poNumber || null,
+  update_by: userId,
 
   ...(deletedDebitIds.length
     ? { DELETED_DEBIT_ID: deletedDebitIds }
