@@ -10,6 +10,7 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { ReceiveService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -37,6 +38,8 @@ const ReceiveEdit = () => {
 
   const [rows, setRows] = useState([]);
   const [showModal, setShowModal] = useState(false);
+
+  const userId = useAuthUserId();
 
   // ── Customer modal state ──────────────────────────────────────────────────────
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -366,6 +369,7 @@ const ReceiveEdit = () => {
         const p = r.particulars.split(" - ");
         return p.length > 1 ? p[1] : r.particulars;
       }),
+        update_by: userId, 
     });
   };
 

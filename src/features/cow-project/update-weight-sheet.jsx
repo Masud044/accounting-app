@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Scale } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,11 +28,16 @@ import { useUpdateCowWeight } from "./queries";
 const formSchema = z.object({
   weightDate: z.string().min(1, "Weight date is required"),
   weight:     z.coerce.number({ invalid_type_error: "Weight must be a number" }).min(0, "Cannot be negative"),
+  intervalDays: z.union([
+    z.coerce.number().min(0, "Cannot be negative"),
+    z.literal(""),
+  ]).optional(),
 });
 
 const defaultValues = {
-  weightDate: "",
-  weight:     "",
+  weightDate:   "",
+  weight:       "",
+  intervalDays: "",
 };
 
 export default function UpdateWeightSheet({ open, onOpenChange, showConfirmation, record, cowNo }) {
@@ -47,8 +53,9 @@ export default function UpdateWeightSheet({ open, onOpenChange, showConfirmation
   useEffect(() => {
     if (open && record) {
       form.reset({
-        weightDate: record.WEIGT_DATE ?? "",
-        weight:     record.WEIGHT ?? "",
+        weightDate:   record.WEIGT_DATE ?? "",
+        weight:       record.WEIGHT ?? "",
+        intervalDays: record.INTERVAL_DAYS ?? "",
       });
     }
   }, [open, record?.ID]);
@@ -60,8 +67,9 @@ export default function UpdateWeightSheet({ open, onOpenChange, showConfirmation
         id: record.ID,
         data: {
           cowNo,
-          weightDate: data.weightDate,
-          weight:     data.weight,
+          weightDate:   data.weightDate,
+          weight:       data.weight,
+          intervalDays: data.intervalDays === "" ? null : data.intervalDays,
         },
       });
       toast.success("Weight record updated successfully!");
@@ -125,6 +133,17 @@ export default function UpdateWeightSheet({ open, onOpenChange, showConfirmation
                   <FormControl>
                     <Input type="number" min="0" step="0.01" placeholder="Weight in kg" disabled={isSubmitting} {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="intervalDays" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Interval Days</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" step="1" placeholder="interval days" disabled={isSubmitting} {...field} />
+                  </FormControl>
+                 
                   <FormMessage />
                 </FormItem>
               )} />

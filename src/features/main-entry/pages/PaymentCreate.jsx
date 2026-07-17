@@ -2683,6 +2683,7 @@ import { PaymentService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanel from "@/components/shared/bill-upload-panel";
 import { useCreateSupplier } from "@/features/supplier/queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -2729,6 +2730,7 @@ const PaymentCreate = () => {
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
   const location = useLocation();
+  const userId = useAuthUserId();
 
   const [billFiles, setBillFiles] = useState([]);
 
@@ -3025,7 +3027,8 @@ const lockInventory = async (inventoryHid) => {
       amount2: rows.map((r) => String(r.amount || 0)),
       inv_type: form.inv_type ? Number(form.inv_type) : null,
       po_number: form.poNumber || null,
-      grn_no: form.grnNo || null,   // 👈 নতুন — backend এ GRN_NO কলাম থাকলে সেভ হবে
+      grn_no: form.grnNo || null, 
+      entry_by: userId,  // 👈 নতুন — backend এ GRN_NO কলাম থাকলে সেভ হবে
     });
   };
 

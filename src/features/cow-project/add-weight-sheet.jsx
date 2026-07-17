@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Scale } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
@@ -27,11 +28,16 @@ import { useCreateCowWeight } from "./queries";
 const formSchema = z.object({
   weightDate: z.string().min(1, "Weight date is required"),
   weight:     z.coerce.number({ invalid_type_error: "Weight must be a number" }).min(0, "Cannot be negative"),
+  intervalDays: z.union([
+    z.coerce.number().min(0, "Cannot be negative"),
+    z.literal(""),
+  ]).optional(),
 });
 
 const defaultValues = {
-  weightDate: "",
-  weight:     "",
+  weightDate:   "",
+  weight:       "",
+  intervalDays: "",
 };
 
 export default function AddWeightSheet({ open, onOpenChange, showConfirmation, cowNo, cowLabel }) {
@@ -52,8 +58,9 @@ export default function AddWeightSheet({ open, onOpenChange, showConfirmation, c
     try {
       await createMutation.mutateAsync({
         cowNo,
-        weightDate: data.weightDate,
-        weight:     data.weight,
+        weightDate:   data.weightDate,
+        weight:       data.weight,
+        intervalDays: data.intervalDays === "" ? null : data.intervalDays,
       });
       toast.success("Weight record added successfully!");
       form.reset(defaultValues);
@@ -116,6 +123,17 @@ export default function AddWeightSheet({ open, onOpenChange, showConfirmation, c
                   <FormControl>
                     <Input type="number" min="0" step="0.01" placeholder="Weight in kg" disabled={isSubmitting} {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="intervalDays" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Interval Days</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" step="1" placeholder="interval days" disabled={isSubmitting} {...field} />
+                  </FormControl>
+                 
                   <FormMessage />
                 </FormItem>
               )} />
