@@ -31,6 +31,7 @@ import {
 import { Users } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useCreateCustomer } from "./queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const formSchema = z.object({
   customerName:  z.string().min(1, "Customer name is required").max(200),
@@ -50,6 +51,8 @@ const defaultValues = {
 
 export default function AddCustomerSheet({ open, onOpenChange, showConfirmation }) {
   const createMutation = useCreateCustomer();
+
+  const userId = useAuthUserId();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -73,7 +76,7 @@ export default function AddCustomerSheet({ open, onOpenChange, showConfirmation 
         ADDRESS:        data.address       || null,
         REMARKS:        data.remarks       || null,
         STATUS:         Number(data.status),
-        ENTRY_BY:       null,
+        ENTRY_BY:       userId,
         PASSWORD:       null,
         ORG_ID:         null,
         DUE:            null,

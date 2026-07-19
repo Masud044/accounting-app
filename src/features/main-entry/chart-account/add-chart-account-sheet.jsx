@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { BookOpen } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useCreateChartOfAccount, useChartOfAccounts } from "./queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 const formSchema = z.object({
@@ -39,6 +40,7 @@ const defaultValues = {
 export default function AddChartSheet({ open, onOpenChange, showConfirmation }) {
   const createMutation = useCreateChartOfAccount();
   const { data: allAccounts = [] } = useChartOfAccounts();
+  const userId = useAuthUserId();
 
   const form = useForm({ resolver: zodResolver(formSchema), defaultValues });
   const { formState: { isDirty } } = form;
@@ -84,6 +86,7 @@ export default function AddChartSheet({ open, onOpenChange, showConfirmation }) 
       account_name: data.accountName,
       lastLevel:    data.lastLevel,
       enabled:      Number(data.enabled),
+      entry_by: userId,
     };
 
     if (data.thirdLevelId)       payload.drop_3 = data.thirdLevelId;
