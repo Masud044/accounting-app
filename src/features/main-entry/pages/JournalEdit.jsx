@@ -9,6 +9,7 @@ import axios from "axios";
 import { SectionContainer } from "@/components/SectionContainer";
 import { Button } from "@/components/ui/button";
 import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -17,6 +18,7 @@ const JournalEdit = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
+  const userId = useAuthUserId();
 
   // ── Bill state ────────────────────────────────────────────────────────────────
   const [existingDocs, setExistingDocs] = useState([]);
@@ -211,6 +213,7 @@ const JournalEdit = () => {
       gl_entry_date: form.glDate,
       receive_desc: form.description,
       supporting: String(form.supporting || "0"),
+      update_by: userId,
       details: rows.map((r) => ({
         id: r.detail_id || r.id,
         code: r.accountCode,

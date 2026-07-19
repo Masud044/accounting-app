@@ -127,8 +127,11 @@ export const NAV_ITEMS = [
   {
     label: "Home",
     roles: ["Admin"],
-    to: "/dashboard/welcome",
-    Icon: Home,
+    links:[ 
+      {to: "/dashboard/welcome",label: "Overview", Icon: Home,}
+  
+  ]
+   
   },
   {
     label: "Dashboard",

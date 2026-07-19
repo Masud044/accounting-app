@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { SectionContainer } from "@/components/SectionContainer";
 import { Button } from "@/components/ui/button";
 import BillUploadPanel from "@/components/shared/bill-upload-panel";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -16,6 +17,7 @@ const JournalCreate = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
+  const userId = useAuthUserId();
 
   const [billFiles, setBillFiles] = useState([]);
   const [rows, setRows] = useState([]);
@@ -142,6 +144,7 @@ const JournalCreate = () => {
       GL_ENTRY_DATE: form.glDate,
       receive_desc: form.description,
       supporting: String(form.supporting || "0"),
+      entry_by: userId,
       details: rows.map((r) => ({
         code: `${r.accountCode}##${r.particulars}`,
         debit: parseFloat(r.debit) || 0,

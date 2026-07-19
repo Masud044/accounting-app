@@ -31,6 +31,7 @@ import {
 import { Truck } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useUpdateSupplier } from "./queries";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const formSchema = z.object({
   supplierName:   z.string().min(1, "Supplier name is required").max(200),
@@ -45,6 +46,7 @@ const formSchema = z.object({
 
 export default function UpdateSupplierSheet({ open, onOpenChange, showConfirmation, supplier }) {
   const updateMutation = useUpdateSupplier();
+  const userId = useAuthUserId();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -85,6 +87,7 @@ export default function UpdateSupplierSheet({ open, onOpenChange, showConfirmati
           ADDRESS:        data.address        || null,
           REMARKS:        data.remarks        || null,
           STATUS:         Number(data.status),
+          ENTRY_BY: userId,
         },
       });
       toast.success("Supplier updated successfully!");
