@@ -194,6 +194,9 @@ export const NAV_ITEMS = [
        { to: "/dashboard/chicken-project", label: "Chicken", Icon: FileText },
       { to: "/dashboard/cow-project", label: "Cow", Icon: FileText },
       { to: "/dashboard/fish-project", label: "Fish", Icon: FileText },
+
+       { to: "/dashboard/farm-calendar", label: "Farm calendar", Icon: FileText },
+      
     ],
   },
   {
