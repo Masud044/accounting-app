@@ -61,7 +61,12 @@ import ExpenseStatementPage from "./features/expense-report";
 import IncomeStatementPage from "./features/income-report";
 import ChickenProjectDetailPage from "./features/chicken-project/chicken-detail-page";
 import CowProjectDetail from "./features/cow-project/cow-project-detail";
-// import ApprovalDashboardPage from "./features/purchase-recognition/recognition-approval-dashboard";
+
+
+
+
+import FarmCalendarPage from "./features/farm-calendar/calender-list";
+import FarmCalendarDetailPage from "./features/farm-calendar/detail-calendar-page";
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -163,6 +168,18 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+
+
+<Route path="/dashboard/farm-calendar" element={
+  <ProtectedRoute anyRole={ADMIN}><FarmCalendarPage /></ProtectedRoute>
+} />
+
+
+<Route path="/dashboard/farm-calendar/:id" element={
+  <ProtectedRoute anyRole={ADMIN}><FarmCalendarDetailPage /></ProtectedRoute>
+} />
+
       // report all 
                <Route
                 path="/dashboard/trail-balance"
