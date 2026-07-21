@@ -1,5 +1,5 @@
 
-import img from"../assets/image.png"
+import img from"../assets/bwa.png"
 import FarmStatsCards from "./farmstate-card";
 
 export default function WelcomePage() {

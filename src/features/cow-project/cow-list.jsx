@@ -123,7 +123,7 @@ export default function CowProjectList() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="font-semibold tabular-nums ps-2">{row.getValue("COW_NUMBER")}</div>
+        <div className=" tabular-nums ps-2">{row.getValue("COW_NUMBER")}</div>
       ),
     },
     {

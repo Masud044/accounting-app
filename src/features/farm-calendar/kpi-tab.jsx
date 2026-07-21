@@ -66,7 +66,7 @@ export default function KpiTargetsTab({ calendarId }) {
     {
       accessorKey: "KPI_NAME",
       header: "KPI Name",
-      cell: ({ row }) => <div className="font-semibold ps-2">{row.getValue("KPI_NAME")}</div>,
+      cell: ({ row }) => <div className=" ps-2">{row.getValue("KPI_NAME")}</div>,
     },
     {
       accessorKey: "FARM_TYPE",

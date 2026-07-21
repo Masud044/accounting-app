@@ -106,7 +106,7 @@ export default function AddActivityLogSheet({ open, onOpenChange, showConfirmati
                   <FormLabel>Status <span className="text-destructive">*</span></FormLabel>
                   <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                     <FormControl><SelectTrigger className="w-full"><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent>
+                    <SelectContent className="z-110">
                       <SelectItem value="PENDING">Pending</SelectItem>
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
