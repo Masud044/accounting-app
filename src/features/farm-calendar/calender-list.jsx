@@ -117,13 +117,13 @@ export default function FarmCalendarList() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="font-semibold tabular-nums ps-2">{row.getValue("CALENDAR_YEAR")}</div>
+        <div className=" tabular-nums ps-2">{row.getValue("CALENDAR_YEAR")}</div>
       ),
     },
     {
       accessorKey: "FARM_NAME",
       header: "Farm Name",
-      cell: ({ row }) => <div className="ps-2 font-medium">{row.getValue("FARM_NAME")}</div>,
+      cell: ({ row }) => <div className="ps-2 ">{row.getValue("FARM_NAME")}</div>,
     },
     {
       accessorKey: "STATUS",

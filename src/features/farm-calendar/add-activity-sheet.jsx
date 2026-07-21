@@ -30,13 +30,23 @@ import {
 } from "@/components/ui/form";
 import { ListChecks } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useCreateFarmCalendarDetail } from "./queries";
+import { useCreateFarmCalendarDetail, useFarmTypes } from "./queries";
+import { useAuthV2 } from "../authentication-v2/use-auth-v2";
 
-export const FARM_TYPE_OPTIONS = [
-  { value: "CHICKEN", label: "Chicken" },
-  { value: "COW",     label: "Cow" },
-  { value: "FISH",    label: "Fish" },
-  { value: "EGG",     label: "Egg" },
+
+const MONTH_OPTIONS = [
+  { value: "1",  label: "January" },
+  { value: "2",  label: "February" },
+  { value: "3",  label: "March" },
+  { value: "4",  label: "April" },
+  { value: "5",  label: "May" },
+  { value: "6",  label: "June" },
+  { value: "7",  label: "July" },
+  { value: "8",  label: "August" },
+  { value: "9",  label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
 ];
 
 const formSchema = z.object({
@@ -51,6 +61,18 @@ const formSchema = z.object({
   remarks:           z.string().optional(),
 });
 
+// const formSchema = z.object({
+//   activityName:      z.string().min(1, "Activity name is required").max(200),
+//   farmType:          z.string().optional(),
+//   activityMonth:     z.string().min(1, "Month is required"),
+//   startDate:         z.string().min(1, "Start date is required"),
+//   endDate:           z.string().min(1, "End date is required"),
+//   responsiblePerson: z.string().optional(),
+//   frequency:         z.string().optional(),
+//   activityDesc:      z.string().optional(),
+//   remarks:           z.string().optional(),
+// });
+
 const defaultValues = {
   activityName: "", farmType: "", activityMonth: "", startDate: "", endDate: "",
   responsiblePerson: "", frequency: "", activityDesc: "", remarks: "",
@@ -58,6 +80,9 @@ const defaultValues = {
 
 export default function AddActivitySheet({ open, onOpenChange, showConfirmation, calendarId }) {
   const createMutation = useCreateFarmCalendarDetail(calendarId);
+  const { data: farmTypes = [] } = useFarmTypes();
+  const { user } = useAuthV2();
+  console.log(user);
 
   const form = useForm({ resolver: zodResolver(formSchema), defaultValues });
   const { formState: { isDirty } } = form;
@@ -72,13 +97,14 @@ export default function AddActivitySheet({ open, onOpenChange, showConfirmation,
         calendarId,
         activityName:      data.activityName,
         farmType:          data.farmType || null,
-        activityMonth:     data.activityMonth,
+        activityMonth:     Number(data.activityMonth),
         startDate:         data.startDate,
         endDate:           data.endDate,
         responsiblePerson: data.responsiblePerson || null,
         frequency:         data.frequency || null,
         activityDesc:      data.activityDesc || null,
         remarks:           data.remarks || null,
+        createdBy:    user?.username || null,
       });
       toast.success("Activity added successfully!");
       form.reset(defaultValues);
@@ -138,9 +164,11 @@ export default function AddActivitySheet({ open, onOpenChange, showConfirmation,
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {FARM_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectContent className="z-110">
+                      {farmTypes.map((ft) => (
+                        <SelectItem key={ft.FARM_TYPE_ID} value={ft.FARM_TYPE_CODE}>
+                          {ft.FARM_TYPE_CODE}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -148,13 +176,22 @@ export default function AddActivitySheet({ open, onOpenChange, showConfirmation,
                 </FormItem>
               )} />
 
-              <FormField control={form.control} name="activityMonth" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Month <span className="text-destructive">*</span></FormLabel>
-                  <FormControl><Input placeholder="e.g. January" disabled={isSubmitting} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+             <FormField control={form.control} name="activityMonth" render={({ field }) => (
+  <FormItem>
+    <FormLabel>Month <span className="text-destructive">*</span></FormLabel>
+    <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+      <FormControl>
+        <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
+      </FormControl>
+      <SelectContent className="z-110">
+        {MONTH_OPTIONS.map((m) => (
+          <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+    <FormMessage />
+  </FormItem>
+)} />
 
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem>

@@ -67,6 +67,7 @@ import CowProjectDetail from "./features/cow-project/cow-project-detail";
 
 import FarmCalendarPage from "./features/farm-calendar/calender-list";
 import FarmCalendarDetailPage from "./features/farm-calendar/detail-calendar-page";
+import ActivityLogList from "./features/farm-activity-log/activity-log-list";
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -178,6 +179,13 @@ function App() {
 
 <Route path="/dashboard/farm-calendar/:id" element={
   <ProtectedRoute anyRole={ADMIN}><FarmCalendarDetailPage /></ProtectedRoute>
+} />
+
+
+<Route path="farm-activity-log/detail/:detailId" element={
+  <ProtectedRoute anyRole={ADMIN}>
+    <ActivityLogList></ActivityLogList>
+  </ProtectedRoute>
 } />
 
       // report all 
