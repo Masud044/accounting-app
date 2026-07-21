@@ -136,7 +136,7 @@ export default function UpdateFarmCalendarSheet({ open, onOpenChange, showConfir
                     <FormControl>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="z-110">
                       <SelectItem value="ACTIVE">Active</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
                       <SelectItem value="CANCELLED">Cancelled</SelectItem>

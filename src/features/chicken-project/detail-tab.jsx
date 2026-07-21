@@ -76,7 +76,7 @@ const [sorting, setSorting] = useState([]);
       accessorKey: "QTY",
       header: "Quantity",
       cell: ({ row }) => (
-        <div className="font-semibold tabular-nums ps-2">
+        <div className=" tabular-nums ps-2">
           {Number(row.getValue("QTY") || 0).toLocaleString()}
         </div>
       ),

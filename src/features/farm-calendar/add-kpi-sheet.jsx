@@ -30,8 +30,7 @@ import {
 } from "@/components/ui/form";
 import { Target } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useCreateKpiTarget } from "./queries";
-import { FARM_TYPE_OPTIONS } from "./add-activity-sheet";
+import { useCreateKpiTarget, useFarmTypes } from "./queries";
 
 const formSchema = z.object({
   kpiName:     z.string().min(1, "KPI name is required").max(200),
@@ -46,6 +45,7 @@ const defaultValues = { kpiName: "", farmType: "", targetValue: "", unit: "", ac
 
 export default function AddKpiSheet({ open, onOpenChange, showConfirmation, calendarId }) {
   const createMutation = useCreateKpiTarget(calendarId);
+  const { data: farmTypes = [] } = useFarmTypes();
 
   const form = useForm({ resolver: zodResolver(formSchema), defaultValues });
   const { formState: { isDirty } } = form;
@@ -123,9 +123,11 @@ export default function AddKpiSheet({ open, onOpenChange, showConfirmation, cale
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {FARM_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectContent className="z-110">
+                      {farmTypes.map((ft) => (
+                        <SelectItem key={ft.FARM_TYPE_ID} value={ft.FARM_TYPE_CODE}>
+                          {ft.FARM_TYPE_CODE}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

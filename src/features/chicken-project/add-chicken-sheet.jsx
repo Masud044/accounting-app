@@ -27,23 +27,20 @@ import { useCreateChickenProject } from "./queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const formSchema = z.object({
-  chickenNumber: z.coerce.number({ invalid_type_error: "Chicken number must be a number" })
-                    .min(0, "Cannot be negative"),
-  lot:           z.coerce.number().optional().or(z.literal("")),
-  description:   z.string().max(500).optional(),
-  shade:         z.string().max(100).optional(),
+  lot:         z.coerce.number().optional().or(z.literal("")),
+  description: z.string().max(500).optional(),
+  shade:       z.string().max(100).optional(),
 });
 
 const defaultValues = {
-  chickenNumber: "",
-  lot:           "",
-  description:   "",
-  shade:         "",
+  lot:         "",
+  description: "",
+  shade:       "",
 };
 
 export default function AddChickenProjectSheet({ open, onOpenChange, showConfirmation }) {
   const createMutation = useCreateChickenProject();
-  const userId = useAuthUserId(); 
+  const userId = useAuthUserId();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -59,11 +56,10 @@ export default function AddChickenProjectSheet({ open, onOpenChange, showConfirm
   const onSubmit = async (data) => {
     try {
       await createMutation.mutateAsync({
-        chickenNumber: data.chickenNumber,
-        lot:           data.lot === "" ? null : data.lot,
-        description:   data.description || null,
-        shade:         data.shade || null,
-        creationBy:     userId, 
+        lot:         data.lot === "" ? null : data.lot,
+        description: data.description || null,
+        shade:       data.shade || null,
+        creationBy:  userId,
       });
       toast.success("Chicken project created successfully!");
       form.reset(defaultValues);
@@ -112,17 +108,6 @@ export default function AddChickenProjectSheet({ open, onOpenChange, showConfirm
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-              {/* Chicken Number */}
-              <FormField control={form.control} name="chickenNumber" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chicken Number <span className="text-destructive">*</span></FormLabel>
-                  <FormControl>
-                    <Input type="number" min="0" placeholder="Enter chicken count" disabled={isSubmitting} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
               {/* Shade */}
               <FormField control={form.control} name="shade" render={({ field }) => (
                 <FormItem>
@@ -155,6 +140,10 @@ export default function AddChickenProjectSheet({ open, onOpenChange, showConfirm
                   <FormMessage />
                 </FormItem>
               )} />
+
+              <p className="text-sm text-muted-foreground">
+                Chicken Number will be calculated automatically from the total quantity added in Details after this record is created.
+              </p>
 
             </div>
 

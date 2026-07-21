@@ -120,7 +120,7 @@ export default function ChickenProjectList() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="font-semibold tabular-nums ps-2">
+        <div className=" tabular-nums ps-2">
           {Number(row.getValue("CHICKEN_NUMBER") || 0).toLocaleString()}
         </div>
       ),

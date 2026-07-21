@@ -30,8 +30,22 @@ import {
 } from "@/components/ui/form";
 import { ListChecks } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useUpdateFarmCalendarDetail } from "./queries";
-import { FARM_TYPE_OPTIONS } from "./add-activity-sheet";
+import { useUpdateFarmCalendarDetail, useFarmTypes } from "./queries";
+
+const MONTH_OPTIONS = [
+  { value: "1",  label: "January" },
+  { value: "2",  label: "February" },
+  { value: "3",  label: "March" },
+  { value: "4",  label: "April" },
+  { value: "5",  label: "May" },
+  { value: "6",  label: "June" },
+  { value: "7",  label: "July" },
+  { value: "8",  label: "August" },
+  { value: "9",  label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
 
 const formSchema = z.object({
   activityName:      z.string().min(1, "Activity name is required").max(200),
@@ -40,19 +54,18 @@ const formSchema = z.object({
   startDate:         z.string().min(1, "Start date is required"),
   endDate:           z.string().min(1, "End date is required"),
   responsiblePerson: z.string().optional(),
-  status:            z.string().optional(),
   frequency:         z.string().optional(),
   activityDesc:      z.string().optional(),
   remarks:           z.string().optional(),
 });
-
 export default function UpdateActivitySheet({ open, onOpenChange, showConfirmation, record, calendarId }) {
   const updateMutation = useUpdateFarmCalendarDetail(calendarId);
+  const { data: farmTypes = [] } = useFarmTypes();
 
   const defaultValues = {
     activityName:      record?.ACTIVITY_NAME ?? "",
     farmType:          record?.FARM_TYPE ?? "",
-    activityMonth:     record?.ACTIVITY_MONTH ?? "",
+   activityMonth: record?.ACTIVITY_MONTH != null ? String(record.ACTIVITY_MONTH) : "",
     startDate:         record?.START_DATE ?? "",
     endDate:           record?.END_DATE ?? "",
     responsiblePerson: record?.RESPONSIBLE_PERSON ?? "",
@@ -60,6 +73,7 @@ export default function UpdateActivitySheet({ open, onOpenChange, showConfirmati
     frequency:         record?.FREQUENCY ?? "",
     activityDesc:      record?.ACTIVITY_DESC ?? "",
     remarks:           record?.REMARKS ?? "",
+    
   };
 
   const form = useForm({ resolver: zodResolver(formSchema), defaultValues });
@@ -71,7 +85,7 @@ export default function UpdateActivitySheet({ open, onOpenChange, showConfirmati
 
   const onSubmit = async (data) => {
     try {
-      await updateMutation.mutateAsync({ id: record.DETAIL_ID, data });
+      await updateMutation.mutateAsync({ id: record.DETAIL_ID, data: { ...data, activityMonth: Number(data.activityMonth) }, });
       toast.success("Activity updated successfully!");
       onOpenChange(false);
     } catch (err) {
@@ -128,9 +142,11 @@ export default function UpdateActivitySheet({ open, onOpenChange, showConfirmati
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {FARM_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    <SelectContent className="z-110">
+                      {farmTypes.map((ft) => (
+                        <SelectItem key={ft.FARM_TYPE_ID} value={ft.FARM_TYPE_CODE}>
+                          {ft.FARM_TYPE_CODE}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -138,13 +154,22 @@ export default function UpdateActivitySheet({ open, onOpenChange, showConfirmati
                 </FormItem>
               )} />
 
-              <FormField control={form.control} name="activityMonth" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Month <span className="text-destructive">*</span></FormLabel>
-                  <FormControl><Input disabled={isSubmitting} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+             <FormField control={form.control} name="activityMonth" render={({ field }) => (
+  <FormItem>
+    <FormLabel>Month <span className="text-destructive">*</span></FormLabel>
+    <Select onValueChange={field.onChange} value={String(field.value)} disabled={isSubmitting}>
+      <FormControl>
+        <SelectTrigger><SelectValue placeholder="Select month" /></SelectTrigger>
+      </FormControl>
+      <SelectContent>
+        {MONTH_OPTIONS.map((m) => (
+          <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+    <FormMessage />
+  </FormItem>
+)} />
 
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem>

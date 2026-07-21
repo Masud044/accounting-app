@@ -19,6 +19,9 @@ export const farmKpiTargetKeys = {
   all:  ["farmKpiTargets"],
   list: (calendarId) => [...farmKpiTargetKeys.all, "list", calendarId],
 };
+export const farmTypeKeys = {
+  all: ["farmType"],
+};
 
 // ── Fetcher ───────────────────────────────────────────────────────────────────
 const fetchJSON = async (url, options = {}) => {
@@ -42,6 +45,19 @@ export const useFarmCalendars = () =>
     refetchOnMount: true,
     retry: 2,
     retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+    throwOnError: false,
+  });
+
+  // ═══════════════════ FARM TYPE (Master) ═══════════════════
+
+
+export const useFarmTypes = () =>
+  useQuery({
+    queryKey: farmTypeKeys.all,
+    queryFn:  () => fetchJSON(`${BASE}/api/farm-type`),
+    staleTime: 10 * 60 * 1000,
+    gcTime:    30 * 60 * 1000,
+    refetchOnWindowFocus: false,
     throwOnError: false,
   });
 
@@ -209,5 +225,66 @@ export const useDeleteKpiTarget = (calendarId) => {
       fetchJSON(`${BASE}/api/farm-calendar/kpi-targets/${id}`, { method: "DELETE" }),
     onSuccess: () => invalidateKpiScope(qc, calendarId),
     onError: (err) => console.error("Delete KPI target failed:", err),
+  });
+};
+
+
+// ═══════════════════ FARM ACTIVITY LOG ═══════════════════
+const ACTIVITY_LOG_BASE = `${BASE}/api/farm-activity-log`;
+
+export const activityLogKeys = {
+  all:  ["farmActivityLog"],
+  list: (detailId) => [...activityLogKeys.all, "list", detailId],
+};
+
+export const useActivityLogsByDetailId = (detailId) =>
+  useQuery({
+    queryKey: activityLogKeys.list(detailId),
+    queryFn:  () => fetchJSON(`${ACTIVITY_LOG_BASE}/detail/${detailId}`),
+    enabled:  !!detailId,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+    throwOnError: false,
+  });
+
+const invalidateActivityLogScope = (qc, detailId) => {
+  qc.invalidateQueries({ queryKey: activityLogKeys.list(detailId) });
+};
+
+export const useCreateActivityLog = (detailId) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) =>
+      fetchJSON(ACTIVITY_LOG_BASE, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+      }),
+    onSuccess: () => invalidateActivityLogScope(qc, detailId),
+    onError: (err) => console.error("Create activity log failed:", err),
+  });
+};
+
+export const useUpdateActivityLog = (detailId) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) =>
+      fetchJSON(`${ACTIVITY_LOG_BASE}/${id}`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+      }),
+    onSuccess: () => invalidateActivityLogScope(qc, detailId),
+    onError: (err) => console.error("Update activity log failed:", err),
+  });
+};
+
+export const useDeleteActivityLog = (detailId) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) =>
+      fetchJSON(`${ACTIVITY_LOG_BASE}/${id}`, { method: "DELETE" }),
+    onSuccess: () => invalidateActivityLogScope(qc, detailId),
+    onError: (err) => console.error("Delete activity log failed:", err),
   });
 };

@@ -118,6 +118,8 @@ export const useChickenProjectDetails = (hId) =>
 const invalidateDetailScope = (qc, hId) => {
   qc.invalidateQueries({ queryKey: chickenProjectDetailKeys.list(hId) });
   qc.invalidateQueries({ queryKey: chickenProjectKeys.counts(hId) });
+  qc.invalidateQueries({ queryKey: chickenProjectKeys.all });
+  qc.invalidateQueries({ queryKey: ["farmSummary"] });
 };
 
 export const useCreateChickenProjectDetail = (hId) => {
