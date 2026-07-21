@@ -202,7 +202,7 @@ export default function UpdateActivitySheet({ open, onOpenChange, showConfirmati
                     <FormControl>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="z-110">
                       <SelectItem value="PLANNED">Planned</SelectItem>
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>

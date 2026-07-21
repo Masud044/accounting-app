@@ -384,7 +384,7 @@ const handleSendForApproval = async (formId) => {
 
                 return (
                   <tr key={form.FORM_ID} className="border-t border-border">
-                    <td className="px-3 py-2 font-medium">{form.FORM_ID}</td>
+                    <td className="px-3 py-2 ">{form.FORM_ID}</td>
                     <td className="px-3 py-2 text-muted-foreground">{form.PO_NUMBER}</td>
                     <td className="px-3 py-2">{form.VENDOR_NAME}</td>
                     <td className="px-3 py-2 text-center text-muted-foreground">{form.ITEM_COUNT} items</td>

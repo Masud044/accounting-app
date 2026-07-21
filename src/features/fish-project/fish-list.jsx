@@ -92,17 +92,17 @@ export default function FishProjectList() {
   };
 
   const columns = [
-    {
-      accessorKey: "ID",
-      header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          ID <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="font-mono text-sm ps-2 font-medium">#{row.getValue("ID")}</div>
-      ),
-    },
+    // {
+    //   accessorKey: "ID",
+    //   header: ({ column }) => (
+    //     <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+    //       ID <ArrowUpDown className="ml-2 h-4 w-4" />
+    //     </Button>
+    //   ),
+    //   cell: ({ row }) => (
+    //     <div className="font-mono text-sm ps-2 font-medium">#{row.getValue("ID")}</div>
+    //   ),
+    // },
     {
       accessorKey: "FISH_NUMBER",
       header: ({ column }) => (
@@ -111,7 +111,7 @@ export default function FishProjectList() {
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="font-semibold tabular-nums ps-2">
+        <div className=" tabular-nums ps-2">
           {Number(row.getValue("FISH_NUMBER") || 0).toLocaleString()}
         </div>
       ),
@@ -120,7 +120,7 @@ export default function FishProjectList() {
       accessorKey: "FISH_TYPE",
       header: "Fish Type",
       cell: ({ row }) => (
-        <div className="font-medium ps-2">{row.getValue("FISH_TYPE") || "—"}</div>
+        <div className=" ps-2">{row.getValue("FISH_TYPE") || "—"}</div>
       ),
     },
     {

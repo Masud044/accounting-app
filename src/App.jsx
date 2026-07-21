@@ -62,12 +62,10 @@ import IncomeStatementPage from "./features/income-report";
 import ChickenProjectDetailPage from "./features/chicken-project/chicken-detail-page";
 import CowProjectDetail from "./features/cow-project/cow-project-detail";
 
-
-
-
 import FarmCalendarPage from "./features/farm-calendar/calender-list";
 import FarmCalendarDetailPage from "./features/farm-calendar/detail-calendar-page";
 import ActivityLogList from "./features/farm-activity-log/activity-log-list";
+import FarmTypePage from "./features/farm-type/index";
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -185,6 +183,13 @@ function App() {
 <Route path="farm-activity-log/detail/:detailId" element={
   <ProtectedRoute anyRole={ADMIN}>
     <ActivityLogList></ActivityLogList>
+  </ProtectedRoute>
+} />
+
+
+<Route path="farm-type" element={
+  <ProtectedRoute anyRole={ADMIN}>
+    <FarmTypePage></FarmTypePage>
   </ProtectedRoute>
 } />
 

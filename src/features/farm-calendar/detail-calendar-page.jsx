@@ -75,7 +75,7 @@ export default function FarmCalendarDetailPage() {
         <Tabs defaultValue="activities">
           <TabsList>
             <TabsTrigger value="activities" className="gap-1.5">
-              Activities
+              Calendar Details
               {counts?.DETAILS_COUNT > 0 && (
                 <Badge variant="secondary" className="rounded-full px-1.5 text-xs tabular-nums">
                   {counts.DETAILS_COUNT}
