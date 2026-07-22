@@ -158,33 +158,9 @@ export const NAV_ITEMS = [
       { to: "/dashboard/cash-Transfer", label: "Cash Transfer", Icon: Plus },
     ],
   },
-  {
-    label: "Account Report",
-    roles: ["Admin"],
-    links: [
-      { to: "/dashboard/expense-report", label: " Expense Report", Icon: ClipboardList },
-      { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList },
-      { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList },
-      { to: "/dashboard/general-ledger", label: "General Ledger", Icon: FileText },
-      { to: "/dashboard/trail-balance", label: "Trail Balance", Icon: FileText },
-      { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText },
-    ],
-  },
-  {
-    label: "Setup",
-    roles: ["Admin"],
-    links: [
-      { to: "/dashboard/chart-account", label: "Chart of Account", Icon: Wrench },
-      { to: "/dashboard/customer", label: "Customer Info", Icon: Wrench },
-      { to: "/dashboard/supplier", label: "Supplier Info", Icon: Wrench },
-      { to: "/dashboard/item", label: "Item", Icon: ClipboardList },
-      { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
-      { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
-      { to: "/dashboard/role", label: "Role", Icon: FileText },
-      { to: "/dashboard/permission", label: "Permission", Icon: FileText },
-    ],
-  },
-  {
+  
+
+{
     label: "Production",
     roles: ["Admin"],
     links: [
@@ -201,6 +177,7 @@ export const NAV_ITEMS = [
       
     ],
   },
+
   {
     label: "Inventory",
     roles: ["Admin", "Inventory"],
@@ -208,6 +185,19 @@ export const NAV_ITEMS = [
       { to: "/dashboard/inventory", label: "Inventory", Icon: ClipboardList },
       { to: "/dashboard/dispatch", label: "Dispatch", Icon: FileText },
       { to: "/dashboard/item-stock", label: "Item Stock", Icon: FileText },
+    ],
+  },
+
+  {
+    label: "Account Report",
+    roles: ["Admin"],
+    links: [
+      { to: "/dashboard/expense-report", label: " Expense Report", Icon: ClipboardList },
+      { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList },
+      { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList },
+      { to: "/dashboard/general-ledger", label: "General Ledger", Icon: FileText },
+      { to: "/dashboard/trail-balance", label: "Trail Balance", Icon: FileText },
+      { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText },
     ],
   },
   {
@@ -220,4 +210,22 @@ export const NAV_ITEMS = [
       { to: "/dashboard/cash-book", label: "Cash Book", Icon: FileText },
     ],
   },
+
+  {
+    label: "Setup",
+    roles: ["Admin"],
+    links: [
+      { to: "/dashboard/chart-account", label: "Chart of Account", Icon: Wrench },
+      { to: "/dashboard/customer", label: "Customer Info", Icon: Wrench },
+      { to: "/dashboard/supplier", label: "Supplier Info", Icon: Wrench },
+      { to: "/dashboard/item", label: "Item", Icon: ClipboardList },
+      { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
+      { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
+      { to: "/dashboard/role", label: "Role", Icon: FileText },
+      { to: "/dashboard/permission", label: "Permission", Icon: FileText },
+    ],
+  },
+  
+  
+  
 ];

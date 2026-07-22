@@ -41,24 +41,23 @@ export default function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
 
       {/* ── Header ── */}
-      <SidebarHeader className="h-14 flex flex-row items-center border-b border-border px-3">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center shrink-0">
-            {/* <img src={img} alt="" className="w-5 h-5 object-contain invert" /> */}
-            <IconTractor />
-          </div>
-          {!isCollapsed && (
-            <span className="font-display text-lg font-bold text-emerald-600 tracking-tight whitespace-nowrap">
-              Bangladesh Welfare Agro
-            </span>
-          )}
-        </div>
-      </SidebarHeader>
-
+    {/* ── Header ── */}
+<SidebarHeader className="h-14 flex flex-row items-center border-b border-border px-3">
+  <NavLink to="/dashboard/welcome" className="flex items-center gap-2 overflow-hidden cursor-pointer">
+    <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center shrink-0">
+      <IconTractor />
+    </div>
+    {!isCollapsed && (
+      <span className="font-display text-lg font-bold text-emerald-600 tracking-tight whitespace-nowrap">
+        Bangladesh Welfare Agro
+      </span>
+    )}
+  </NavLink>
+</SidebarHeader>
      {/* ── Nav Groups ── */}
 <SidebarContent className="px-2 py-4 gap-4">
   {NAV_ITEMS.map((group, idx) => (
-    <Collapsible key={idx} defaultOpen className="group/collapsible">
+    <Collapsible key={idx} defaultOpen={false} className="group/collapsible">
       <SidebarGroup className="px-0">
         {!isCollapsed && (
           <CollapsibleTrigger asChild>
