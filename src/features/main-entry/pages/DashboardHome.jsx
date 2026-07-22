@@ -30,6 +30,8 @@ import InvoiceMonthlyChart from "@/features/sale-invoice/invoice-monthly-chart";
 import InvoiceDailyTrendChart from "@/features/sale-invoice/invoice-daily-chart";
 import InvoiceSalesDashboard from "@/features/sale-invoice/invoice-sale-dashboard";
 import FinancialDashboardPage from "./financial-dashboard-page";
+import MonthlyDebitChart from "@/features/dashboad-debit-gl/monthly-debit-summary";
+import CashFlowReport from "@/features/dashboad-debit-gl/cashflow-statement";
 
 const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -402,6 +404,8 @@ const [incomeFilters, setIncomeFilters] = useState({
         </div> */}
         <div>
         <FinancialDashboardPage></FinancialDashboardPage>
+        <MonthlyDebitChart></MonthlyDebitChart>
+        <CashFlowReport></CashFlowReport>
         </div>
 
       </div>

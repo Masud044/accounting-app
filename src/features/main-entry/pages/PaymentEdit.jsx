@@ -1015,7 +1015,7 @@
 
 // export default PaymentEdit;
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Trash2, Users, X } from "lucide-react";
 import Select from "react-select";
 import { useParams, useNavigate } from "react-router-dom";
@@ -1147,6 +1147,8 @@ const PaymentEdit = () => {
     queryKey: ["voucher", voucherId],
     queryFn: async () => (await PaymentService.search(voucherId)).data,
     enabled: !!voucherId && accounts.length > 0,
+    refetchOnWindowFocus: false,   // 👈 add this
+  staleTime: Infinity,    
   });
 
   const toInputDate = (raw) => {
@@ -1157,9 +1159,12 @@ const PaymentEdit = () => {
       : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
+  const initializedRef = useRef(false);
+
   useEffect(() => {
     if (!voucherId || voucherData?.status !== "success" || !accounts.length)
       return;
+    if (initializedRef.current) return; 
 
     const master = voucherData.master || {};
     const details = voucherData.details || [];
@@ -1206,6 +1211,7 @@ const PaymentEdit = () => {
     }));
 
     setRows(mappedRows);
+     initializedRef.current = true;
   }, [voucherData, accounts, voucherId]);
 
   const mutation = useMutation({

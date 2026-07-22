@@ -173,6 +173,7 @@ export const NAV_ITEMS = [
 
        { to: "/dashboard/farm-calendar", label: "Farm calendar", Icon: FileText },
         { to: "/dashboard/farm-type", label: "Farm Type", Icon: FileText },
+          { to: "/dashboard/farm-budget", label: "Farm Budget", Icon: FileText },
        
       
     ],
