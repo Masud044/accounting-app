@@ -66,6 +66,9 @@ import FarmCalendarPage from "./features/farm-calendar/calender-list";
 import FarmCalendarDetailPage from "./features/farm-calendar/detail-calendar-page";
 import ActivityLogList from "./features/farm-activity-log/activity-log-list";
 import FarmTypePage from "./features/farm-type/index";
+import FarmBudgetDetailPage from "./features/farm-budget/budget-detail-page";
+import FarmBudgetPage from "./features/farm-budget/index";
+
 
 const ADMIN = ["Admin"];
 const ADMIN_INVENTORY = ["Admin", "Inventory"];
@@ -192,6 +195,19 @@ function App() {
     <FarmTypePage></FarmTypePage>
   </ProtectedRoute>
 } />
+
+<Route path="/dashboard/farm-budget" element={
+  <ProtectedRoute anyRole={ADMIN}>
+    <FarmBudgetPage></FarmBudgetPage>
+  </ProtectedRoute>
+} />
+<Route path="/dashboard/farm-budget/:id"element={
+  <ProtectedRoute anyRole={ADMIN}>
+    <FarmBudgetDetailPage></FarmBudgetDetailPage>
+  </ProtectedRoute>
+} />
+
+
 
       // report all 
                <Route

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Trash2, Users, X } from "lucide-react";
 import Select from "react-select";
 import { useParams, useNavigate } from "react-router-dom";
@@ -140,8 +140,11 @@ const ReceiveEdit = () => {
     queryFn: async () => {
       const res = await ReceiveService.search(voucherId);
       return res.data;
+        
     },
     enabled: !!voucherId && accounts.length > 0,
+    refetchOnWindowFocus: false,   // 👈 add this
+  staleTime: Infinity,
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -153,8 +156,13 @@ const ReceiveEdit = () => {
   };
 
   // ── Populate form ─────────────────────────────────────────────────────────────
+
+  const initializedRef = useRef(false);
+
+
   useEffect(() => {
     if (!voucherId || voucherData?.status !== "success") return;
+     if (initializedRef.current) return;
     const master = voucherData.master || {};
     const details = voucherData.details || {};
     const paymentCode = master.CASHACCOUNT || "";
@@ -192,6 +200,7 @@ const ReceiveEdit = () => {
       sale_invoice_no: master.SALE_INVOICE_NO ? String(master.SALE_INVOICE_NO) : "",
     });
     setRows(mappedRows);
+      initializedRef.current = true;
   }, [voucherId, voucherData, accounts]);
 
   // ── Voucher Mutation ──────────────────────────────────────────────────────────
