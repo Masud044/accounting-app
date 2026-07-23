@@ -15,6 +15,10 @@ export const farmBudgetDetailKeys = {
   list: (budgetId) => [...farmBudgetDetailKeys.all, "list", budgetId],
 };
 
+export const farmTypeKeys = { all: ["farmTypes"] };
+
+export const expenseAccountKeys = { all: ["expenseAccounts"] };
+
 // ── Fetcher ───────────────────────────────────────────────────────────────────
 const fetchJSON = async (url, options = {}) => {
   const res = await fetch(url, options);
@@ -153,3 +157,25 @@ export const useDeleteFarmBudgetDetail = (budgetId) => {
     onError: (err) => console.error("Delete farm budget detail failed:", err),
   });
 };
+
+// ═══════════════════ FARM TYPES (master list) ═══════════════════
+export const useFarmTypes = () =>
+  useQuery({
+    queryKey: farmTypeKeys.all,
+    queryFn:  () => fetchJSON(`${BASE}/api/farm-type`),
+    staleTime: 10 * 60 * 1000,
+    gcTime:    30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    throwOnError: false,
+  });
+
+// ═══════════════════ EXPENSE ACCOUNTS (COA leaf nodes under Expense) ═══════════════════
+export const useExpenseAccounts = () =>
+  useQuery({
+    queryKey: expenseAccountKeys.all,
+    queryFn:  () => fetchJSON(`${BASE}/api/farm-budget/expense-accounts`),
+    staleTime: 10 * 60 * 1000,
+    gcTime:    30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    throwOnError: false,
+  });
