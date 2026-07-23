@@ -98,98 +98,130 @@ export default function GeneralLedgerList() {
 
   // ── Filter bar ───────────────────────────────────────────────────────────
   const FilterBar = (
-    <div className="bg-card rounded-md shadow-sm p-4 mb-4 print:hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-lg md:text-2xl font-semibold tracking-tight">General Ledger</h1>
-        <div className="flex flex-wrap items-end gap-2">
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">From Date</label>
-            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
+    <div className="bg-card rounded-lg border shadow-sm p-5 mb-4 print:hidden">
+      {/* Header row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 pb-4 border-b">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <BookOpen className="h-5 w-5" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">To Date</label>
-            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
+            <h1 className="text-lg md:text-xl font-semibold tracking-tight leading-none">
+              General Ledger
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Account-wise transaction history & running balance
+            </p>
           </div>
-
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Account Code</label>
-            <Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={accountPopoverOpen}
-                  className="w-72 justify-between font-normal"
-                >
-                  <span className="truncate">
-                    {selectedAccount
-                      ? `${selectedAccount.ACCOUNT_ID} — ${selectedAccount.FULL_PATH.trim()}`
-                      : "All accounts"}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-96 p-0">
-                <Command>
-                  <CommandInput placeholder="Search account code or name..." />
-                  <CommandList>
-                    <CommandEmpty>
-                      {accountsLoading ? "Loading..." : "No account found."}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      <CommandItem
-                        value="all-accounts"
-                        onSelect={() => {
-                          setAccountCode("");
-                          setAccountPopoverOpen(false);
-                        }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", !accountCode ? "opacity-100" : "opacity-0")} />
-                        All accounts
-                      </CommandItem>
-                      {accounts.map((a) => (
-                        <CommandItem
-                          key={a.ID}
-                          value={`${a.ACCOUNT_ID} ${a.ACCOUNT_NAME}`}
-                          onSelect={() => {
-                            setAccountCode(a.ACCOUNT_ID);
-                            setAccountPopoverOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              String(accountCode) === String(a.ACCOUNT_ID) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <span className="truncate">
-                            {a.ACCOUNT_ID} — {a.FULL_PATH.trim()}
-                          </span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <Button onClick={handleGenerate} disabled={!fromDate || !toDate}>
-            <BookOpen className="mr-1 h-4 w-4" /> Generate
-          </Button>
-          {applied && (
-            <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="h-4 w-4" />
-              <span className="sr-only">Print</span>
-            </Button>
-          )}
-          {applied && (
-            <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
-              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-              <span className="sr-only">Refresh</span>
-            </Button>
-          )}
         </div>
+
+        {applied && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="h-4 w-4" />
+              <span className="ml-1.5 hidden sm:inline">Print</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+              <span className="ml-1.5 hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Account Code — full width row */}
+      <div className="mb-4">
+        <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+          Account Code
+        </label>
+        <Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={accountPopoverOpen}
+              className="w-full justify-between font-normal"
+            >
+              <span className="truncate text-left">
+                {selectedAccount
+                  ? `${selectedAccount.ACCOUNT_ID} — ${selectedAccount.FULL_PATH.trim()}`
+                  : "All accounts"}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search account code or name..." />
+              <CommandList>
+                <CommandEmpty>
+                  {accountsLoading ? "Loading..." : "No account found."}
+                </CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    value="all-accounts"
+                    onSelect={() => {
+                      setAccountCode("");
+                      setAccountPopoverOpen(false);
+                    }}
+                  >
+                    <Check className={cn("mr-2 h-4 w-4", !accountCode ? "opacity-100" : "opacity-0")} />
+                    All accounts
+                  </CommandItem>
+                  {accounts.map((a) => (
+                    <CommandItem
+                      key={a.ID}
+                      value={`${a.ACCOUNT_ID} ${a.ACCOUNT_NAME}`}
+                      onSelect={() => {
+                        setAccountCode(a.ACCOUNT_ID);
+                        setAccountPopoverOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          String(accountCode) === String(a.ACCOUNT_ID) ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <span className="truncate">
+                        {a.ACCOUNT_ID} — {a.FULL_PATH.trim()}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Date range + Generate — separate row */}
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1">
+          <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+            From Date
+          </label>
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+            To Date
+          </label>
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <Button onClick={handleGenerate} disabled={!fromDate || !toDate} className="sm:w-auto w-full">
+          <BookOpen className="mr-1 h-4 w-4" /> Generate
+        </Button>
       </div>
     </div>
   );
@@ -198,7 +230,7 @@ export default function GeneralLedgerList() {
     return (
       <div>
         {FilterBar}
-        <div className="bg-card rounded-lg shadow-sm p-4">
+        <div className="bg-card rounded-lg border shadow-sm p-4">
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon"><BookOpen /></EmptyMedia>
@@ -214,7 +246,7 @@ export default function GeneralLedgerList() {
     return (
       <div>
         {FilterBar}
-        <div className="bg-card rounded-lg shadow-sm p-4">
+        <div className="bg-card rounded-lg border shadow-sm p-4">
           <div className="flex flex-col items-center justify-center py-16">
             <Spinner className="h-12 w-12 mb-4" />
             <p className="text-muted-foreground">General ledger generate kora hocche...</p>
@@ -228,7 +260,7 @@ export default function GeneralLedgerList() {
     return (
       <div>
         {FilterBar}
-        <div className="bg-card rounded-lg shadow-sm p-4">
+        <div className="bg-card rounded-lg border shadow-sm p-4">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error Loading Report</AlertTitle>
@@ -261,18 +293,18 @@ export default function GeneralLedgerList() {
 
       {grandTotals && (
         <div className="grid grid-cols-2 gap-3 mb-4 print:hidden">
-          <div className="bg-card rounded-md shadow-sm p-4">
+          <div className="bg-card rounded-lg border shadow-sm p-4">
             <p className="text-sm text-muted-foreground">Total Debit</p>
             <p className="text-lg font-semibold tabular-nums">{fmt(grandTotals.debit)}</p>
           </div>
-          <div className="bg-card rounded-md shadow-sm p-4">
+          <div className="bg-card rounded-lg border shadow-sm p-4">
             <p className="text-sm text-muted-foreground">Total Credit</p>
             <p className="text-lg font-semibold tabular-nums">{fmt(grandTotals.credit)}</p>
           </div>
         </div>
       )}
 
-      <div className="bg-card rounded-md shadow-sm p-4">
+      <div className="bg-card rounded-lg border shadow-sm p-4">
         {groups.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -301,7 +333,7 @@ export default function GeneralLedgerList() {
                   {/* Account header */}
                   <button
                     onClick={() => toggleGroup(g.code)}
-                    className="w-full flex items-center justify-between bg-muted/50 px-4 py-2 text-left print:hidden"
+                    className="w-full flex items-center justify-between bg-muted/50 px-4 py-2.5 text-left print:hidden hover:bg-muted/70 transition-colors"
                   >
                     <span className="font-semibold">
                       {g.code} — {g.name}
