@@ -68,6 +68,8 @@ import ActivityLogList from "./features/farm-activity-log/activity-log-list";
 import FarmTypePage from "./features/farm-type/index";
 import FarmBudgetDetailPage from "./features/farm-budget/budget-detail-page";
 import FarmBudgetPage from "./features/farm-budget/index";
+import FarmProjectDetailPage from "./features/farm-project-management/project-detail-page";
+import FarmProjectPage from "./features/farm-project-management/index";
 
 
 const ADMIN = ["Admin"];
@@ -204,6 +206,18 @@ function App() {
 <Route path="/dashboard/farm-budget/:id"element={
   <ProtectedRoute anyRole={ADMIN}>
     <FarmBudgetDetailPage></FarmBudgetDetailPage>
+  </ProtectedRoute>
+} />
+
+
+<Route path="/dashboard/farm-project" element={
+  <ProtectedRoute anyRole={ADMIN}>
+    <FarmProjectPage></FarmProjectPage>
+  </ProtectedRoute>
+} />
+<Route path="/dashboard/farm-project/:id"element={
+  <ProtectedRoute anyRole={ADMIN}>
+    <FarmProjectDetailPage></FarmProjectDetailPage>
   </ProtectedRoute>
 } />
 
