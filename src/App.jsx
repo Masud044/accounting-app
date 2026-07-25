@@ -70,6 +70,8 @@ import FarmBudgetDetailPage from "./features/farm-budget/budget-detail-page";
 import FarmBudgetPage from "./features/farm-budget/index";
 import FarmProjectDetailPage from "./features/farm-project-management/project-detail-page";
 import FarmProjectPage from "./features/farm-project-management/index";
+import FarmCalendarReportPage from "./features/farm-calender-report/farm-calendar-report";
+import FarmCalendarReportList from "./features/farm-calender-report/farm-calendar-report-list";
 
 
 const ADMIN = ["Admin"];
@@ -224,6 +226,24 @@ function App() {
 
 
       // report all 
+
+      // report all 
+<Route
+  path="farm-calendar-report"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <FarmCalendarReportList></FarmCalendarReportList>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="farm-calendar-report/:calendarId"
+  element={
+    <ProtectedRoute anyRole={ADMIN}>
+      <FarmCalendarReportPage></FarmCalendarReportPage>
+    </ProtectedRoute>
+  }
+/>
                <Route
                 path="/dashboard/trail-balance"
                 element={

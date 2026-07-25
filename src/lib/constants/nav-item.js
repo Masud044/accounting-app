@@ -200,6 +200,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/general-ledger", label: "General Ledger", Icon: FileText },
       { to: "/dashboard/trail-balance", label: "Trail Balance", Icon: FileText },
       { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText },
+      { to: "/dashboard/farm-calendar-report", label: "Calendar-Report", Icon: FileText },
     ],
   },
   {
