@@ -72,6 +72,9 @@ import FarmProjectDetailPage from "./features/farm-project-management/project-de
 import FarmProjectPage from "./features/farm-project-management/index";
 import FarmCalendarReportPage from "./features/farm-calender-report/farm-calendar-report";
 import FarmCalendarReportList from "./features/farm-calender-report/farm-calendar-report-list";
+import ProjectProfileReportPage from "./features/project-management/project-profile-report";
+import ProjectProfileReportList from "./features/project-management/report-project-list";
+import FinancialPage from "./features/financial-project/index";
 
 
 const ADMIN = ["Admin"];
@@ -223,6 +226,10 @@ function App() {
   </ProtectedRoute>
 } />
 
+<Route path="/dashboard/financial-project" element={
+  <ProtectedRoute anyRole={ADMIN}><FinancialPage/></ProtectedRoute>
+} />
+
 
 
       // report all 
@@ -244,6 +251,15 @@ function App() {
     </ProtectedRoute>
   }
 />
+
+
+
+<Route path="/dashboard/project-profile-report" element={
+  <ProtectedRoute anyRole={ADMIN}><ProjectProfileReportList /></ProtectedRoute>
+} />
+<Route path="/dashboard/project-profile-report/:projectId" element={
+  <ProtectedRoute anyRole={ADMIN}><ProjectProfileReportPage /></ProtectedRoute>
+} />
                <Route
                 path="/dashboard/trail-balance"
                 element={

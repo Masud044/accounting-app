@@ -11,7 +11,7 @@ import {
   useFarmProjectById,
   useFarmProjectPhases,
   useFarmProjectActivities,
-  useFinancialProjections,
+ 
 } from "./queries";
 import HeaderSummaryCard from "./header-summary-card";
 import UpdateFarmProjectSheet from "./update-project-sheet";
@@ -38,7 +38,7 @@ export default function FarmProjectDetailPage() {
   // Fetched here once so the tab badges can show counts without a dedicated counts endpoint.
   const { data: phases = [] } = useFarmProjectPhases(id);
   const { data: activities = [] } = useFarmProjectActivities(id);
-  const { data: projections = [] } = useFinancialProjections(id);
+  // const { data: projections = [] } = useFinancialProjections(id);
 
   if (isError) {
     return (
@@ -99,14 +99,14 @@ export default function FarmProjectDetailPage() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="financial" className="gap-1.5">
+            {/* <TabsTrigger value="financial" className="gap-1.5">
               Financial Projections
               {projections.length > 0 && (
                 <Badge variant="secondary" className="rounded-full px-1.5 text-xs tabular-nums">
                   {projections.length}
                 </Badge>
               )}
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="phases" className="mt-4">
