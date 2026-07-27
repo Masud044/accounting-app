@@ -174,7 +174,9 @@ export const NAV_ITEMS = [
        { to: "/dashboard/farm-calendar", label: "Farm calendar", Icon: FileText },
         { to: "/dashboard/farm-type", label: "Farm Type", Icon: FileText },
           { to: "/dashboard/farm-budget", label: "Farm Budget", Icon: FileText },
+          
             { to: "/dashboard/farm-project", label: "Farm Project Management", Icon: FileText },
+             { to: "/dashboard/financial-project", label: "Financial Project", Icon: FileText },
        
       
     ],
@@ -200,6 +202,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/general-ledger", label: "General Ledger", Icon: FileText },
       { to: "/dashboard/trail-balance", label: "Trail Balance", Icon: FileText },
       { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText },
+       { to: "/dashboard/project-profile-report", label: "Project Profile Report", Icon: FileText },
       { to: "/dashboard/farm-calendar-report", label: "Calendar-Report", Icon: FileText },
     ],
   },
