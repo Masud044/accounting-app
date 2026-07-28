@@ -75,6 +75,8 @@ import FarmCalendarReportList from "./features/farm-calender-report/farm-calenda
 import ProjectProfileReportPage from "./features/project-management/project-profile-report";
 import ProjectProfileReportList from "./features/project-management/report-project-list";
 import FinancialPage from "./features/financial-project/index";
+import ProjectProfilePage from "./features/project-management/index";
+import ProjectDetailPage from "./features/project-management/project-detail-page";
 
 
 const ADMIN = ["Admin"];
@@ -229,6 +231,10 @@ function App() {
 <Route path="/dashboard/financial-project" element={
   <ProtectedRoute anyRole={ADMIN}><FinancialPage/></ProtectedRoute>
 } />
+
+
+<Route path="/dashboard/project-profile" element={<ProjectProfilePage />} />
+<Route path="/dashboard/project-profile/:id" element={<ProjectDetailPage />} />
 
 
 

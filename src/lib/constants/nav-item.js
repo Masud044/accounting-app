@@ -175,8 +175,9 @@ export const NAV_ITEMS = [
         { to: "/dashboard/farm-type", label: "Farm Type", Icon: FileText },
           { to: "/dashboard/farm-budget", label: "Farm Budget", Icon: FileText },
           
-            { to: "/dashboard/farm-project", label: "Farm Project Management", Icon: FileText },
-             { to: "/dashboard/financial-project", label: "Financial Project", Icon: FileText },
+            // { to: "/dashboard/farm-project", label: "Farm Project Management", Icon: FileText },
+            //  { to: "/dashboard/financial-project", label: "Financial Project", Icon: FileText },
+                { to: "/dashboard/project-profile", label: "Project Management", Icon: FileText },
        
       
     ],
