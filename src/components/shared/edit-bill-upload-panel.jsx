@@ -14,7 +14,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL ;
 
 const ALLOWED_TYPES = [
   "application/pdf",

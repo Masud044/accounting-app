@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL;
 const BASE = `${url}/api/purchase-recognition`;
 
 // ═══════════════════════════════════════════════════════════════

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Fish, Egg } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL;
 
 // ── Data fetching ──────────────────────────────────────────────────────────────
 const useFarmSummary = () =>

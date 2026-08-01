@@ -5,7 +5,7 @@ import axios from "axios";
 
 //  Payment- API
 
-const url  = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url  = import.meta.env.VITE_API_BASE_URL;
 
 export const PaymentService = {
   insert: async (payload) => {

@@ -14,7 +14,7 @@ import BillUploadPanel from "@/components/shared/bill-upload-panel";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL ;
 
 const invoiceLockUrl = (hid) => `${url}/api/sal-invoice/${hid}/lock`;
 
