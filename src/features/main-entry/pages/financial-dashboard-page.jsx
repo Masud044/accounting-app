@@ -9,7 +9,7 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL ;
 const currentYear = new Date().getFullYear();
 
 // ── shared filter options ────────────────────────────────────────────────

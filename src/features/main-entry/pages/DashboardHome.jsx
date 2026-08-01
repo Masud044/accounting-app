@@ -33,7 +33,7 @@ import FinancialDashboardPage from "./financial-dashboard-page";
 import MonthlyDebitChart from "@/features/dashboad-debit-gl/monthly-debit-summary";
 import CashFlowReport from "@/features/dashboad-debit-gl/cashflow-statement";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL ;
 
 const MONTHS = [
   { label: "All", value: "" },

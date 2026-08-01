@@ -2685,7 +2685,7 @@ import BillUploadPanel from "@/components/shared/bill-upload-panel";
 import { useCreateSupplier } from "@/features/supplier/queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL ;
 
 const supplierDefault = {
   supplierName: "",

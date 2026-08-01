@@ -207,7 +207,7 @@ import EditRecognitionSheet from "./update-recognition-sheet";
 import { Send, Clock, CheckCircle2 } from "lucide-react";
 import { usePurchaseRecognitions, useDeletePurchaseRecognition, useSendForApproval } from "./queries";
 
-const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const url = import.meta.env.VITE_API_BASE_URL;
 const BASE = `${url}/api/purchase-recognition`;
 
 // ── helpers ────────────────────────────────────────────────────────────────────
