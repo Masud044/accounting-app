@@ -64,7 +64,7 @@ const formSchema = z.object({
   farmType:     z.string().min(1, "Farm type is required"),
   expenseHead:  z.string().min(1, "Expense head is required"),
   budgetMonth:  z.coerce.number({ invalid_type_error: "Month is required" }).min(1).max(12),
-  expenseCode:  z.string().max(30).optional(),
+  expenseCode:  z.coerce.string().max(30).optional(),
   budgetAmount: z.coerce.number({ invalid_type_error: "Amount must be a number" }).min(0, "Cannot be negative"),
 });
 
@@ -76,10 +76,12 @@ const defaultValues = {
   budgetAmount: "",
 };
 
+const EMPTY_ARRAY = [];
+
 export default function UpdateFarmBudgetDetailSheet({ open, onOpenChange, showConfirmation, record, budgetId }) {
   const updateMutation = useUpdateFarmBudgetDetail(budgetId);
-  const { data: farmTypes = [], isLoading: farmTypesLoading } = useFarmTypes();
-  const { data: expenseAccounts = [], isLoading: expenseAccountsLoading } = useExpenseAccounts();
+  const { data: farmTypes = EMPTY_ARRAY, isLoading: farmTypesLoading } = useFarmTypes();
+  const { data: expenseAccounts = EMPTY_ARRAY, isLoading: expenseAccountsLoading } = useExpenseAccounts();
   const [expensePopoverOpen, setExpensePopoverOpen] = useState(false);
 
   const form = useForm({ resolver: zodResolver(formSchema), defaultValues });
