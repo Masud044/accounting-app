@@ -223,7 +223,7 @@ const formSchema = z.object({
                     .min(0, "Reject quantity cannot be negative")
                     .optional(),
   remarks:        z.string().max(50, "Remarks max 50 characters").optional(),
-  updatedBy:      z.string().max(100).optional(),
+ updatedBy:      z.coerce.string().max(100).optional(), 
 });
 
 // Helper: Oracle date → input[type=date] value (YYYY-MM-DD)
