@@ -172,7 +172,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/fish-project", label: "Fish", Icon: FileText },
 
        { to: "/dashboard/farm-calendar", label: "Farm calendar", Icon: FileText },
-        { to: "/dashboard/farm-type", label: "Farm Type", Icon: FileText },
+       
           { to: "/dashboard/farm-budget", label: "Farm Budget", Icon: FileText },
           
             // { to: "/dashboard/farm-project", label: "Farm Project Management", Icon: FileText },
@@ -226,12 +226,36 @@ export const NAV_ITEMS = [
       { to: "/dashboard/customer", label: "Customer Info", Icon: Wrench },
       { to: "/dashboard/supplier", label: "Supplier Info", Icon: Wrench },
       { to: "/dashboard/item", label: "Item", Icon: ClipboardList },
+       { to: "/dashboard/farm-type", label: "Farm Type", Icon: FileText },
+      // { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
+      // { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
+      // { to: "/dashboard/role", label: "Role", Icon: FileText },
+      // { to: "/dashboard/permission", label: "Permission", Icon: FileText },
+    ],
+  },
+
+  {
+    label: "User Management",
+    roles: ["Admin"],
+    links: [
+      
       { to: "/dashboard/user-management", label: "User Management", Icon: ClipboardList },
       { to: "/dashboard/module", label: "Module", Icon: ClipboardList },
       { to: "/dashboard/role", label: "Role", Icon: FileText },
       { to: "/dashboard/permission", label: "Permission", Icon: FileText },
     ],
   },
+
+  {
+    label: "Setting",
+    roles: ["Admin"],
+    links: [
+      
+      { to: "/dashboard/notification", label: "Notification Settings", Icon: ClipboardList },
+    
+    ],
+  },
+  
   
   
   
