@@ -297,11 +297,11 @@ export default function FarmCalendarReportPage() {
   const {
     header,
     operationalCalendar,
-    routineActivities,
+    routineActivities=[],
     vaccinationCalendar = [],
     feedCalendar = [],
     financialCalendar = [],
-    kpiTargets,
+    kpiTargets=[],
     actualPerformance,
     expectedAnnualOutput,
   } = report;
@@ -443,44 +443,34 @@ export default function FarmCalendarReportPage() {
         </div>
 
         {/* Expected Annual Output — from named KPI rows, may be blank */}
-        <div className="space-y-2">
-          <h3 className="text-base font-semibold">Expected Annual Output</h3>
-          {expectedAnnualOutput &&
-          Object.values(expectedAnnualOutput).some((v) => v != null) ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                icon={IconChecklist}
-                label="Cattle Fattened"
-                value={expectedAnnualOutput.cattleFattenedCount ?? "—"}
-              />
-              <StatCard
-                icon={IconCalendarStats}
-                label="Sales Cycles"
-                value={expectedAnnualOutput.salesCyclesCount ?? "—"}
-              />
-              <StatCard
-                icon={IconTrendingUp}
-                label="Estimated Revenue"
-                value={fmtMoney(expectedAnnualOutput.estimatedAnnualRevenue)}
-                accent="text-emerald-600"
-              />
-              <StatCard
-                icon={IconCoin}
-                label="Estimated Gross Profit"
-                value={fmtMoney(expectedAnnualOutput.estimatedAnnualGrossProfit)}
-                accent="text-amber-600"
-              />
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium">"Number of Cattle Fattened"</span>,{" "}
-              <span className="font-medium">"Number of Sales Cycles"</span>,{" "}
-              <span className="font-medium">"Estimated Annual Revenue"</span>,{" "}
-              <span className="font-medium">"Estimated Annual Gross Profit"</span> — KPI
-              row-e ei names diye value set korle ei section-e dekhabe.
-            </p>
-          )}
-        </div>
+       {/* Expected Annual Output — always shown as cards, "—" when a KPI row is missing */}
+<div className="space-y-2">
+  <h3 className="text-base font-semibold">Expected Annual Output</h3>
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
+    <StatCard
+      icon={IconChecklist}
+      label="Cattle Fattened"
+      value={expectedAnnualOutput?.cattleFattenedCount ?? "—"}
+    />
+    <StatCard
+      icon={IconCalendarStats}
+      label="Sales Cycles"
+      value={expectedAnnualOutput?.salesCyclesCount ?? "—"}
+    />
+    <StatCard
+      icon={IconTrendingUp}
+      label="Estimated Revenue"
+      value={fmtMoney(expectedAnnualOutput?.estimatedAnnualRevenue)}
+      accent="text-emerald-600"
+    />
+    <StatCard
+      icon={IconCoin}
+      label="Estimated Gross Profit"
+      value={fmtMoney(expectedAnnualOutput?.estimatedAnnualGrossProfit)}
+      accent="text-amber-600"
+    />
+  </div>
+</div>
       </div>
     </SectionContainer>
   );

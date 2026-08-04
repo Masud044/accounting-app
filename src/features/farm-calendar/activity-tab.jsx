@@ -376,6 +376,13 @@ export default function ActivitiesTab({ calendarId }) {
       header: "Responsible",
       cell: ({ row }) => <div>{row.getValue("RESPONSIBLE_PERSON") || "—"}</div>,
     },
+     {
+      accessorKey: "FREQUENCY",
+      header: "Frequency",
+      cell: ({ row }) => (
+        <div className="text-muted-foreground max-w-xs truncate">{row.getValue("FREQUENCY") || "—"}</div>
+      ),
+    },
     {
       accessorKey: "STATUS",
       header: "Status",
