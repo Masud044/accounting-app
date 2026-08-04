@@ -67,7 +67,7 @@ export default function FarmCalendarReportList() {
       description="Report dekhte kono calendar select koro"
     >
       {list.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Kono calendar toiri kora hoyni.</p>
+        <p className="text-sm text-muted-foreground">not found calendar</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((c) => (

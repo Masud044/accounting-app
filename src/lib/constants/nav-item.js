@@ -246,15 +246,7 @@ export const NAV_ITEMS = [
     ],
   },
 
-  {
-    label: "Setting",
-    roles: ["Admin"],
-    links: [
-      
-      { to: "/dashboard/notification", label: "Notification Settings", Icon: ClipboardList },
-    
-    ],
-  },
+ 
   
   
   

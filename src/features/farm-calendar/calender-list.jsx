@@ -132,6 +132,7 @@ export default function FarmCalendarList() {
         <Badge variant={statusVariant(row.getValue("STATUS"))}>{row.getValue("STATUS")}</Badge>
       ),
     },
+   
     {
       accessorKey: "DESCRIPTION",
       header: "Description",
