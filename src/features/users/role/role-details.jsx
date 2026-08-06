@@ -1,16 +1,7 @@
 // src/features/users/role/role-details.jsx
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router";
-import {
-  ShieldCheck,
-  Puzzle,
-  Filter,
-  Plus,
-  Trash2,
-  ChevronsUpDown,
-  Check,
-} from "lucide-react";
-import { toast } from "sonner";
+import { ShieldCheck, Filter, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,29 +17,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import EntityCombobox from "@/components/shared/entity-combobox";
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-
-import PageContainer from "@/components/page-container";
 import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
 
 import {
@@ -58,13 +28,14 @@ import {
   useAssignPermissionToRole,
   useRevokePermissionFromRole,
 } from "../../user-management/queries";
+import { SectionContainer } from "@/components/SectionContainer";
+import { toast } from "react-toastify";
 
 export default function RoleDetailsPage() {
   const { id } = useParams();
 
   const [activeModule, setActiveModule] = useState("All");
   const [selectedPermissionId, setSelectedPermissionId] = useState("");
-  const [open, setOpen] = useState(false);
 
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
@@ -86,9 +57,23 @@ export default function RoleDetailsPage() {
     (p) => !assignedIds.has(p.ID),
   );
 
-  const selectedPermission = availablePermissions.find(
-    (p) => String(p.ID) === selectedPermissionId,
-  );
+  // ── Combobox items for "Assign permission" ──
+ const assignablePermissionItems = useMemo(
+  () =>
+    availablePermissions
+      .slice()
+      .sort((a, b) =>
+        (a.MODULE_NAME || "").localeCompare(b.MODULE_NAME || ""),
+      )
+      .map((p) => ({
+        value: String(p.ID),
+        label: `${p.PERMISSION_NAME} ${p.MODULE_NAME || ""} ${p.PERMISSION_CODE}`, // used for search matching
+        permissionName: p.PERMISSION_NAME,
+        moduleName: p.MODULE_NAME,
+        permissionCode: p.PERMISSION_CODE,
+      })),
+  [availablePermissions],
+);
 
   const grouped = useMemo(() => {
     return rolePermissions.reduce((acc, p) => {
@@ -101,6 +86,15 @@ export default function RoleDetailsPage() {
 
   const moduleNames = Object.keys(grouped);
 
+  // ── Combobox items for module filter ──
+  const moduleFilterItems = useMemo(
+    () => [
+      { value: "All", label: "All Modules" },
+      ...moduleNames.map((mod) => ({ value: mod, label: mod })),
+    ],
+    [moduleNames],
+  );
+
   const filtered = useMemo(() => {
     if (activeModule === "All") return grouped;
     return { [activeModule]: grouped[activeModule] || [] };
@@ -111,7 +105,7 @@ export default function RoleDetailsPage() {
 
     try {
       await assignMutation.mutateAsync({
-        roleId: parseInt(id),
+        roleId: id,
         permissionId: parseInt(selectedPermissionId),
       });
 
@@ -135,7 +129,7 @@ export default function RoleDetailsPage() {
 
     try {
       await revokeMutation.mutateAsync({
-        roleId: parseInt(id),
+        roleId: id,
         permissionId: perm.ID,
       });
 
@@ -147,16 +141,16 @@ export default function RoleDetailsPage() {
 
   if (isLoading) {
     return (
-      <PageContainer>
+      <SectionContainer>
         <Skeleton className="h-[80vh] w-full rounded-xl" />
-      </PageContainer>
+      </SectionContainer>
     );
   }
 
   const allAssigned = availablePermissions.length === 0;
 
   return (
-    <PageContainer>
+    <SectionContainer>
       <div className="space-y-5">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
@@ -199,68 +193,25 @@ export default function RoleDetailsPage() {
               </div>
             ) : (
               <div className="flex gap-2">
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="w-[420px] justify-between h-9"
-                    >
-                      {selectedPermission
-                        ? selectedPermission.PERMISSION_NAME
-                        : "Assign permission"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-
-                  <PopoverContent className="w-[420px] p-0">
-                    <Command>
-                      <CommandInput placeholder="Search permission..." />
-                      <CommandEmpty>No permission found.</CommandEmpty>
-
-                      <div className="max-h-[320px] overflow-y-auto">
-                        {Object.entries(
-                          availablePermissions.reduce((acc, p) => {
-                            const mod = p.MODULE_NAME || "Other";
-                            if (!acc[mod]) acc[mod] = [];
-                            acc[mod].push(p);
-                            return acc;
-                          }, {}),
-                        ).map(([module, perms]) => (
-                          <CommandGroup key={module} heading={module}>
-                            {perms.map((p) => (
-                              <CommandItem
-                                key={p.ID}
-                                value={`${p.PERMISSION_NAME} ${p.PERMISSION_CODE} ${module}`}
-                                onSelect={() => {
-                                  setSelectedPermissionId(String(p.ID));
-                                  setOpen(false);
-                                }}
-                                className="flex items-center gap-2"
-                              >
-                                <span className="font-mono text-xs text-muted-foreground">
-                                  {p.PERMISSION_CODE}
-                                </span>
-
-                                <span className="truncate flex-1">
-                                  {p.PERMISSION_NAME}
-                                </span>
-
-                                <Check
-                                  className={`h-4 w-4 ${
-                                    selectedPermissionId === String(p.ID)
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  }`}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        ))}
-                      </div>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <EntityCombobox
+  items={assignablePermissionItems}
+  value={selectedPermissionId}
+  onValueChange={setSelectedPermissionId}
+  placeholder="Assign permission..."
+  size="md"
+  className="w-[420px]"
+  renderItem={(item) => (
+    <div className="flex flex-col gap-0.5 min-w-0">
+      <div className="flex items-center gap-2">
+        <span className="font-medium truncate">{item.permissionName}</span>
+        <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0 shrink-0">
+          {item.permissionCode}
+        </Badge>
+      </div>
+      <span className="text-xs text-muted-foreground">{item.moduleName || "—"}</span>
+    </div>
+  )}
+/>
 
                 <Button
                   size="sm"
@@ -277,19 +228,15 @@ export default function RoleDetailsPage() {
           {/* Filter */}
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={activeModule} onValueChange={setActiveModule}>
-              <SelectTrigger className="w-52 h-9">
-                <SelectValue placeholder="Filter by module" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Modules</SelectItem>
-                {moduleNames.map((mod) => (
-                  <SelectItem key={mod} value={mod}>
-                    {mod}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <EntityCombobox
+              items={moduleFilterItems}
+              value={activeModule}
+              onValueChange={(v) => setActiveModule(v || "All")}
+              placeholder="Filter by module"
+              size="md"
+              className="w-52"
+              showClear={false}
+            />
           </div>
         </div>
 
@@ -347,6 +294,6 @@ export default function RoleDetailsPage() {
       </div>
 
       <ConfirmationDialog />
-    </PageContainer>
+    </SectionContainer>
   );
 }

@@ -41,23 +41,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router"; // Added useNavigate
 
 import { usePermissions, useDeletePermission } from "./queries";
-import AddPermissionDialog from "./add-permission-dialog";
-import UpdatePermissionDialog from "./update-permission-dialog";
+// Removed Dialog Imports
 import CustomDataTableColumnHeader from "@/components/shared/custom-data-table-column-header";
 import CustomDataTableToolbar from "@/components/shared/custom-data-table-toolbar";
 
 export default function PermissionList() {
+  const navigate = useNavigate(); // Added
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [selectedPermission, setSelectedPermission] = useState(null);
+  
+  // Removed Dialog states
 
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
@@ -72,9 +71,9 @@ export default function PermissionList() {
 
   const deletePermissionMutation = useDeletePermission();
 
+  // Updated to navigate
   const handleEdit = (permission) => {
-    setSelectedPermission(permission);
-    setIsUpdateDialogOpen(true);
+    navigate(`/dashboard/permission/${permission.ID}/edit`);
   };
 
   const handleDelete = async (permission) => {
@@ -97,28 +96,6 @@ export default function PermissionList() {
   };
 
   const columns = [
-    // {
-    //   id: "select",
-    //   header: ({ table }) => (
-    //     <Checkbox
-    //       checked={
-    //         table.getIsAllPageRowsSelected() ||
-    //         (table.getIsSomePageRowsSelected() && "indeterminate")
-    //       }
-    //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-    //       aria-label="Select all"
-    //     />
-    //   ),
-    //   cell: ({ row }) => (
-    //     <Checkbox
-    //       checked={row.getIsSelected()}
-    //       onCheckedChange={(value) => row.toggleSelected(!!value)}
-    //       aria-label="Select row"
-    //     />
-    //   ),
-    //   enableSorting: false,
-    //   enableHiding: false,
-    // },
     {
       accessorKey: "MODULE_NAME",
       header: ({ column }) => (
@@ -159,43 +136,43 @@ export default function PermissionList() {
         <div className="text-muted-foreground">{row.getValue("DESCRIPTION") || "—"}</div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   enableHiding: false,
-    //   cell: ({ row }) => {
-    //     const permission = row.original;
+    {
+      id: "actions",
+      header: "Actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const permission = row.original;
 
-    //     return (
-    //       <div className="flex items-center gap-1">
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8"
-    //           onClick={() => handleEdit(permission)}
-    //         >
-    //           <IconEdit className="h-4 w-4" />
-    //           <span className="sr-only">Edit</span>
-    //         </Button>
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleEdit(permission)} // Now navigates
+            >
+              <IconEdit className="h-4 w-4" />
+              <span className="sr-only">Edit</span>
+            </Button>
 
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8 text-destructive hover:text-destructive"
-    //           onClick={() => handleDelete(permission)}
-    //           disabled={deletePermissionMutation.isPending}
-    //         >
-    //           {deletePermissionMutation.isPending ? (
-    //             <Spinner data-icon="inline-start" />
-    //           ) : (
-    //             <Trash2 className="h-4 w-4" />
-    //           )}
-    //           <span className="sr-only">Delete</span>
-    //         </Button>
-    //       </div>
-    //     );
-    //   },
-    // },
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => handleDelete(permission)}
+              disabled={deletePermissionMutation.isPending}
+            >
+              {deletePermissionMutation.isPending ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="sr-only">Delete</span>
+            </Button>
+          </div>
+        );
+      },
+    },
   ];
 
   const table = useReactTable({
@@ -251,7 +228,8 @@ export default function PermissionList() {
             <div>
               <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Permissions</h1>
             </div>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
+            {/* Updated to navigate */}
+            <Button onClick={() => navigate("/dashboard/permission/create")}>
               <IconPlus />
               Add Permission
             </Button>
@@ -300,7 +278,7 @@ export default function PermissionList() {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">Dashboard</Link>
+                    <Link to="/dashboard">Dashboard</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -314,15 +292,16 @@ export default function PermissionList() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
               <span className="sr-only">Refresh data</span>
-            </Button> */}
+            </Button>
 
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            {/* Updated to navigate */}
+            <Button onClick={() => navigate("/dashboard/permission/create")}>
               <IconPlus />
               Add Permission
-            </Button> */}
+            </Button>
           </div>
         </div>
       </div>
@@ -384,22 +363,7 @@ export default function PermissionList() {
         </div>
       </div>
 
-      {isAddDialogOpen && (
-        <AddPermissionDialog
-          open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          showConfirmation={showConfirmation}
-        />
-      )}
-
-      {isUpdateDialogOpen && (
-        <UpdatePermissionDialog
-          open={isUpdateDialogOpen}
-          onOpenChange={setIsUpdateDialogOpen}
-          showConfirmation={showConfirmation}
-          permission={selectedPermission}
-        />
-      )}
+      {/* Removed Dialog Render Blocks */}
 
       <ConfirmationDialog />
     </div>

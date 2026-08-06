@@ -287,4 +287,5 @@ export {
   ComboboxTrigger,
   ComboboxValue,
   useComboboxAnchor,
+  ComboboxClear,
 }
