@@ -77,6 +77,7 @@ import ProjectProfileReportList from "./features/project-management/report-proje
 import FinancialPage from "./features/financial-project/index";
 import ProjectProfilePage from "./features/project-management/index";
 import ProjectDetailPage from "./features/project-management/project-detail-page";
+import IncomeVoucherPage from "./features/income-expense-voucher-report";
 
 
 const ADMIN = ["Admin"];
@@ -265,6 +266,10 @@ function App() {
 } />
 <Route path="/dashboard/project-profile-report/:projectId" element={
   <ProtectedRoute anyRole={ADMIN}><ProjectProfileReportPage /></ProtectedRoute>
+} />
+
+<Route path="/dashboard/income-expense-voucher-report" element={
+  <ProtectedRoute anyRole={ADMIN}><IncomeVoucherPage /></ProtectedRoute>
 } />
                <Route
                 path="/dashboard/trail-balance"

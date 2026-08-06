@@ -197,6 +197,7 @@ export const NAV_ITEMS = [
     label: "Account Report",
     roles: ["Admin"],
     links: [
+       { to: "/dashboard/income-expense-voucher-report", label: "Income Expense Voucher", Icon: FileText },
       { to: "/dashboard/expense-report", label: " Expense Report", Icon: ClipboardList },
       { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList },
       { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList },
