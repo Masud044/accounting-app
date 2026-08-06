@@ -40,7 +40,17 @@ const columns = [
   header: "Date",
   cell: ({ getValue }) => {
     const v = getValue();
-    return <span>{v ? new Date(v).toDateString() : ""}</span>;
+    return (
+      <span>
+        {v
+          ? new Date(v).toLocaleDateString("en-US", {
+              month: "short",
+              day: "2-digit",
+              year: "numeric",
+            })
+          : ""}
+      </span>
+    );
   },
 },
   {
@@ -116,9 +126,15 @@ const IncomeExpenseReport = () => {
     autoTable(doc, {
       startY: 28,
       head: [["Voucher No", "Date", "Description", "Amount"]],
-     body: rows.map((r) => [
+    body: rows.map((r) => [
   r.VOUCHERNO,
-  r.GL_ENTRY_DATE ? new Date(r.GL_ENTRY_DATE).toDateString() : "",
+  r.GL_ENTRY_DATE
+    ? new Date(r.GL_ENTRY_DATE).toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      })
+    : "",
   r.DESCRIPTION_WITH_CODE,
   formatAmount(r.AMOUNT),
 ]),
