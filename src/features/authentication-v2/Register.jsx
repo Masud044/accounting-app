@@ -47,7 +47,7 @@ export default function RegisterFormV2() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "", employee_id: "", password: "",
-      confirmPassword: "", role_name: "",
+      confirmPassword: "", role_name: "USER",
     },
   });
 

@@ -24,7 +24,7 @@ import {
   IconSelector,
   IconX,
 } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router";
 import { format } from "date-fns";
 
@@ -417,9 +417,12 @@ export default function UserList() {
   };
 
   // ── Dialog helpers ──────────────────────────────────────────────────────────
+  // const handleEdit = (user) => {
+  //   setSelectedUser(user);
+  //   setIsUpdateOpen(true);
+  // };
   const handleEdit = (user) => {
-    setSelectedUser(user);
-    setIsUpdateOpen(true);
+    navigate(`/dashboard/user-management/users/${user.ID}/edit`);
   };
   const handlePassword = (user) => {
     setSelectedUser(user);
@@ -552,8 +555,8 @@ export default function UserList() {
                   </TooltipTrigger>
                   <TooltipContent>View Details</TooltipContent>
                 </Tooltip>
-
-                <Tooltip>
+{/* no need edit */}
+                {/* <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
@@ -565,7 +568,7 @@ export default function UserList() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Edit User</TooltipContent>
-                </Tooltip>
+                </Tooltip> */}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -665,7 +668,8 @@ export default function UserList() {
         <PageHeader
           onRefetch={refetch}
           isFetching={isFetching}
-          onAdd={() => setIsAddOpen(true)}
+          // onAdd={() => setIsAddOpen(true)}
+          onAdd={() => navigate("/dashboard/user-management/users/create")}
         />
         <div className="bg-card rounded-md shadow-sm p-4">
           <Alert variant="destructive">
@@ -704,7 +708,8 @@ export default function UserList() {
       <PageHeader
         onRefetch={refetch}
         isFetching={isFetching}
-        onAdd={() => setIsAddOpen(true)}
+        // onAdd={() => setIsAddOpen(true)}
+        onAdd={() => navigate("/dashboard/user-management/users/create")}
       />
 
       <div className="bg-card rounded-md shadow-sm p-4">

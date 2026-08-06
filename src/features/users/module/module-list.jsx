@@ -1,3 +1,4 @@
+// src\features\users\module\module-list.jsx
 import { useState } from "react";
 import {
   flexRender,
@@ -39,53 +40,42 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router"; // Added useNavigate
 
 import { useModules, useDeleteModule } from "./queries";
-import AddModuleDialog from "./add-module-dialog";
-import UpdateModuleDialog from "./update-module-dialog";
+// Removed: import AddModuleDialog from "./add-module-dialog";
+// Removed: import UpdateModuleDialog from "./update-module-dialog";
 import CustomDataTableColumnHeader from "@/components/shared/custom-data-table-column-header";
 import CustomDataTableToolbar from "@/components/shared/custom-data-table-toolbar";
 
 export default function ModuleList() {
+  const navigate = useNavigate(); // Added for routing
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [selectedModule, setSelectedModule] = useState(null);
+  
+  // Removed Dialog states: isAddDialogOpen, isUpdateDialogOpen, selectedModule
 
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
-  // const {
-  //   data: modulesData = [],
-  //   isLoading,
-  //   isError,
-  //   error,
-  //   refetch,
-  //   isFetching,
-  // } = useModules();
-
   const {
-  data: rawModules = [],
-  isLoading,
-  isError,
-  error,
-  refetch,
-  isFetching,
-} = useModules();
+    data: rawModules = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useModules();
 
-// শুধু এই 4টা module দেখাবে
-const ALLOWED_MODULES = ["Dashboard", "Main Entry", "Main Report", "Inventory"];
-const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_NAME));
+  const modulesData = rawModules;
 
   const deleteModuleMutation = useDeleteModule();
 
+  // Updated to navigate to the edit page instead of opening a dialog
   const handleEdit = (module) => {
-    setSelectedModule(module);
-    setIsUpdateDialogOpen(true);
+    navigate(`/dashboard/module/${module.ID}/edit`);
   };
 
   const handleDelete = async (module) => {
@@ -108,28 +98,6 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
   };
 
   const columns = [
-    // {
-    //   id: "select",
-    //   header: ({ table }) => (
-    //     <Checkbox
-    //       checked={
-    //         table.getIsAllPageRowsSelected() ||
-    //         (table.getIsSomePageRowsSelected() && "indeterminate")
-    //       }
-    //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-    //       aria-label="Select all"
-    //     />
-    //   ),
-    //   cell: ({ row }) => (
-    //     <Checkbox
-    //       checked={row.getIsSelected()}
-    //       onCheckedChange={(value) => row.toggleSelected(!!value)}
-    //       aria-label="Select row"
-    //     />
-    //   ),
-    //   enableSorting: false,
-    //   enableHiding: false,
-    // },
     {
       accessorKey: "SEQUENCE_NO",
       header: ({ column }) => (
@@ -159,43 +127,43 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
         <div className="text-muted-foreground">{row.getValue("DESCRIPTION") || "—"}</div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   enableHiding: false,
-    //   cell: ({ row }) => {
-    //     const module = row.original;
+    {
+      id: "actions",
+      header: "Actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const module = row.original;
 
-    //     return (
-    //       <div className="flex items-center gap-1">
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8"
-    //           onClick={() => handleEdit(module)}
-    //         >
-    //           <IconEdit className="h-4 w-4" />
-    //           <span className="sr-only">Edit</span>
-    //         </Button>
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleEdit(module)} // Now navigates
+            >
+              <IconEdit className="h-4 w-4" />
+              <span className="sr-only">Edit</span>
+            </Button>
 
-    //         <Button
-    //           variant="ghost"
-    //           size="icon"
-    //           className="h-8 w-8 text-destructive hover:text-destructive"
-    //           onClick={() => handleDelete(module)}
-    //           disabled={deleteModuleMutation.isPending}
-    //         >
-    //           {deleteModuleMutation.isPending ? (
-    //             <Spinner data-icon="inline-start" />
-    //           ) : (
-    //             <Trash2 className="h-4 w-4" />
-    //           )}
-    //           <span className="sr-only">Delete</span>
-    //         </Button>
-    //       </div>
-    //     );
-    //   },
-    // },
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => handleDelete(module)}
+              disabled={deleteModuleMutation.isPending}
+            >
+              {deleteModuleMutation.isPending ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="sr-only">Delete</span>
+            </Button>
+          </div>
+        );
+      },
+    },
   ];
 
   const table = useReactTable({
@@ -227,7 +195,6 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
             <div>
               <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Modules</h1>
             </div>
-          
           </div>
         </div>
         <div className="bg-card rounded-md shadow-sm p-4">
@@ -248,10 +215,11 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
             <div>
               <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Modules</h1>
             </div>
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            {/* Updated to navigate */}
+            <Button onClick={() => navigate("/dashboard/module/create")}>
               <IconPlus />
               Add Module
-            </Button> */}
+            </Button>
           </div>
         </div>
         <div className="bg-card rounded-md shadow-sm p-4">
@@ -297,7 +265,7 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">Dashboard</Link>
+                    <Link to="/dashboard">Dashboard</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -310,17 +278,18 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
             </Breadcrumb>
           </div>
 
-          {/* <div className="flex items-center gap-2"> */}
-            {/* <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} /> 
               <span className="sr-only">Refresh data</span>
-            </Button> */}
+            </Button>
 
-            {/* <Button onClick={() => setIsAddDialogOpen(true)}>
+            {/* Updated to navigate */}
+            <Button onClick={() => navigate("/dashboard/module/create")}>
               <IconPlus />
               Add Module
-            </Button> */}
-          {/* </div> */}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -378,22 +347,10 @@ const modulesData = rawModules.filter((m) => ALLOWED_MODULES.includes(m.MODULE_N
         </div>
       </div>
 
-      {isAddDialogOpen && (
-        <AddModuleDialog
-          open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          showConfirmation={showConfirmation}
-        />
-      )}
-
-      {isUpdateDialogOpen && (
-        <UpdateModuleDialog
-          open={isUpdateDialogOpen}
-          onOpenChange={setIsUpdateDialogOpen}
-          showConfirmation={showConfirmation}
-          module={selectedModule}
-        />
-      )}
+      {/* Removed Dialog Render Blocks:
+         {isAddDialogOpen && ...}
+         {isUpdateDialogOpen && ...}
+      */}
 
       <ConfirmationDialog />
     </div>
