@@ -53,6 +53,7 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import { PaymentService } from "@/api/AccontingApi";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { useHasPermission } from "@/hooks/use-permission";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
@@ -63,6 +64,11 @@ export default function PaymentTable() {
   const [globalFilter, setGlobalFilter]     = useState("");
   const [deleteModal, setDeleteModal]       = useState({ show: false, id: null, voucherNo: "" });
   const [downloading, setDownloading]       = useState(null);
+
+  const canCreate   = useHasPermission("PAYMENT_VOUCHER_CREATE");
+  const canEdit     = useHasPermission("PAYMENT_VOUCHER_EDIT");
+  const canDelete   = useHasPermission("PAYMENT_VOUCHER_DELETE");
+  const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD")
 
   const queryClient = useQueryClient();
 
@@ -193,75 +199,150 @@ export default function PaymentTable() {
       id: "actions",
       enableHiding: false,
       header: () => <div className="text-center font-bold text-gray-800 text-sm font-sans">Actions</div>,
+      // cell: ({ row }) => {
+      //   const voucher    = row.original;
+      //   const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
+
+      //   return (
+      //     <div className="flex items-center justify-center gap-1">
+
+      //       {/* Edit */}
+      //       {isApproved ? (
+      //         <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+      //           <Pencil size={16} />
+      //         </Button>
+      //       ) : (
+      //         /* ← updated route to use the new PaymentEdit page */
+      //         <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+      //           <Button variant="ghost" size="icon">
+      //             <Pencil size={16} />
+      //           </Button>
+      //         </Link>
+      //       )}
+
+      //       {/* Download */}
+      //       <DropdownMenu>
+      //         <DropdownMenuTrigger asChild>
+      //           <Button variant="ghost" size="icon" title="Download"
+      //             disabled={downloading?.startsWith(`${voucher.ID}-`)}>
+      //             <Download size={16} />
+      //           </Button>
+      //         </DropdownMenuTrigger>
+      //         <DropdownMenuContent align="end" className="w-40">
+      //           <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
+      //           <DropdownMenuSeparator />
+      //           <DropdownMenuItem className="cursor-pointer gap-2"
+      //             disabled={downloading === `${voucher.ID}-pdf`}
+      //             onClick={() => handleDownload(voucher, "pdf")}>
+      //             <FileText size={14} className="text-red-500" />
+      //             {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+      //           </DropdownMenuItem>
+      //           <DropdownMenuItem className="cursor-pointer gap-2"
+      //             disabled={downloading === `${voucher.ID}-excel`}
+      //             onClick={() => handleDownload(voucher, "excel")}>
+      //             <FileSpreadsheet size={14} className="text-green-600" />
+      //             {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+      //           </DropdownMenuItem>
+      //         </DropdownMenuContent>
+      //       </DropdownMenu>
+
+      //       {/* Approved badge OR Delete */}
+      //       {isApproved ? (
+      //         <TooltipProvider>
+      //           <Tooltip>
+      //             <TooltipTrigger asChild>
+      //               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+      //                 <BadgeCheck size={16} />
+      //               </span>
+      //             </TooltipTrigger>
+      //             <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+      //               Approved
+      //             </TooltipContent>
+      //           </Tooltip>
+      //         </TooltipProvider>
+      //       ) : (
+      //         <Button size="icon" onClick={() => handleDeleteClick(voucher)} title="Delete Voucher">
+      //           <Trash2 size={16} />
+      //         </Button>
+      //       )}
+      //     </div>
+      //   );
+      // },
+
       cell: ({ row }) => {
-        const voucher    = row.original;
-        const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
+  const voucher    = row.original;
+  const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
 
-        return (
-          <div className="flex items-center justify-center gap-1">
+  return (
+    <div className="flex items-center justify-center gap-1">
 
-            {/* Edit */}
-            {isApproved ? (
-              <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-                <Pencil size={16} />
-              </Button>
-            ) : (
-              /* ← updated route to use the new PaymentEdit page */
-              <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
-                <Button variant="ghost" size="icon">
-                  <Pencil size={16} />
-                </Button>
-              </Link>
-            )}
+      {/* Edit */}
+      {canEdit && (
+        isApproved ? (
+          <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+            <Pencil size={16} />
+          </Button>
+        ) : (
+          <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+            <Button variant="ghost" size="icon">
+              <Pencil size={16} />
+            </Button>
+          </Link>
+        )
+      )}
 
-            {/* Download */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" title="Download"
-                  disabled={downloading?.startsWith(`${voucher.ID}-`)}>
-                  <Download size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer gap-2"
-                  disabled={downloading === `${voucher.ID}-pdf`}
-                  onClick={() => handleDownload(voucher, "pdf")}>
-                  <FileText size={14} className="text-red-500" />
-                  {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2"
-                  disabled={downloading === `${voucher.ID}-excel`}
-                  onClick={() => handleDownload(voucher, "excel")}>
-                  <FileSpreadsheet size={14} className="text-green-600" />
-                  {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {/* Download */}
+      {canDownload && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" title="Download"
+              disabled={downloading?.startsWith(`${voucher.ID}-`)}>
+              <Download size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer gap-2"
+              disabled={downloading === `${voucher.ID}-pdf`}
+              onClick={() => handleDownload(voucher, "pdf")}>
+              <FileText size={14} className="text-red-500" />
+              {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer gap-2"
+              disabled={downloading === `${voucher.ID}-excel`}
+              onClick={() => handleDownload(voucher, "excel")}>
+              <FileSpreadsheet size={14} className="text-green-600" />
+              {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
-            {/* Approved badge OR Delete */}
-            {isApproved ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-                      <BadgeCheck size={16} />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-                    Approved
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <Button size="icon" onClick={() => handleDeleteClick(voucher)} title="Delete Voucher">
-                <Trash2 size={16} />
-              </Button>
-            )}
-          </div>
-        );
-      },
+      {/* Approved badge OR Delete */}
+      {isApproved ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+                <BadgeCheck size={16} />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+              Approved
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        canDelete && (
+          <Button size="icon" onClick={() => handleDeleteClick(voucher)} title="Delete Voucher">
+            <Trash2 size={16} />
+          </Button>
+        )
+      )}
+    </div>
+  );
+},
     },
   ];
 
@@ -334,12 +415,21 @@ export default function PaymentTable() {
                 </DropdownMenu>
 
                 {/* ← Link to the new create page */}
-                <Link to="/dashboard/payment-create">
+                {/* <Link to="/dashboard/payment-create">
                   <Button>
                     <PlusIcon size={16} className="mr-2" />
                     Add New Payment
                   </Button>
-                </Link>
+                </Link> */}
+
+                {canCreate && (
+  <Link to="/dashboard/payment-create">
+    <Button>
+      <PlusIcon size={16} className="mr-2" />
+      Add New Payment
+    </Button>
+  </Link>
+)}
               </div>
 
               {/* Table */}
