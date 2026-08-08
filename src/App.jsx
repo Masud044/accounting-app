@@ -853,7 +853,7 @@ function App() {
               <Route
                 path="overview"
                 element={
-                  <ProtectedRoute anyPermission="DASHBOARD_OVERVIEW_VIEW">
+                  <ProtectedRoute anyPermission="EXPENSE_INCOME_VIEW">
                     <DashboardHome />
                   </ProtectedRoute>
                 }
