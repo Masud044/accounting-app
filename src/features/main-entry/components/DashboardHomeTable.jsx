@@ -521,7 +521,7 @@ const formatDate = (value) => {
 };
 
 // approvedIds: locally tracked approved IDs Set
-const createColumns = (setConfirmId, approvedIds, canEdit, canApprove, canDelete) => [
+const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
   {
     id: "select",
     header: ({ table }) => (
@@ -593,6 +593,24 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove, canDelete
     ),
     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
   },
+
+ {
+  id: "AMOUNT",
+  header: () => (
+    <div className="text-left font-bold text-sm text-gray-800 font-sans">Debit/Credit</div>
+  ),
+  cell: ({ row }) => {
+    const item = row.original;
+    const debit = parseFloat(item.TOTAL_DEBIT || 0);
+    const credit = parseFloat(item.TOTAL_CREDIT || 0);
+    const amount = debit !== 0 ? debit : credit;
+    const formatted = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return <div className="ml-3 font-medium">{formatted}</div>;
+  },
+},
   // {
   //   accessorKey: "ENTRY_BY",
   //   header: ({ column }) => (
@@ -639,9 +657,9 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove, canDelete
             </TooltipProvider>
 
             {/* Delete — disabled */}
-            <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+            {/* <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
               <Trash2 size={18} />
-            </Button>
+            </Button> */}
           </div>
         );
       }
@@ -670,14 +688,14 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove, canDelete
           )}
 
           {/* Delete */}
-          {canDelete && (
+          {/* {canDelete && (
             <Button
               size="icon"
               onClick={() => console.log("Delete ID:", item.ID)}
             >
               <Trash2 size={18} />
             </Button>
-          )}
+          )} */}
         </div>
       );
     },

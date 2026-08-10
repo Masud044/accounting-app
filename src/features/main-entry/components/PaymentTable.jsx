@@ -67,7 +67,7 @@ export default function PaymentTable() {
 
   const canCreate   = useHasPermission("PAYMENT_VOUCHER_CREATE");
   const canEdit     = useHasPermission("PAYMENT_VOUCHER_EDIT");
-  const canDelete   = useHasPermission("PAYMENT_VOUCHER_DELETE");
+
   const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD")
 
   const queryClient = useQueryClient();
@@ -100,9 +100,7 @@ export default function PaymentTable() {
     },
   });
 
-  const handleDeleteClick = (voucher) => {
-    setDeleteModal({ show: true, id: voucher.ID, voucherNo: voucher.VOUCHERNO });
-  };
+  
 
   const confirmDelete = () => {
     if (deleteModal.id) deleteMutation.mutate(deleteModal.id);
@@ -320,26 +318,21 @@ export default function PaymentTable() {
       )}
 
       {/* Approved badge OR Delete */}
-      {isApproved ? (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-                <BadgeCheck size={16} />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-              Approved
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ) : (
-        canDelete && (
-          <Button size="icon" onClick={() => handleDeleteClick(voucher)} title="Delete Voucher">
-            <Trash2 size={16} />
-          </Button>
-        )
-      )}
+     {/* Approved badge */}
+{isApproved && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+          <BadgeCheck size={16} />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+        Approved
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
     </div>
   );
 },

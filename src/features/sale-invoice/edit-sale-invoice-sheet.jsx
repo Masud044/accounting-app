@@ -1105,13 +1105,21 @@ export default function EditInvoiceSheet({ open, onOpenChange, hid, showConfirma
     .filter(Boolean)
     .join(", ");
 
+    const lineDetailsText = lines
+  .map((l) => `Sale_qty=${Number(l.saleQty || 0).toLocaleString()}, unit_price=${Number(l.unitPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+  .join(" | ");
+
+
   const receiveVoucherState = {
     customer: customerId,
     invoiceDate,
     invoiceHid: invoiceData?.HID,
     invoiceNo:  invoiceData?.INVOICE_ID ? String(invoiceData.INVOICE_ID) : "",
     saleInvoiceNo: invoiceData?.HID ?? "",
-    description: productionDatesText || `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
+    // description: productionDatesText || `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
+    description: productionDatesText
+    ? `${productionDatesText}, ${lineDetailsText}`
+    : `Payment against Sale Invoice #${invoiceData?.HID ?? ""}`,
     rows: lines.map((l) => ({
       particulars: l.description,
       amount: Math.round(Number(l.saleQty || 0) * Number(l.unitPrice || 0) * 100) / 100,

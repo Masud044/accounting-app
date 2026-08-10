@@ -342,6 +342,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/farm-calendar", label: "Farm calendar", Icon: FileText, requiredPermission: "FARM_CALENDAR_VIEW" },
       { to: "/dashboard/farm-budget", label: "Farm Budget", Icon: FileText, requiredPermission: "FARM_BUDGET_VIEW" },
       { to: "/dashboard/project-profile", label: "Project Management", Icon: FileText, requiredPermission: "PROJECT_PROFILE_VIEW" },
+       { to: "/dashboard/agenda", label: "Agenda Management", Icon: FileText, requiredPermission: "AGENDA_MANAGEMENT_VIEW" },
     ],
   },
   {
