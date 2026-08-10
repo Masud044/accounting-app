@@ -102,7 +102,6 @@
 // //   return <Navigate to="/dashboard/welcome" replace />; // Inventory → WelcomePage
 // // };
 
-
 // const DashboardIndex = () => {
 //   const { user, isLoading } = useAuthV2();
 //   if (isLoading) return null;
@@ -132,7 +131,6 @@
 //   // No accessible link at all — still authenticated, so not /login.
 //   return <Navigate to="/unauthorized" replace />;
 // };
-
 
 // function App() {
 //   return (
@@ -426,7 +424,6 @@
 //                 }
 //               />
 
-
 //               <Route
 //                 path="home-table"
 //                 element={
@@ -467,7 +464,6 @@
 //                   </ProtectedRoute>
 //                 }
 //               />
-
 
 //              <Route
 //                 path="module"
@@ -691,9 +687,6 @@
 
 // export default App;
 
-
-
-
 import {
   BrowserRouter as Router,
   Routes,
@@ -783,13 +776,16 @@ import UpdateModulePage from "./features/users/module/update-module-page";
 import AddPermissionPage from "./features/users/permission/add-permission-page";
 import UpdatePermissionPage from "./features/users/permission/update-permission-page";
 import { NAV_ITEMS } from "./lib/constants/nav-item";
+import UpdateAgendaPage from "./features/agenda-management/update-agenda-page";
+import AddAgendaPage from "./features/agenda-management/add-agenda-page";
+import AgendaManagementPage from "./features/agenda-management/index";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
   const { user, isLoading } = useAuthV2();
   // console.log("before loading")
   if (isLoading) return null;
-//  console.log("before loading")
+  //  console.log("before loading")
   const permissions = user?.permissions ?? [];
   const has = (code) => permissions.includes(code);
   const hasAny = (required) => {
@@ -805,8 +801,8 @@ const DashboardIndex = () => {
   // Nahole sidebar er first accessible link e redirect
   for (const group of NAV_ITEMS) {
     for (const link of group.links) {
-       if (link.to !== "/dashboard" && hasAny(link.requiredPermission)) {
-        console.log("route", link)
+      if (link.to !== "/dashboard" && hasAny(link.requiredPermission)) {
+        console.log("route", link);
         return <Navigate to={link.to} replace />;
       }
     }
@@ -841,7 +837,6 @@ function App() {
             >
               {/* Index — permission onujayi DashboardHome ba Welcome ba first accessible link */}
               <Route index element={<DashboardIndex />} />
-
               <Route
                 path="welcome"
                 element={
@@ -874,7 +869,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Production */}
               <Route
                 path="chicken-project"
@@ -1007,7 +1001,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Report all */}
               <Route
                 path="farm-calendar-report"
@@ -1089,7 +1082,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="approval-dashboard"
                 element={
@@ -1098,7 +1090,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Inventory */}
               <Route
                 path="inventory"
@@ -1132,7 +1123,31 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
+               {/* agenda- management */}
+              <Route
+                path="agenda"
+                element={
+                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW" >
+                    <AgendaManagementPage></AgendaManagementPage>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="agenda/add"
+                element={
+                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW" >
+                    <AddAgendaPage></AddAgendaPage>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="agenda/edit/:id"
+                element={
+                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW">
+                    <UpdateAgendaPage></UpdateAgendaPage>
+                  </ProtectedRoute>
+                }
+              />
               {/* User Management */}
               <Route
                 path="user-management"
@@ -1166,7 +1181,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="home-table"
                 element={
@@ -1175,7 +1189,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="role"
                 element={
@@ -1200,7 +1213,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="module"
                 element={
@@ -1225,7 +1237,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="permission"
                 element={
@@ -1250,7 +1261,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Main entry — voucher */}
               {/* NOTE: "grn" nav-item.js e nai — "GRN_VIEW" notun code, assign korte hobe */}
               <Route
@@ -1351,7 +1361,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Account report */}
               <Route
                 path="sale-report"
@@ -1409,7 +1418,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Inventory report — daily-expense/daily-income/ledger/cash-book
                   nav-item.js e ache kintu App.jsx e in ei list-e route hishebe nai —
                   jodi dorkar hoy, ei charta o eikhane add korte hobe */}

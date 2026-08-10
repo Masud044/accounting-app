@@ -524,7 +524,7 @@ export default function JournalTable() {
 
   const canCreate   = useHasPermission("JOURNAL_VOUCHER_CREATE");
   const canEdit     = useHasPermission("JOURNAL_VOUCHER_EDIT");
-  const canDelete   = useHasPermission("JOURNAL_VOUCHER_DELETE");
+ 
   const canDownload = useHasPermission("JOURNAL_VOUCHER_DOWNLOAD");
 
   const formatDate = (value) => {
@@ -727,30 +727,21 @@ export default function JournalTable() {
             )}
 
             {/* Approved badge OR Delete */}
-            {isApproved ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-                      <BadgeCheck size={16} />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-                    Approved
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              canDelete && (
-                <Button
-                  size="icon"
-                  onClick={() => console.log(voucher)}
-                  title="Delete Voucher"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              )
-            )}
+           {/* Approved badge */}
+{isApproved && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+          <BadgeCheck size={16} />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+        Approved
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
           </div>
         );
       },
