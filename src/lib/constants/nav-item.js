@@ -300,9 +300,9 @@
 
 
 import {
-  Home, FileText, Plus, Wrench, ClipboardList,
+  Home, FileText, Plus, Wrench, ClipboardList
 } from "lucide-react";
-import { IconUsers } from "@tabler/icons-react";
+import { IconUsers, IconDoorEnter, IconBuilding  } from "@tabler/icons-react";
 
 export const NAV_ITEMS = [
   {
@@ -384,6 +384,9 @@ export const NAV_ITEMS = [
       { to: "/dashboard/supplier", label: "Supplier Info", Icon: Wrench, requiredPermission: "SUPPLIER_VIEW" },
       { to: "/dashboard/item", label: "Item", Icon: ClipboardList, requiredPermission: "ITEM_VIEW" },
       { to: "/dashboard/farm-type", label: "Farm Type", Icon: FileText, requiredPermission: "FARM_TYPE_VIEW" },
+       { to: "/dashboard/departments", label: "Departments", Icon: IconBuilding, requiredPermission: "DEPARTMENT_VIEW" },
+    { to: "/dashboard/employees", label: "Employees", Icon: IconUsers, requiredPermission: "EMPLOYEE_VIEW" },
+    { to: "/dashboard/meeting-rooms", label: "Meeting Rooms", Icon: IconDoorEnter, requiredPermission: "MEETING_ROOM_VIEW" },
     ],
   },
   {

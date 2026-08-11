@@ -779,6 +779,9 @@ import { NAV_ITEMS } from "./lib/constants/nav-item";
 import UpdateAgendaPage from "./features/agenda-management/update-agenda-page";
 import AddAgendaPage from "./features/agenda-management/add-agenda-page";
 import AgendaManagementPage from "./features/agenda-management/index";
+import DepartmentsPage from "./features/department/index";
+import EmployeesPage from "./features/employee/index";
+import MeetingRoomsPage from "./features/meeting-room/index";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1123,11 +1126,11 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-               {/* agenda- management */}
+              {/* agenda- management */}
               <Route
                 path="agenda"
                 element={
-                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW" >
+                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW">
                     <AgendaManagementPage></AgendaManagementPage>
                   </ProtectedRoute>
                 }
@@ -1135,7 +1138,7 @@ function App() {
               <Route
                 path="agenda/add"
                 element={
-                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW" >
+                  <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW">
                     <AddAgendaPage></AddAgendaPage>
                   </ProtectedRoute>
                 }
@@ -1145,6 +1148,31 @@ function App() {
                 element={
                   <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW">
                     <UpdateAgendaPage></UpdateAgendaPage>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="departments"
+                element={
+                  <ProtectedRoute anyPermission="DEPARTMENT_VIEW">
+                    <DepartmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="employees"
+                element={
+                  <ProtectedRoute anyPermission="EMPLOYEE_VIEW">
+                    <EmployeesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="meeting-rooms"
+                element={
+                  <ProtectedRoute anyPermission="MEETING_ROOM_VIEW">
+                    <MeetingRoomsPage />
                   </ProtectedRoute>
                 }
               />

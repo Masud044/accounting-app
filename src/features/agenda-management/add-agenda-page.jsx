@@ -15,7 +15,7 @@ export default function AddAgendaPage() {
       toast.success(
         payload.status === "DRAFT" ? "Meeting saved as draft!" : "Meeting scheduled successfully!"
       );
-      navigate("/agenda");
+      navigate("/dashboard/agenda");
     } catch (err) {
       toast.error(err?.message || "Failed to save meeting. Please try again.");
     }
