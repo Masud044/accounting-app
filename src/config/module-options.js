@@ -65,6 +65,9 @@ export const MODULE_OPTIONS = [
   { value: "Supplier Info", label: "Supplier Info" },
   { value: "Item", label: "Item" },
   { value: "Farm Type", label: "Farm Type" },
+   { value: "Employee", label: "Employee" },
+    { value: "Department", label: "Department" },
+     { value: "Meeting Room", label: "Meeting Room" },
 
   // User Management
   { value: "User Management", label: "User Management" },

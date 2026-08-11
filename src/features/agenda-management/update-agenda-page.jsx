@@ -22,7 +22,7 @@ export default function UpdateAgendaPage() {
       toast.success(
         payload.status === "DRAFT" ? "Meeting saved as draft!" : "Meeting updated successfully!"
       );
-      navigate("/agenda");
+      navigate("/dashboard/agenda");
     } catch (err) {
       toast.error(err?.message || "Failed to update meeting. Please try again.");
     }
