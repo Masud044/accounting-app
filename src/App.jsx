@@ -782,6 +782,7 @@ import AgendaManagementPage from "./features/agenda-management/index";
 import DepartmentsPage from "./features/department/index";
 import EmployeesPage from "./features/employee/index";
 import MeetingRoomsPage from "./features/meeting-room/index";
+import MeetingDetailPage from "./features/agenda-management/meeting-details";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1135,6 +1136,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+  path="agenda/:id"
+  element={
+    <ProtectedRoute anyPermission="AGENDA_MANAGEMENT_VIEW">
+      <MeetingDetailPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="agenda/add"
                 element={
