@@ -36,6 +36,7 @@ export const MODULE_OPTIONS = [
   { value: "Farm Budget", label: "Farm Budget" },
   { value: "Project Management", label: "Project Management" },
    { value: "Agenda Management", label: "Agenda Management" },
+   { value: "Ledger Period Calendar", label: "Ledger Period Calendar" },
 
   // Inventory
   { value: "Inventory", label: "Inventory" },
