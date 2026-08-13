@@ -783,6 +783,7 @@ import DepartmentsPage from "./features/department/index";
 import EmployeesPage from "./features/employee/index";
 import MeetingRoomsPage from "./features/meeting-room/index";
 import MeetingDetailPage from "./features/agenda-management/meeting-details";
+import LedgerPeriodPage from "./features/ledger-period-calendar/index";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1185,6 +1186,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+             <Route
+  path="ledger-period"
+  element={
+    <ProtectedRoute anyPermission="LEDGER_PERIOD_CALENDAR_VIEW">
+      <LedgerPeriodPage />
+    </ProtectedRoute>
+  }
+/>
               {/* User Management */}
               <Route
                 path="user-management"
