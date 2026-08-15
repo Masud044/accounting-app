@@ -65,6 +65,19 @@ const YEARS = Array.from(
   }
 );
 
+const formatDate = (value) => {
+  if (!value) return "—";
+  // GL_ENTRY_DATE ধরে নিচ্ছি "YYYY-MM-DD" বা ISO string আকারে আসছে
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value); // parse fail হলে raw value দেখাবে
+
+  const day   = String(d.getDate()).padStart(2, "0");
+  const month = d.toLocaleString("en-US", { month: "short" }); // Aug
+  const year  = d.getFullYear();
+
+  return `${month} ${day} ${year}`; // → Aug 01 2026
+};
+
 
 const makeColumns = () => [
   {
@@ -77,14 +90,18 @@ const makeColumns = () => [
     enableSorting: false,
   },
    {
-    accessorKey: "GL_ENTRY_DATE",
-    header: ({ column }) => (
-      <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Date <ArrowUpDown className="ml-1 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => <span className="text-slate-500 text-xs">{row.getValue("GL_ENTRY_DATE")}</span>,
-  },
+  accessorKey: "GL_ENTRY_DATE",
+  header: ({ column }) => (
+    <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      Date <ArrowUpDown className="ml-1 h-3 w-3" />
+    </Button>
+  ),
+  cell: ({ row }) => (
+    <span className="text-slate-500 text-xs">
+      {formatDate(row.getValue("GL_ENTRY_DATE"))}
+    </span>
+  ),
+},
   {
     accessorKey: "DESCRIPTION",
     header: ({ column }) => (
