@@ -314,7 +314,7 @@ export const NAV_ITEMS = [
   {
     label: "Dashboard",
     links: [
-      { to: "/dashboard/overview", label: "Expense & Income", Icon: Home, requiredPermission: "EXPENSE_INCOME_VIEW" },
+      { to: "/dashboard/overview", label: "Expense & Income", Icon: Home, requiredPermission: "DASHBOARD_EXPENSE_INCOME_VIEW" },
       { to: "/dashboard/sale-dashboard", label: "Sales and Invoice", Icon: Home, requiredPermission: "SALE_DASHBOARD_VIEW" },
       { to: "/dashboard/egg-dashboard", label: "Egg Production Summary", Icon: FileText, requiredPermission: "EGG_DASHBOARD_VIEW" },
       { to: "/dashboard/approval-dashboard", label: "Approval Dashboard", Icon: Plus, requiredPermission: "APPROVAL_DASHBOARD_VIEW" },

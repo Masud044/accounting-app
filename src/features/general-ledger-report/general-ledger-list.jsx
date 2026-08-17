@@ -59,7 +59,7 @@ export default function GeneralLedgerList() {
 
   // ── শুধু enabled + leaf accounts dropdown e দেখাবো (GL entry শুধু leaf-এ post হয়) ──
   const accounts = useMemo(
-    () => allAccounts.filter((a) => a.ENABLED === 1 && a.IS_LEAF === 1),
+    () => allAccounts.filter((a) => a.ENABLED === 1),
     [allAccounts]
   );
 

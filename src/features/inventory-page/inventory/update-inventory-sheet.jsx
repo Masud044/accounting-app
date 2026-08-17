@@ -676,6 +676,7 @@ import {
   useSuppliers,
 } from "./queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
+import { usePeriodStatusForDate } from "@/features/ledger-period-calendar/queries";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const fetchJSON = async (url) => {
@@ -820,6 +821,11 @@ export default function UpdateInventorySheet({
   const [dirty, setDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const userId =useAuthUserId();
+
+
+  const { data: periodStatus } = usePeriodStatusForDate("INV", invDate);
+  const isPeriodClosed = periodStatus?.STATUS === "CLOSED";
+  const noPeriodDefined = !!invDate && periodStatus === null;
 
   useEffect(() => {
     if (!inv) return;
@@ -1058,18 +1064,28 @@ const isReadOnly    = isSubmitting || isLocked;
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Inv Date</Label>
-                  <DatePicker
-                    className="w-full"
-                    disabled={isSubmitting}
-                    value={invDate ? new Date(invDate) : undefined}
-                    onChange={(d) => {
-                      setInvDate(d ? format(d, "yyyy-MM-dd") : "");
-                      setDirty(true);
-                    }}
-                  />
-                </div>
+               <div className="space-y-1.5">
+  <Label className="text-xs font-medium">Inv Date</Label>
+  <DatePicker
+    className={cn("w-full", isPeriodClosed && "border-red-400")}
+    disabled={isSubmitting}
+    value={invDate ? new Date(invDate) : new Date()}
+    onChange={(d) => {
+      setInvDate(d ? format(d, "yyyy-MM-dd") : "");
+      setDirty(true);
+    }}
+  />
+  {isPeriodClosed && (
+    <p className="text-xs text-red-500">
+      ⚠ Period "{periodStatus.PERIOD_NAME}" is closed for INV postings.
+    </p>
+  )}
+  {noPeriodDefined && (
+    <p className="text-xs text-amber-500">
+      ⚠ No ledger period found for this date.
+    </p>
+  )}
+</div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">GRN No</Label>
                   <Input value={grnNo} disabled className="h-9 bg-muted/50" />
@@ -1313,10 +1329,10 @@ const isReadOnly    = isSubmitting || isLocked;
   </Button>
 
   {!isLocked && (
-    <Button onClick={handleSave} disabled={isSubmitting}>
-      {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Saving...</> : "Save Changes"}
-    </Button>
-  )}
+  <Button onClick={handleSave} disabled={isSubmitting || isPeriodClosed || noPeriodDefined}>
+    {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Saving...</> : "Save Changes"}
+  </Button>
+)}
 
   {isLocked ? (
     <Button

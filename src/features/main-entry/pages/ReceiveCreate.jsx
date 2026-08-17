@@ -12,6 +12,7 @@ import { ReceiveService } from "@/api/AccontingApi";
 import { Button } from "@/components/ui/button";
 import BillUploadPanel from "@/components/shared/bill-upload-panel";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
+import { usePeriodStatusForDate } from "@/features/ledger-period-calendar/queries";
 
 
 const url = import.meta.env.VITE_API_BASE_URL ;
@@ -48,6 +49,9 @@ const ReceiveCreate = () => {
     customer: "", glDate: today, ReceiveCode: "",
     accountId: "", particular: "", amount: "", totalAmount: 0, inv_type: "", sale_invoice_no: "", 
   });
+  const { data: periodStatus } = usePeriodStatusForDate("AR", form.glDate);
+const isPeriodClosed = periodStatus?.STATUS === "CLOSED";
+const noPeriodDefined = !!form.glDate && periodStatus === null;
 
   // ── Queries ──────────────────────────────────────────────────────────────────
   const { data: customers = [] } = useQuery({
@@ -387,7 +391,7 @@ const ReceiveCreate = () => {
               { label: "Invoice No",         type: "text",   key: "invoiceNo",  readOnly: true },
               { label: "Sale Invoice No",   type: "text",   key: "sale_invoice_no",  readOnly: true },
               { label: "No. of Supporting",  type: "number", key: "supporting", onChange: (v) => setForm({ ...form, supporting: v }) },
-              { label: "GL Date",            type: "date",   key: "glDate",     onChange: (v) => setForm({ ...form, glDate: v }) },
+              // { label: "GL Date",            type: "date",   key: "glDate",     onChange: (v) => setForm({ ...form, glDate: v }) },
             ].map(({ label, type, key, readOnly, onChange }) => (
               <div key={key} className="grid grid-cols-3 px-3 items-center py-2">
                 <label className="font-bold text-sm text-gray-800">{label}</label>
@@ -399,6 +403,28 @@ const ReceiveCreate = () => {
                 />
               </div>
             ))}
+
+            {/* GL Date — আলাদা */}
+<div className="grid grid-cols-3 px-3 items-center py-2">
+  <label className="font-bold text-sm text-gray-800">GL Date</label>
+  <input
+    type="date"
+    value={form.glDate}
+    onChange={(e) => setForm({ ...form, glDate: e.target.value })}
+    disabled={isSubmitting}
+    className={`col-span-2 w-full border rounded py-1 ${isPeriodClosed ? "border-red-400" : ""} bg-white`}
+  />
+</div>
+{isPeriodClosed && (
+  <p className="text-xs text-red-500 px-3 -mt-1 mb-2">
+    ⚠ Period "{periodStatus.PERIOD_NAME}" is closed for AR postings. Choose a different date.
+  </p>
+)}
+{noPeriodDefined && (
+  <p className="text-xs text-amber-500 px-3 -mt-1 mb-2">
+    ⚠ No ledger period found for this date.
+  </p>
+)}
 
             {/* Customer select-এর পরে এই block যোগ করো */}
 <div className="grid grid-cols-3 px-3 items-center py-3">
@@ -579,9 +605,9 @@ const ReceiveCreate = () => {
 
         {/* Actions */}
         <div className="flex justify-end gap-4">
-          <Button type="button" onClick={() => setShowModal(true)} disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Create"}
-          </Button>
+        <Button type="button" onClick={() => setShowModal(true)} disabled={isSubmitting || isPeriodClosed || noPeriodDefined}>
+  {isSubmitting ? "Submitting..." : "Create"}
+</Button>
         </div>
       </div>
 

@@ -264,3 +264,17 @@ export const useUpdatePeriodType = () => {
     onError: (err) => console.error("Update period type failed:", err),
   });
 };
+
+
+
+export const usePeriodStatusForDate = (moduleCode, date) =>
+  useQuery({
+    queryKey: ["periodStatus", moduleCode, date],
+    queryFn: () =>
+      fetchJSON(
+        `${BASE}/api/ledger-period-calendar/check-period-status?moduleCode=${encodeURIComponent(moduleCode)}&date=${encodeURIComponent(date)}`
+      ),
+    enabled: !!date && !!moduleCode,
+    staleTime: 60 * 1000,
+    retry: false,
+  });
