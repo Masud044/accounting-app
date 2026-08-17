@@ -986,6 +986,7 @@ import {
   useSuppliers,
 } from "./queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
+import { usePeriodStatusForDate } from "@/features/ledger-period-calendar/queries";
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -1144,6 +1145,10 @@ export default function AddInventorySheet({
   const [rows, setRows] = useState([]);
   const [dirty, setDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const { data: periodStatus } = usePeriodStatusForDate("INV", invDate);
+const isPeriodClosed = periodStatus?.STATUS === "CLOSED";
+const noPeriodDefined = !!invDate && periodStatus === null;
 
   useEffect(() => {
     if (grnData?.grnNo) setGrnNo(grnData.grnNo);
@@ -1337,18 +1342,28 @@ export default function AddInventorySheet({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Inv Date</Label>
-              <DatePicker
-                className="w-full"
-                disabled={submitting}
-                value={invDate ? new Date(invDate) : new Date()}
-                onChange={(d) => {
-                  setInvDate(d ? format(d, "yyyy-MM-dd") : "");
-                  setDirty(true);
-                }}
-              />
-            </div>
+           <div className="space-y-1.5">
+  <Label className="text-xs font-medium">Inv Date</Label>
+  <DatePicker
+    className={cn("w-full", isPeriodClosed && "border-red-400")}
+    disabled={submitting}
+    value={invDate ? new Date(invDate) : new Date()}
+    onChange={(d) => {
+      setInvDate(d ? format(d, "yyyy-MM-dd") : "");
+      setDirty(true);
+    }}
+  />
+  {isPeriodClosed && (
+    <p className="text-xs text-red-500">
+      ⚠ Period "{periodStatus.PERIOD_NAME}" is closed for INV postings.
+    </p>
+  )}
+  {noPeriodDefined && (
+    <p className="text-xs text-amber-500">
+      ⚠ No ledger period found for this date.
+    </p>
+  )}
+</div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">GRN No</Label>
               <Input
@@ -1572,19 +1587,16 @@ export default function AddInventorySheet({
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || rows.length === 0}
-          >
-            {submitting ? (
-              <>
-                <Spinner className="mr-2 h-4 w-4" />
-                Creating...
-              </>
-            ) : (
-              `Create (${rows.length} item${rows.length !== 1 ? "s" : ""})`
-            )}
-          </Button>
+         <Button
+  onClick={handleSubmit}
+  disabled={submitting || rows.length === 0 || isPeriodClosed || noPeriodDefined}
+>
+  {submitting ? (
+    <><Spinner className="mr-2 h-4 w-4" />Creating...</>
+  ) : (
+    `Create (${rows.length} item${rows.length !== 1 ? "s" : ""})`
+  )}
+</Button>
         </div>
       </SheetContent>
     </Sheet>

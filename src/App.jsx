@@ -784,6 +784,7 @@ import EmployeesPage from "./features/employee/index";
 import MeetingRoomsPage from "./features/meeting-room/index";
 import MeetingDetailPage from "./features/agenda-management/meeting-details";
 import LedgerPeriodPage from "./features/ledger-period-calendar/index";
+import DashboardExpenseIncomeIndex from "./features/main-entry/pages/dashboard-expense-income-index";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -853,8 +854,8 @@ function App() {
               <Route
                 path="overview"
                 element={
-                  <ProtectedRoute anyPermission="EXPENSE_INCOME_VIEW">
-                    <DashboardHome />
+                  <ProtectedRoute anyPermission="DASHBOARD_EXPENSE_INCOME_VIEW">
+                    <DashboardExpenseIncomeIndex />
                   </ProtectedRoute>
                 }
               />

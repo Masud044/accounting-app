@@ -99,3 +99,29 @@ export const useUpdateChartOfAccount = () => {
 //     onError: (err) => console.error("Delete chart of account failed:", err),
 //   });
 // };
+
+/** GET /api/chart-account/projects — project accounts only */
+export const useProjectChartAccounts = () =>
+  useQuery({
+    queryKey: [...chartKeys.all, "projects"],
+    queryFn:  () => fetchJSON(`${BASE}/api/chart-account/projects`),
+    staleTime: 5 * 60 * 1000,
+    gcTime:    10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 30_000),
+    throwOnError: false,
+  });
+
+/** GET /api/chart-account/others — non-project accounts only */
+export const useOtherChartAccounts = () =>
+  useQuery({
+    queryKey: [...chartKeys.all, "others"],
+    queryFn:  () => fetchJSON(`${BASE}/api/chart-account/others`),
+    staleTime: 5 * 60 * 1000,
+    gcTime:    10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 30_000),
+    throwOnError: false,
+  });

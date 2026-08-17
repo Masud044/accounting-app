@@ -13,7 +13,7 @@ export const MODULE_OPTIONS = [
   { value: "Overview", label: "Overview" },
 
   // Dashboard
-  { value: "Expense & Income", label: " Expense & Income Dashboard" },
+  { value: "Dashboard Expense  Income", label: "Dashboard Expense  Income" },
   { value: "Sales and  Invoice", label: "  Sales and  Invoice Dashboard" },
   { value: "Egg Production Summary", label: " Egg Production Summary Dashboard" },
   { value: "Approval Dashboard", label: "Approval Dashboard" },

@@ -136,7 +136,7 @@ export default function EditLedgerPeriodSheet({ open, onOpenChange, period, fisc
                         <SelectValue placeholder="Select period type" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="z-110">
                       {periodTypes.map((t) => (
                         <SelectItem key={t.PERIOD_TYPE_ID} value={String(t.PERIOD_TYPE_ID)}>
                           {t.TYPE_NAME} ({t.TYPE_CODE})

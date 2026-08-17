@@ -20,18 +20,19 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import axios from "axios";
-import MonthlyProductionChart from "@/features/egg-production/monthly-production-chart";
-import MonthlySummaryChart from "@/features/egg-production/monthy-summary-production";
-import DailyTrendChart from "@/features/egg-production/daily-trend";
-import ApprovalDashboardPage from "@/features/purchase-recognition/recognition-approval-dashboard";
-import InvoiceDashboardPanel from "@/features/sale-invoice/invoice-dashboard-panel";
-import InvoiceMonthlyChart from "@/features/sale-invoice/invoice-monthly-chart";
+// import MonthlyProductionChart from "@/features/egg-production/monthly-production-chart";
+// import MonthlySummaryChart from "@/features/egg-production/monthy-summary-production";
+// import DailyTrendChart from "@/features/egg-production/daily-trend";
+// import ApprovalDashboardPage from "@/features/purchase-recognition/recognition-approval-dashboard";
+// import InvoiceDashboardPanel from "@/features/sale-invoice/invoice-dashboard-panel";
+// import InvoiceMonthlyChart from "@/features/sale-invoice/invoice-monthly-chart";
 
-import InvoiceDailyTrendChart from "@/features/sale-invoice/invoice-daily-chart";
-import InvoiceSalesDashboard from "@/features/sale-invoice/invoice-sale-dashboard";
-import FinancialDashboardPage from "./financial-dashboard-page";
-import MonthlyDebitChart from "@/features/dashboad-debit-gl/monthly-debit-summary";
-import CashFlowReport from "@/features/dashboad-debit-gl/cashflow-statement";
+// import InvoiceDailyTrendChart from "@/features/sale-invoice/invoice-daily-chart";
+// import InvoiceSalesDashboard from "@/features/sale-invoice/invoice-sale-dashboard";
+// import FinancialDashboardPage from "./financial-dashboard-page";
+// import MonthlyDebitChart from "@/features/dashboad-debit-gl/monthly-debit-summary";
+// import CashFlowReport from "@/features/dashboad-debit-gl/cashflow-statement";
+// import ChartListView from "../chart-account/dashboard-chart-list";
 
 const url = import.meta.env.VITE_API_BASE_URL ;
 
@@ -419,11 +420,12 @@ const [incomeFilters, setIncomeFilters] = useState({
         <div>
          <InvoiceSalesDashboard></InvoiceSalesDashboard>
         </div> */}
-        <div>
+        {/* <div>
+          <ChartListView></ChartListView>
         <FinancialDashboardPage></FinancialDashboardPage>
         <MonthlyDebitChart></MonthlyDebitChart>
         <CashFlowReport></CashFlowReport>
-        </div>
+        </div> */}
 
       </div>
     </SectionContainer>

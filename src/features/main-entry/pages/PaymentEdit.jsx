@@ -1029,6 +1029,7 @@ import { Button } from "@/components/ui/button";
 import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
 import { useCreateSupplier } from "@/features/supplier/queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
+import { usePeriodStatusForDate } from "@/features/ledger-period-calendar/queries";
 
 const url = import.meta.env.VITE_API_BASE_URL ;
 
@@ -1077,6 +1078,10 @@ const PaymentEdit = () => {
     totalAmount: 0,
     inv_type: "",
   });
+
+  const { data: periodStatus } = usePeriodStatusForDate("AP", form.glDate);
+const isPeriodClosed = periodStatus?.STATUS === "CLOSED";
+const noPeriodDefined = !!form.glDate && periodStatus === null;
 
   useQuery({
     queryKey: ["gldocs", voucherId],
@@ -1500,12 +1505,12 @@ const removeRow = (id) => {
                 key: "supporting",
                 onChange: (v) => setForm({ ...form, supporting: v }),
               },
-              {
-                label: "GL Date",
-                type: "date",
-                key: "glDate",
-                onChange: (v) => setForm({ ...form, glDate: v }),
-              },
+              // {
+              //   label: "GL Date",
+              //   type: "date",
+              //   key: "glDate",
+              //   onChange: (v) => setForm({ ...form, glDate: v }),
+              // },
             ].map(({ label, type, key, readOnly, onChange }) => (
               <div
                 key={key}
@@ -1525,6 +1530,27 @@ const removeRow = (id) => {
               </div>
             ))}
 
+
+<div className="grid grid-cols-3 px-3 items-center py-2">
+  <label className="font-bold text-sm text-gray-800">GL Date</label>
+  <input
+    type="date"
+    value={form.glDate}
+    onChange={(e) => setForm({ ...form, glDate: e.target.value })}
+    disabled={isSubmitting}
+    className={`col-span-2 w-full border rounded py-1 ${isPeriodClosed ? "border-red-400 bg-white" : "bg-white"}`}
+  />
+</div>
+{isPeriodClosed && (
+  <p className="text-xs text-red-500 px-3 -mt-1 mb-2">
+    ⚠ Period "{periodStatus.PERIOD_NAME}" is closed for AP postings. Choose a different date.
+  </p>
+)}
+{noPeriodDefined && (
+  <p className="text-xs text-amber-500 px-3 -mt-1 mb-2">
+    ⚠ No ledger period found for this date.
+  </p>
+)}
             <div className="grid grid-cols-3 px-3 items-center py-3">
               <label className="font-bold text-sm text-gray-800">Type</label>
               <select
@@ -1729,13 +1755,16 @@ const removeRow = (id) => {
           <Button type="button" onClick={() => navigate(-1)}>
             Cancel
           </Button>
-          <Button
+          {/* <Button
             type="button"
             onClick={() => setShowModal(true)}
             disabled={isSubmitting}
           >
             {isSubmitting ? "Updating..." : "Update"}
-          </Button>
+          </Button> */}
+          <Button type="button" onClick={() => setShowModal(true)} disabled={isSubmitting || isPeriodClosed || noPeriodDefined}>
+  {isSubmitting ? "Updating..." : "Update"}
+</Button>
         </div>
       </div>
 

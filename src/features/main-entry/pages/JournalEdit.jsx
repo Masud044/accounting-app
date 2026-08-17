@@ -10,6 +10,7 @@ import { SectionContainer } from "@/components/SectionContainer";
 import { Button } from "@/components/ui/button";
 import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
+import { usePeriodStatusForDate } from "@/features/ledger-period-calendar/queries";
 
 const url = import.meta.env.VITE_API_BASE_URL ;
 
@@ -35,6 +36,10 @@ const JournalEdit = () => {
     accountId: "",
     particular: "",
   });
+
+  const { data: periodStatus } = usePeriodStatusForDate("GL", form.glDate);
+const isPeriodClosed = periodStatus?.STATUS === "CLOSED";
+const noPeriodDefined = !!form.glDate && periodStatus === null;
 
   // ── Fetch existing docs ───────────────────────────────────────────────────────
   useQuery({
@@ -270,7 +275,7 @@ const JournalEdit = () => {
                 className="col-span-2 w-40 border rounded py-1 bg-white"
               />
             </div>
-            <div className="grid grid-cols-3 py-2 px-3 items-center">
+            {/* <div className="grid grid-cols-3 py-2 px-3 items-center">
               <label className="font-bold text-gray-800 text-sm font-sans">GL Date</label>
               <input
                 type="date" value={form.glDate}
@@ -278,7 +283,27 @@ const JournalEdit = () => {
                 disabled={isSubmitting}
                 className="col-span-2 w-full border rounded py-1 bg-white"
               />
-            </div>
+            </div> */}
+
+            <div className="grid grid-cols-3 py-2 px-3 items-center">
+  <label className="font-bold text-gray-800 text-sm font-sans">GL Date</label>
+  <input
+    type="date" value={form.glDate}
+    onChange={(e) => setForm({ ...form, glDate: e.target.value })}
+    disabled={isSubmitting}
+    className={`col-span-2 w-full border rounded py-1 bg-white ${isPeriodClosed ? "border-red-400" : ""}`}
+  />
+</div>
+{isPeriodClosed && (
+  <p className="text-xs text-red-500 px-3 -mt-1 mb-2">
+    ⚠ Period "{periodStatus.PERIOD_NAME}" is closed for GL postings. Choose a different date.
+  </p>
+)}
+{noPeriodDefined && (
+  <p className="text-xs text-amber-500 px-3 -mt-1 mb-2">
+    ⚠ No ledger period found for this date.
+  </p>
+)}
           </div>
         </div>
 
@@ -445,9 +470,9 @@ const JournalEdit = () => {
           <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="button" onClick={() => setShowModal(true)} disabled={isSubmitting}>
-            {isSubmitting ? "Updating..." : "Update"}
-          </Button>
+          <Button type="button" onClick={() => setShowModal(true)} disabled={isSubmitting || isPeriodClosed || noPeriodDefined}>
+  {isSubmitting ? "Updating..." : "Update"}
+</Button>
         </div>
       </div>
 
@@ -498,6 +523,7 @@ const JournalEdit = () => {
                 className="px-4 py-2 rounded-lg bg-green-500 text-white">
                 {isSubmitting ? "Updating..." : "Confirm"}
               </button>
+             
             </div>
           </div>
         </div>
