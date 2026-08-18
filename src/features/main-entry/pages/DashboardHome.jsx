@@ -98,7 +98,7 @@ const makeColumns = () => [
     </Button>
   ),
   cell: ({ row }) => (
-    <span className="text-slate-500 text-xs">
+    <span >
       {formatDate(row.getValue("GL_ENTRY_DATE"))}
     </span>
   ),
@@ -110,7 +110,7 @@ const makeColumns = () => [
         Description <ArrowUpDown className="ml-1 h-3 w-3" />
       </Button>
     ),
-    cell: ({ row }) => <span className="text-slate-700 text-xs">{row.getValue("DESCRIPTION")}</span>,
+    cell: ({ row }) => <span >{row.getValue("DESCRIPTION")}</span>,
   },
   {
     accessorKey: "AMT",
@@ -120,7 +120,7 @@ const makeColumns = () => [
       </Button>
     ),
     cell: ({ row }) => (
-      <span className="font-medium text-slate-800 text-xs">
+      <span >
         {Number(row.getValue("AMT")).toLocaleString()}
       </span>
     ),
@@ -178,7 +178,7 @@ const DataPanel = ({ title, type, filters, setFilters, data, isLoading }) => {
     return "All time";
   };
 
-  const accentColor  = type === "expense" ? "text-rose-600"    : "text-emerald-600";
+  // const accentColor  = type === "expense" ? "text-rose-600"    : "text-emerald-600";
   const borderTop    = type === "expense" ? "border-rose-200"   : "border-emerald-200";
   const totalColor   = type === "expense" ? "text-rose-700"     : "text-emerald-700";
 
@@ -189,8 +189,8 @@ const DataPanel = ({ title, type, filters, setFilters, data, isLoading }) => {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
           <div>
-            <h2 className={`text-sm font-semibold ${accentColor}`}>{title}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{filterLabel()}</p>
+            <h2 className="font-semibold">{title}</h2>
+            <p className=" mt-0.5">{filterLabel()}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
@@ -223,7 +223,7 @@ const DataPanel = ({ title, type, filters, setFilters, data, isLoading }) => {
         {/* Table — no pagination, সব row */}
         <div className="overflow-auto rounded-md border max-h-[420px]">
           <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0  z-10">
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id}>
                   {hg.headers.map((h) => (
@@ -368,7 +368,7 @@ const [incomeFilters, setIncomeFilters] = useState({
 
   return (
     <SectionContainer>
-      <div className="py-5 space-y-6 bg-slate-50/30 min-h-screen">
+      <div className="">
 
         {/* Expense + Income Tables — আগে */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

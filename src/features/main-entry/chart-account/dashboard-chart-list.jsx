@@ -35,12 +35,12 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empt
 import { useProjectChartAccounts, useOtherChartAccounts } from "./queries";
 
 // Level badge colors
-const LEVEL_COLORS = {
-  1: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  2: "bg-blue-100   text-blue-800   dark:bg-blue-900/30   dark:text-blue-300",
-  3: "bg-teal-100   text-teal-800   dark:bg-teal-900/30   dark:text-teal-300",
-  4: "bg-amber-100  text-amber-800  dark:bg-amber-900/30  dark:text-amber-300",
-};
+// const LEVEL_COLORS = {
+//   1: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+//   2: "bg-blue-100   text-blue-800   dark:bg-blue-900/30   dark:text-blue-300",
+//   3: "bg-teal-100   text-teal-800   dark:bg-teal-900/30   dark:text-teal-300",
+//   4: "bg-amber-100  text-amber-800  dark:bg-amber-900/30  dark:text-amber-300",
+// };
 
 export default function ChartListView() {
   const [sorting, setSorting]                   = useState([]);
@@ -85,10 +85,10 @@ export default function ChartListView() {
       accessorKey: "ACCOUNT_ID",
       header: ({ column }) => (
         <Button
-          variant="ghost"
+           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Account ID <ArrowUpDown className="ml-2 h-4 w-4" />
+          Account ID <ArrowUpDown className="ml-2 font-medium h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => (
@@ -131,7 +131,7 @@ export default function ChartListView() {
       accessorKey: "ROOT_ACCOUNT",
       header: "Root",
       cell: ({ row }) => (
-        <Badge variant="outline" className="text-xs font-normal">
+        <Badge variant="outline">
           {row.getValue("ROOT_ACCOUNT") || "—"}
         </Badge>
       ),
@@ -145,9 +145,9 @@ export default function ChartListView() {
         const lvl = row.getValue("LEBEL");
         return (
           <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              LEVEL_COLORS[lvl] ?? "bg-gray-100 text-gray-800"
-            }`}
+            // className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            //   LEVEL_COLORS[lvl] ?? "bg-gray-100 text-gray-800"
+            // }`}
           >
             L{lvl}
           </span>
@@ -176,7 +176,7 @@ export default function ChartListView() {
       cell: ({ row }) => {
         const path = String(row.getValue("FULL_PATH") ?? "").replace(/^\s*>\s*/, "");
         return (
-          <span className="text-xs text-muted-foreground max-w-[280px] block truncate" title={path}>
+          <span >
             {path || "—"}
           </span>
         );
@@ -260,15 +260,16 @@ export default function ChartListView() {
       {/* Header */}
      
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className=" font-semibold tracking-tight">
-            Chart of Account
-          </h1>
+         
+           
+          <h1 className="font-semibold"> Chart of Account</h1>
+         
           
         </div>
      
 
       {/* Table + Tabs */}
-      <div className="bg-card rounded-md shadow-sm p-4">
+      <div >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="project">
@@ -315,7 +316,7 @@ export default function ChartListView() {
             {/* Table */}
             <div className="overflow-hidden rounded-md border">
               <Table>
-                <TableHeader>
+                <TableHeader >
                   {table.getHeaderGroups().map((hg) => (
                     <TableRow key={hg.id}>
                       {hg.headers.map((h) => (
