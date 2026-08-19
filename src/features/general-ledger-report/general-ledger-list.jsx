@@ -45,8 +45,11 @@ const fmtBalance = (val) => {
 };
 
 export default function GeneralLedgerList() {
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState("2026-01-01");
+  const [toDate, setToDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [accountCode, setAccountCode] = useState("");
   const [applied, setApplied] = useState(null);
   const [collapsed, setCollapsed] = useState({});

@@ -256,31 +256,25 @@ export default function ChartListView() {
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
-    <div>
+    <div className=" rounded-lg shadow-md p-4 mt-2">
       {/* Header */}
      
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-         
-           
-          <h1 className="font-semibold"> Chart of Account</h1>
-         
-          
-        </div>
-     
+       
 
       {/* Table + Tabs */}
       <div >
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList>
-            <TabsTrigger value="project">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full ">
+          <TabsList className="">
+            <TabsTrigger value="project"  className="font-semibold data-[state=active]:bg-emerald-700 data-[state=active]:text-white">
               Project ({projectAccounts.length})
             </TabsTrigger>
-            <TabsTrigger value="others">
+            <TabsTrigger value="others" className="font-semibold data-[state=active]:bg-emerald-700 data-[state=active]:text-white">
               Others ({otherAccounts.length})
             </TabsTrigger>
           </TabsList>
+             <h1 className="mb-[-10] font-semibold text-center"> Chart of Account</h1>
 
-          <TabsContent value={activeTab} className="space-y-4 mt-4">
+          <TabsContent value={activeTab} className="space-y-4 mt-4 ">
             {/* Toolbar */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Input

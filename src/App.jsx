@@ -827,7 +827,7 @@ function App() {
         <Router>
           <Routes>
             {/* Public */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<LoginV2 />} />
             <Route path="/login" element={<LoginV2 />} />
             <Route path="/register" element={<RegisterV2 />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />

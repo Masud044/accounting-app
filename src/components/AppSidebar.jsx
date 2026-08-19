@@ -29,6 +29,7 @@ import { NAV_ITEMS } from "@/lib/constants/nav-item";
 import { useTheme } from "@/components/theme-provider";
 import { IconTractor } from "@tabler/icons-react";
 import { useAuthV2 } from "@/features/authentication-v2/use-auth-v2";
+import logo from "@/assets/account-image.jpeg";
 
 export default function AppSidebar() {
   const { state } = useSidebar();
@@ -52,14 +53,29 @@ export default function AppSidebar() {
       {/* ── Header ── */}
       <SidebarHeader className="h-14 flex flex-row items-center border-b border-border px-3">
         <NavLink to="/dashboard/welcome" className="flex items-center gap-2 overflow-hidden cursor-pointer">
-          <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center shrink-0">
+          {/* <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center shrink-0">
             <IconTractor />
           </div>
           {!isCollapsed && (
             <span className="font-display text-lg font-bold text-emerald-600 tracking-tight whitespace-nowrap">
               Bangladesh Welfare Agro
             </span>
-          )}
+          )} */}
+           <div className=" flex items-center gap-3">
+                      <img
+                        src={logo}
+                        alt="Bangladesh Welfare Agro"
+                        width={44}
+                        height={44}
+                        className="rounded-full object-contain ring-1 ring-emerald-900/10"
+                      />
+                      <div className="leading-tight">
+                       
+                        <p className="-mt-0.5 text-[15px] font-bold text-emerald-700">
+                           Bangladesh Welfare Agro
+                        </p>
+                      </div>
+                    </div>
         </NavLink>
       </SidebarHeader>
 
