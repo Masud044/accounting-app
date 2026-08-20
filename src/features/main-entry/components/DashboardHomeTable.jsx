@@ -1,3 +1,905 @@
+// // // "use client";
+
+// // // import * as React from "react";
+// // // import {
+// // //   flexRender,
+// // //   getCoreRowModel,
+// // //   getFilteredRowModel,
+// // //   getPaginationRowModel,
+// // //   getSortedRowModel,
+// // //   useReactTable,
+// // // } from "@tanstack/react-table";
+
+// // // import {
+// // //   Tooltip,
+// // //   TooltipContent,
+// // //   TooltipProvider,
+// // //   TooltipTrigger,
+// // // } from "@/components/ui/tooltip";
+// // // import { useQuery, useQueryClient } from "@tanstack/react-query";
+// // // import { Link } from "react-router-dom";
+// // // import {
+// // //   Pencil,
+// // //   Trash2,
+// // //   ArrowUpDown,
+// // //   ChevronDown,
+// // //   FileUser,
+// // //   CheckCircle,
+// // //   BadgeCheck,
+// // // } from "lucide-react";
+// // // import { Button } from "@/components/ui/button";
+// // // import { Checkbox } from "@/components/ui/checkbox";
+// // // import {
+// // //   DropdownMenu,
+// // //   DropdownMenuCheckboxItem,
+// // //   DropdownMenuContent,
+// // //   DropdownMenuTrigger,
+// // // } from "@/components/ui/dropdown-menu";
+// // // import {
+// // //   AlertDialog,
+// // //   AlertDialogAction,
+// // //   AlertDialogCancel,
+// // //   AlertDialogContent,
+// // //   AlertDialogDescription,
+// // //   AlertDialogFooter,
+// // //   AlertDialogHeader,
+// // //   AlertDialogTitle,
+// // // } from "@/components/ui/alert-dialog";
+// // // import { Input } from "@/components/ui/input";
+// // // import {
+// // //   Table,
+// // //   TableBody,
+// // //   TableCell,
+// // //   TableHead,
+// // //   TableHeader,
+// // //   TableRow,
+// // // } from "@/components/ui/table";
+// // // import { DataTablePagination } from "@/components/DataTablePagination";
+// // // import axios from "axios";
+
+// // // const getVoucherTypeLabel = (type) => {
+// // //   switch (String(type)) {
+// // //     case "1": return "Receive";
+// // //     case "2": return "Payment";
+// // //     case "3": return "Journal";
+// // //     case "4": return "Bank Transfer";
+// // //     default: return "Unknown";
+// // //   }
+// // // };
+
+// // // const getEditRoute = (type, id) => {
+// // //   switch (String(type)) {
+// // //     case "1": return `/dashboard/receive-edit/${id}`;
+// // //     case "2": return `/dashboard/payment-edit/${id}`;
+// // //     case "3": return `/dashboard/journal-edit/${id}`;
+// // //     default: return `/dashboard/cash-transfer`;
+// // //   }
+// // // };
+
+// // // // approvedIds: locally tracked approved IDs Set
+// // // const createColumns = (setConfirmId, approvedIds) => [
+// // //   {
+// // //     id: "select",
+// // //     header: ({ table }) => (
+// // //       <Checkbox
+// // //         checked={
+// // //           table.getIsAllPageRowsSelected() ||
+// // //           (table.getIsSomePageRowsSelected() && "indeterminate")
+// // //         }
+// // //         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+// // //         aria-label="Select all"
+// // //       />
+// // //     ),
+// // //     cell: ({ row }) => (
+// // //       <Checkbox
+// // //         checked={row.getIsSelected()}
+// // //         onCheckedChange={(value) => row.toggleSelected(!!value)}
+// // //         aria-label="Select row"
+// // //       />
+// // //     ),
+// // //     enableSorting: false,
+// // //     enableHiding: false,
+// // //   },
+// // //   {
+// // //     accessorKey: "VOUCHER_TYPE",
+// // //     header: ({ column }) => (
+// // //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // //         Voucher Type <ArrowUpDown className="ml-2 h-4 w-4" />
+// // //       </Button>
+// // //     ),
+// // //     cell: ({ row }) => {
+// // //       const type = row.getValue("VOUCHER_TYPE");
+// // //       const colorMap = {
+// // //         1: "text-green-800 bg-green-100",
+// // //         2: "text-red-800 bg-red-100",
+// // //         3: "text-blue-800 bg-blue-100",
+// // //         4: "text-purple-800 bg-purple-100",
+// // //       };
+// // //       return (
+// // //         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorMap[type] || "text-gray-800 bg-gray-100"}`}>
+// // //           {getVoucherTypeLabel(type)}
+// // //         </span>
+// // //       );
+// // //     },
+// // //   },
+// // //   {
+// // //     accessorKey: "VOUCHERNO",
+// // //     header: ({ column }) => (
+// // //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // //         Voucher No <ArrowUpDown className="ml-2 h-4 w-4" />
+// // //       </Button>
+// // //     ),
+// // //     cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
+// // //   },
+// // //   {
+// // //     accessorKey: "TRANS_DATE",
+// // //     header: ({ column }) => (
+// // //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // //         Transaction Date <ArrowUpDown className="ml-2 h-4 w-4" />
+// // //       </Button>
+// // //     ),
+// // //     cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
+// // //   },
+// // //   {
+// // //     accessorKey: "DESCRIPTION",
+// // //     header: ({ column }) => (
+// // //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // //         Description <ArrowUpDown className="ml-2 h-4 w-4" />
+// // //       </Button>
+// // //     ),
+// // //     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
+// // //   },
+// // //   {
+// // //     accessorKey: "ENTRY_BY",
+// // //     header: ({ column }) => (
+// // //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // //         Entry By <ArrowUpDown className="ml-2 h-4 w-4" />
+// // //       </Button>
+// // //     ),
+// // //     cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_BY")}</div>,
+// // //   },
+// // //   {
+// // //     id: "actions",
+// // //     enableHiding: false,
+// // //     header: () => <div className="text-center font-bold text-sm text-gray-800 font-sans">Actions</div>,
+// // //     cell: ({ row }) => {
+// // //       const item = row.original;
+// // //       const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
+
+// // //       // Check approved: either from API field (IS_POSTED/STATUS) or locally tracked
+// // //       const isApproved =
+// // //         item.POSTED === 1 ||
+// // //         item.POSTED === "1" ||
+// // //         approvedIds.has(item.ID);
+
+// // //       if (isApproved) {
+// // //   return (
+// // //     <div className="flex items-center justify-center gap-3">
+// // //       {/* Edit — disabled */}
+// // //       <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// // //         <Pencil size={16} />
+// // //       </Button>
+
+// // //       {/* Approved badge with Tooltip */}
+// // //       <TooltipProvider>
+// // //         <Tooltip>
+// // //           <TooltipTrigger asChild>
+// // //             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+// // //               <BadgeCheck size={16} />
+// // //             </span>
+// // //           </TooltipTrigger>
+// // //           <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+// // //             Approved
+// // //           </TooltipContent>
+// // //         </Tooltip>
+// // //       </TooltipProvider>
+
+// // //       {/* Delete — disabled */}
+// // //       <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// // //         <Trash2 size={18} />
+// // //       </Button>
+// // //     </div>
+// // //   );
+// // // }
+
+// // //       return (
+// // //         <div className="flex items-center justify-center gap-3">
+// // //           {/* Edit */}
+// // //           <Link to={editRoute}>
+// // //             <Button variant="ghost" size="icon">
+// // //               <Pencil size={16} />
+// // //             </Button>
+// // //           </Link>
+
+// // //           {/* Approve — dialog খুলবে */}
+// // //           <Button
+// // //             variant="ghost"
+// // //             size="icon"
+// // //             className="text-green-600 hover:text-green-800 hover:bg-green-50"
+// // //             onClick={() => setConfirmId(item.ID)}
+// // //           >
+// // //             <FileUser size={16} />
+// // //           </Button>
+
+// // //           {/* Delete */}
+// // //           <Button
+// // //             // variant="ghost"
+// // //             size="icon"
+// // //             // className="text-red-600 hover:text-red-800 hover:bg-red-50"
+// // //             onClick={() => console.log("Delete ID:", item.ID)}
+// // //           >
+// // //             <Trash2 size={18} />
+// // //           </Button>
+// // //         </div>
+// // //       );
+// // //     },
+// // //   },
+// // // ];
+
+// // // const url = import.meta.env.VITE_API_BASE_URL;
+
+// // // export function DashboardHomeTable() {
+// // //   const queryClient = useQueryClient();
+
+// // //   const [confirmId, setConfirmId] = React.useState(null);
+// // //   const [isApproving, setIsApproving] = React.useState(false);
+
+// // //   // ✅ Locally approved IDs track করার জন্য — API refetch ছাড়াই UI instantly update হবে
+// // //   const [approvedIds, setApprovedIds] = React.useState(new Set());
+
+// // //   const { data, isLoading, error } = useQuery({
+// // //     queryKey: ["unpostedVouchers"],
+// // //     queryFn: async () => {
+// // //       const res = await axios.get(`${url}/api/info-list`);
+// // //       return res.data;
+// // //     },
+// // //   });
+
+// // //   const apiData = Array.isArray(data?.vouchers) ? data.vouchers : [];
+
+// // //   const [sorting, setSorting] = React.useState([]);
+// // //   const [columnFilters, setColumnFilters] = React.useState([]);
+// // //   const [columnVisibility, setColumnVisibility] = React.useState({});
+// // //   const [rowSelection, setRowSelection] = React.useState({});
+
+// // //   // ✅ Approve Handler
+// // //   const handleActivateVoucher = async () => {
+// // //     if (!confirmId) return;
+// // //     setIsApproving(true);
+// // //     try {
+// // //       const res = await axios.get(`${url}/api/active-voucher?id=${confirmId}`);
+// // //       if (res.data.success) {
+// // //         // ✅ Locally mark as approved — row থাকবে, approved badge দেখাবে
+// // //         setApprovedIds((prev) => new Set([...prev, confirmId]));
+// // //         // Optional: background-এ query invalidate করো (silent refresh)
+// // //         queryClient.invalidateQueries(["unpostedVouchers"]);
+// // //       } else {
+// // //         alert(res.data.message || "Failed to approve voucher");
+// // //       }
+// // //     } catch (error) {
+// // //       alert("Something went wrong: " + error.message);
+// // //     } finally {
+// // //       setIsApproving(false);
+// // //       setConfirmId(null);
+// // //     }
+// // //   };
+
+// // //   const columns = React.useMemo(
+// // //     () => createColumns(setConfirmId, approvedIds),
+// // //     [approvedIds] // approvedIds বদলালে columns re-render হবে
+// // //   );
+
+// // //   const table = useReactTable({
+// // //     data: apiData,
+// // //     columns,
+// // //     onSortingChange: setSorting,
+// // //     onColumnFiltersChange: setColumnFilters,
+// // //     getCoreRowModel: getCoreRowModel(),
+// // //     getPaginationRowModel: getPaginationRowModel(),
+// // //     getSortedRowModel: getSortedRowModel(),
+// // //     getFilteredRowModel: getFilteredRowModel(),
+// // //     onColumnVisibilityChange: setColumnVisibility,
+// // //     onRowSelectionChange: setRowSelection,
+// // //     state: { sorting, columnFilters, columnVisibility, rowSelection },
+// // //   });
+
+// // //   return (
+// // //     <div className="rounded-lg bg-white">
+// // //       {/* Approve Confirmation Dialog */}
+// // //       <AlertDialog
+// // //         open={!!confirmId}
+// // //         onOpenChange={() => !isApproving && setConfirmId(null)}
+// // //       >
+// // //         <AlertDialogContent>
+// // //           <AlertDialogHeader>
+// // //             <AlertDialogTitle className="flex items-center gap-2">
+// // //               <CheckCircle className="text-green-600" size={20} />
+// // //               Approve Voucher?
+// // //             </AlertDialogTitle>
+// // //             <AlertDialogDescription>
+// // //               Voucher ID <strong>{confirmId}</strong> will be permanently approved.{" "}
+// // //               <span className="text-red-500 font-medium">This action cannot be undone.</span>{" "}
+// // //               Please confirm before proceeding.
+// // //             </AlertDialogDescription>
+// // //           </AlertDialogHeader>
+// // //           <AlertDialogFooter>
+// // //             <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+// // //             <AlertDialogAction
+// // //               onClick={handleActivateVoucher}
+// // //               disabled={isApproving}
+// // //               className="bg-green-600 hover:bg-green-700"
+// // //             >
+// // //               {isApproving ? "Approving..." : "Yes, Approve"}
+// // //             </AlertDialogAction>
+// // //           </AlertDialogFooter>
+// // //         </AlertDialogContent>
+// // //       </AlertDialog>
+
+// // //       {/* Search & Column Toggle */}
+// // //       <div className="flex items-center py-4 gap-4">
+// // //         <Input
+// // //           placeholder="Filter descriptions..."
+// // //           value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+// // //           onChange={(e) =>
+// // //             table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+// // //           }
+// // //           className="max-w-sm"
+// // //         />
+// // //         <DropdownMenu>
+// // //           <DropdownMenuTrigger asChild>
+// // //             <Button variant="outline" className="ml-auto">
+// // //               Columns <ChevronDown className="ml-2 h-4 w-4" />
+// // //             </Button>
+// // //           </DropdownMenuTrigger>
+// // //           <DropdownMenuContent align="end">
+// // //             {table
+// // //               .getAllColumns()
+// // //               .filter((col) => col.getCanHide())
+// // //               .map((column) => (
+// // //                 <DropdownMenuCheckboxItem
+// // //                   key={column.id}
+// // //                   className="capitalize"
+// // //                   checked={column.getIsVisible()}
+// // //                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
+// // //                 >
+// // //                   {column.id}
+// // //                 </DropdownMenuCheckboxItem>
+// // //               ))}
+// // //           </DropdownMenuContent>
+// // //         </DropdownMenu>
+// // //       </div>
+
+// // //       {/* Table */}
+// // //       <div className="overflow-hidden rounded-md border">
+// // //         <Table>
+// // //           <TableHeader>
+// // //             {table.getHeaderGroups().map((group) => (
+// // //               <TableRow key={group.id}>
+// // //                 {group.headers.map((header) => (
+// // //                   <TableHead key={header.id}>
+// // //                     {header.isPlaceholder
+// // //                       ? null
+// // //                       : flexRender(header.column.columnDef.header, header.getContext())}
+// // //                   </TableHead>
+// // //                 ))}
+// // //               </TableRow>
+// // //             ))}
+// // //           </TableHeader>
+// // //           <TableBody>
+// // //             {isLoading && (
+// // //               <TableRow>
+// // //                 <TableCell colSpan={columns.length} className="text-center h-24">
+// // //                   Loading...
+// // //                 </TableCell>
+// // //               </TableRow>
+// // //             )}
+// // //             {error && (
+// // //               <TableRow>
+// // //                 <TableCell colSpan={columns.length} className="text-center h-24 text-red-600">
+// // //                   Error: {error.message}
+// // //                 </TableCell>
+// // //               </TableRow>
+// // //             )}
+// // //             {!isLoading && !error &&
+// // //               table.getRowModel().rows.map((row) => (
+// // //                 <TableRow
+// // //                   key={row.id}
+// // //                   data-state={row.getIsSelected() && "selected"}
+// // //                   className="hover:bg-gray-50"
+// // //                 >
+// // //                   {row.getVisibleCells().map((cell) => (
+// // //                     <TableCell key={cell.id}>
+// // //                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// // //                     </TableCell>
+// // //                   ))}
+// // //                 </TableRow>
+// // //               ))}
+// // //             {!isLoading && !error && table.getRowModel().rows.length === 0 && (
+// // //               <TableRow>
+// // //                 <TableCell colSpan={columns.length} className="text-center h-24">
+// // //                   No results.
+// // //                 </TableCell>
+// // //               </TableRow>
+// // //             )}
+// // //           </TableBody>
+// // //         </Table>
+// // //       </div>
+
+// // //       <DataTablePagination table={table} />
+// // //     </div>
+// // //   );
+// // // }
+
+// // "use client";
+
+// // import * as React from "react";
+// // import {
+// //   flexRender,
+// //   getCoreRowModel,
+// //   getFilteredRowModel,
+// //   getPaginationRowModel,
+// //   getSortedRowModel,
+// //   useReactTable,
+// // } from "@tanstack/react-table";
+
+// // import {
+// //   Tooltip,
+// //   TooltipContent,
+// //   TooltipProvider,
+// //   TooltipTrigger,
+// // } from "@/components/ui/tooltip";
+// // import { useQuery, useQueryClient } from "@tanstack/react-query";
+// // import { Link } from "react-router-dom";
+// // import {
+// //   Pencil,
+// //   Trash2,
+// //   ArrowUpDown,
+// //   ChevronDown,
+// //   FileUser,
+// //   CheckCircle,
+// //   BadgeCheck,
+// // } from "lucide-react";
+// // import { Button } from "@/components/ui/button";
+// // import { Checkbox } from "@/components/ui/checkbox";
+// // import {
+// //   DropdownMenu,
+// //   DropdownMenuCheckboxItem,
+// //   DropdownMenuContent,
+// //   DropdownMenuTrigger,
+// // } from "@/components/ui/dropdown-menu";
+// // import {
+// //   AlertDialog,
+// //   AlertDialogAction,
+// //   AlertDialogCancel,
+// //   AlertDialogContent,
+// //   AlertDialogDescription,
+// //   AlertDialogFooter,
+// //   AlertDialogHeader,
+// //   AlertDialogTitle,
+// // } from "@/components/ui/alert-dialog";
+// // import { Input } from "@/components/ui/input";
+// // import {
+// //   Table,
+// //   TableBody,
+// //   TableCell,
+// //   TableHead,
+// //   TableHeader,
+// //   TableRow,
+// // } from "@/components/ui/table";
+// // import { DataTablePagination } from "@/components/DataTablePagination";
+// // import axios from "axios";
+// // import { useHasPermission } from "@/hooks/use-permission";
+
+// // const getVoucherTypeLabel = (type) => {
+// //   switch (String(type)) {
+// //     case "1": return "Receive";
+// //     case "2": return "Payment";
+// //     case "3": return "Journal";
+// //     case "4": return "Bank Transfer";
+// //     default: return "Unknown";
+// //   }
+// // };
+
+// // const getEditRoute = (type, id) => {
+// //   switch (String(type)) {
+// //     case "1": return `/dashboard/receive-edit/${id}`;
+// //     case "2": return `/dashboard/payment-edit/${id}`;
+// //     case "3": return `/dashboard/journal-edit/${id}`;
+// //     default: return `/dashboard/cash-transfer`;
+// //   }
+// // };
+
+// // const formatDate = (value) => {
+// //   if (!value) return "—";
+// //   const date = new Date(value);
+// //   if (isNaN(date.getTime())) return value; // parse na hole original dekhay
+// //   return date.toLocaleDateString("en-US", {
+// //     month: "short",
+// //     day: "2-digit",
+// //     year: "numeric",
+// //   });
+// // };
+
+// // // approvedIds: locally tracked approved IDs Set
+// // const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
+// //   {
+// //     id: "select",
+// //     header: ({ table }) => (
+// //       <Checkbox
+// //         checked={
+// //           table.getIsAllPageRowsSelected() ||
+// //           (table.getIsSomePageRowsSelected() && "indeterminate")
+// //         }
+// //         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+// //         aria-label="Select all"
+// //       />
+// //     ),
+// //     cell: ({ row }) => (
+// //       <Checkbox
+// //         checked={row.getIsSelected()}
+// //         onCheckedChange={(value) => row.toggleSelected(!!value)}
+// //         aria-label="Select row"
+// //       />
+// //     ),
+// //     enableSorting: false,
+// //     enableHiding: false,
+// //   },
+// //   {
+// //     accessorKey: "VOUCHER_TYPE",
+// //     header: ({ column }) => (
+// //       <Button variant="ghost"  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //         Voucher Type <ArrowUpDown className="ml-2  h-4 w-4" />
+// //       </Button>
+// //     ),
+// //     cell: ({ row }) => {
+// //       const type = row.getValue("VOUCHER_TYPE");
+// //       const colorMap = {
+// //         1: "text-green-800 bg-green-100",
+// //         2: "text-red-800 bg-red-100",
+// //         3: "text-blue-800 bg-blue-100",
+// //         4: "text-purple-800 bg-purple-100",
+// //       };
+// //       return (
+// //         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorMap[type] || "text-gray-800 bg-gray-100"}`}>
+// //           {getVoucherTypeLabel(type)}
+// //         </span>
+// //       );
+// //     },
+// //   },
+// //   {
+// //     accessorKey: "VOUCHERNO",
+// //     header: ({ column }) => (
+// //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //         Voucher No <ArrowUpDown className="ml-2 h-4 w-4" />
+// //       </Button>
+// //     ),
+// //     cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
+// //   },
+// //   {
+// //   accessorKey: "TRANS_DATE",
+// //   header: ({ column }) => (
+// //     <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //       Transaction Date <ArrowUpDown className="ml-2 h-4 w-4" />
+// //     </Button>
+// //   ),
+// //   cell: ({ row }) => <div className="ml-3">{formatDate(row.getValue("TRANS_DATE"))}</div>,
+// // },
+// //   {
+// //     accessorKey: "DESCRIPTION",
+// //     header: ({ column }) => (
+// //       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //         Description <ArrowUpDown className="ml-2 h-4 w-4" />
+// //       </Button>
+// //     ),
+// //     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
+// //   },
+
+// //  {
+// //   id: "AMOUNT",
+// //   header: () => (
+// //     <div className="text-left font-bold text-sm text-gray-800 font-sans">Debit/Credit</div>
+// //   ),
+// //   cell: ({ row }) => {
+// //     const item = row.original;
+// //     const debit = parseFloat(item.TOTAL_DEBIT || 0);
+// //     const credit = parseFloat(item.TOTAL_CREDIT || 0);
+// //     const amount = debit !== 0 ? debit : credit;
+// //     const formatted = new Intl.NumberFormat("en-US", {
+// //       minimumFractionDigits: 2,
+// //       maximumFractionDigits: 2,
+// //     }).format(amount);
+// //     return <div className="ml-3 font-medium">{formatted}</div>;
+// //   },
+// // },
+// //   // {
+// //   //   accessorKey: "ENTRY_BY",
+// //   //   header: ({ column }) => (
+// //   //     <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //   //       Entry By <ArrowUpDown className="ml-2 h-4 w-4" />
+// //   //     </Button>
+// //   //   ),
+// //   //   cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_BY")}</div>,
+// //   // },
+// //   {
+// //     id: "actions",
+// //     enableHiding: false,
+// //     header: () => <div className="text-center font-bold text-sm text-gray-800 font-sans">Actions</div>,
+// //     cell: ({ row }) => {
+// //       const item = row.original;
+// //       const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
+
+// //       // Check approved: either from API field (IS_POSTED/STATUS) or locally tracked
+// //       const isApproved =
+// //         item.POSTED === 1 ||
+// //         item.POSTED === "1" ||
+// //         approvedIds.has(item.ID);
+
+// //       if (isApproved) {
+// //         return (
+// //           <div className="flex items-center justify-center gap-3">
+// //             {/* Edit — disabled */}
+// //             <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// //               <Pencil size={16} />
+// //             </Button>
+
+// //             {/* Approved badge with Tooltip */}
+// //             <TooltipProvider>
+// //               <Tooltip>
+// //                 <TooltipTrigger asChild>
+// //                   <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+// //                     <BadgeCheck size={16} />
+// //                   </span>
+// //                 </TooltipTrigger>
+// //                 <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+// //                   Approved
+// //                 </TooltipContent>
+// //               </Tooltip>
+// //             </TooltipProvider>
+
+// //             {/* Delete — disabled */}
+// //             {/* <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// //               <Trash2 size={18} />
+// //             </Button> */}
+// //           </div>
+// //         );
+// //       }
+
+// //       return (
+// //         <div className="flex items-center justify-center gap-3">
+// //           {/* Edit */}
+// //           {canEdit && (
+// //             <Link to={editRoute}>
+// //               <Button variant="ghost" size="icon">
+// //                 <Pencil size={16} />
+// //               </Button>
+// //             </Link>
+// //           )}
+
+// //           {/* Approve — dialog খুলবে */}
+// //           {canApprove && (
+// //             <Button
+// //               variant="ghost"
+// //               size="icon"
+// //               className="text-green-600 hover:text-green-800 hover:bg-green-50"
+// //               onClick={() => setConfirmId(item.ID)}
+// //             >
+// //               <FileUser size={16} />
+// //             </Button>
+// //           )}
+
+// //           {/* Delete */}
+// //           {/* {canDelete && (
+// //             <Button
+// //               size="icon"
+// //               onClick={() => console.log("Delete ID:", item.ID)}
+// //             >
+// //               <Trash2 size={18} />
+// //             </Button>
+// //           )} */}
+// //         </div>
+// //       );
+// //     },
+// //   },
+// // ];
+
+// // const url = import.meta.env.VITE_API_BASE_URL;
+
+// // export function DashboardHomeTable() {
+// //   const queryClient = useQueryClient();
+
+// //   const [confirmId, setConfirmId] = React.useState(null);
+// //   const [isApproving, setIsApproving] = React.useState(false);
+
+// //   const canEdit    = useHasPermission("HOME_VOUCHER_EDIT");
+// //   const canApprove = useHasPermission("HOME_VOUCHER_APPROVE");
+// //   const canDelete  = useHasPermission("HOME_VOUCHER_DELETE");
+
+// //   // ✅ Locally approved IDs track করার জন্য — API refetch ছাড়াই UI instantly update হবে
+// //   const [approvedIds, setApprovedIds] = React.useState(new Set());
+
+// //   const { data, isLoading, error } = useQuery({
+// //     queryKey: ["unpostedVouchers"],
+// //     queryFn: async () => {
+// //       const res = await axios.get(`${url}/api/info-list`);
+// //       return res.data;
+// //     },
+// //   });
+
+// //   const apiData = Array.isArray(data?.vouchers) ? data.vouchers : [];
+
+// //   const [sorting, setSorting] = React.useState([]);
+// //   const [columnFilters, setColumnFilters] = React.useState([]);
+// //   const [columnVisibility, setColumnVisibility] = React.useState({});
+// //   const [rowSelection, setRowSelection] = React.useState({});
+
+// //   // ✅ Approve Handler
+// //   const handleActivateVoucher = async () => {
+// //     if (!confirmId) return;
+// //     setIsApproving(true);
+// //     try {
+// //       const res = await axios.get(`${url}/api/active-voucher?id=${confirmId}`);
+// //       if (res.data.success) {
+// //         // ✅ Locally mark as approved — row থাকবে, approved badge দেখাবে
+// //         setApprovedIds((prev) => new Set([...prev, confirmId]));
+// //         // Optional: background-এ query invalidate করো (silent refresh)
+// //         queryClient.invalidateQueries(["unpostedVouchers"]);
+// //       } else {
+// //         alert(res.data.message || "Failed to approve voucher");
+// //       }
+// //     } catch (error) {
+// //       alert("Something went wrong: " + error.message);
+// //     } finally {
+// //       setIsApproving(false);
+// //       setConfirmId(null);
+// //     }
+// //   };
+
+// //   const columns = React.useMemo(
+// //     () => createColumns(setConfirmId, approvedIds, canEdit, canApprove, canDelete),
+// //     [approvedIds, canEdit, canApprove, canDelete]
+// //   );
+
+// //   const table = useReactTable({
+// //     data: apiData,
+// //     columns,
+// //     onSortingChange: setSorting,
+// //     onColumnFiltersChange: setColumnFilters,
+// //     getCoreRowModel: getCoreRowModel(),
+// //     getPaginationRowModel: getPaginationRowModel(),
+// //     getSortedRowModel: getSortedRowModel(),
+// //     getFilteredRowModel: getFilteredRowModel(),
+// //     onColumnVisibilityChange: setColumnVisibility,
+// //     onRowSelectionChange: setRowSelection,
+// //     state: { sorting, columnFilters, columnVisibility, rowSelection },
+// //   });
+
+// //   return (
+// //     <div className="rounded-lg ">
+// //       {/* Approve Confirmation Dialog */}
+// //       <AlertDialog
+// //         open={!!confirmId}
+// //         onOpenChange={() => !isApproving && setConfirmId(null)}
+// //       >
+// //         <AlertDialogContent>
+// //           <AlertDialogHeader>
+// //             <AlertDialogTitle className="flex items-center gap-2">
+// //               <CheckCircle className="text-green-600" size={20} />
+// //               Approve Voucher?
+// //             </AlertDialogTitle>
+// //             <AlertDialogDescription>
+// //               Voucher ID <strong>{confirmId}</strong> will be permanently approved.{" "}
+// //               <span className="text-red-500 font-medium">This action cannot be undone.</span>{" "}
+// //               Please confirm before proceeding.
+// //             </AlertDialogDescription>
+// //           </AlertDialogHeader>
+// //           <AlertDialogFooter>
+// //             <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+// //             <AlertDialogAction
+// //               onClick={handleActivateVoucher}
+// //               disabled={isApproving}
+// //               className="bg-green-600 hover:bg-green-700"
+// //             >
+// //               {isApproving ? "Approving..." : "Yes, Approve"}
+// //             </AlertDialogAction>
+// //           </AlertDialogFooter>
+// //         </AlertDialogContent>
+// //       </AlertDialog>
+
+// //       {/* Search & Column Toggle */}
+// //       <div className="flex items-center py-4 gap-4">
+// //         <Input
+// //           placeholder="Filter descriptions..."
+// //           value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+// //           onChange={(e) =>
+// //             table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+// //           }
+// //           className="max-w-sm"
+// //         />
+// //         <DropdownMenu>
+// //           <DropdownMenuTrigger asChild>
+// //             <Button variant="outline" className="ml-auto">
+// //               Columns <ChevronDown className="ml-2 h-4 w-4" />
+// //             </Button>
+// //           </DropdownMenuTrigger>
+// //           <DropdownMenuContent align="end">
+// //             {table
+// //               .getAllColumns()
+// //               .filter((col) => col.getCanHide())
+// //               .map((column) => (
+// //                 <DropdownMenuCheckboxItem
+// //                   key={column.id}
+// //                   className="capitalize"
+// //                   checked={column.getIsVisible()}
+// //                   onCheckedChange={(value) => column.toggleVisibility(!!value)}
+// //                 >
+// //                   {column.id}
+// //                 </DropdownMenuCheckboxItem>
+// //               ))}
+// //           </DropdownMenuContent>
+// //         </DropdownMenu>
+// //       </div>
+
+// //       {/* Table */}
+// //       <div className="overflow-hidden rounded-md border">
+// //         <Table>
+// //           <TableHeader>
+// //             {table.getHeaderGroups().map((group) => (
+// //               <TableRow key={group.id}>
+// //                 {group.headers.map((header) => (
+// //                   <TableHead key={header.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+// //                     {header.isPlaceholder
+// //                       ? null
+// //                       : flexRender(header.column.columnDef.header, header.getContext())}
+// //                   </TableHead>
+// //                 ))}
+// //               </TableRow>
+// //             ))}
+// //           </TableHeader>
+// //           <TableBody>
+// //             {isLoading && (
+// //               <TableRow>
+// //                 <TableCell colSpan={columns.length} className="text-center h-24">
+// //                   Loading...
+// //                 </TableCell>
+// //               </TableRow>
+// //             )}
+// //             {error && (
+// //               <TableRow>
+// //                 <TableCell colSpan={columns.length} className="text-center h-24 text-red-600">
+// //                   Error: {error.message}
+// //                 </TableCell>
+// //               </TableRow>
+// //             )}
+// //             {!isLoading && !error &&
+// //               table.getRowModel().rows.map((row) => (
+// //                 <TableRow
+// //                   key={row.id}
+// //                   data-state={row.getIsSelected() && "selected"}
+// //                   className="hover:bg-gray-50"
+// //                 >
+// //                   {row.getVisibleCells().map((cell) => (
+// //                     <TableCell key={cell.id}>
+// //                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// //                     </TableCell>
+// //                   ))}
+// //                 </TableRow>
+// //               ))}
+// //             {!isLoading && !error && table.getRowModel().rows.length === 0 && (
+// //               <TableRow>
+// //                 <TableCell colSpan={columns.length} className="text-center h-24">
+// //                   No results.
+// //                 </TableCell>
+// //               </TableRow>
+// //             )}
+// //           </TableBody>
+// //         </Table>
+// //       </div>
+
+// //       <DataTablePagination table={table} />
+// //     </div>
+// //   );
+// // }
+
 // "use client";
 
 // import * as React from "react";
@@ -56,6 +958,7 @@
 // } from "@/components/ui/table";
 // import { DataTablePagination } from "@/components/DataTablePagination";
 // import axios from "axios";
+// import { useHasPermission } from "@/hooks/use-permission";
 
 // const getVoucherTypeLabel = (type) => {
 //   switch (String(type)) {
@@ -76,8 +979,30 @@
 //   }
 // };
 
+// const formatDate = (value) => {
+//   if (!value) return "—";
+//   const date = new Date(value);
+//   if (isNaN(date.getTime())) return value;
+//   return date.toLocaleDateString("en-US", {
+//     month: "short",
+//     day: "2-digit",
+//     year: "numeric",
+//   });
+// };
+
+// // Reusable sortable header — clean uppercase gray style (Image 1 look)
+// const SortableHeader = ({ column, label }) => (
+//   <Button
+//     variant="ghost"
+//     className="text-xs font-semibold text-gray-500 uppercase tracking-wide p-0 h-auto hover:bg-transparent"
+//     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//   >
+//     {label} <ArrowUpDown className="ml-1 h-3 w-3" />
+//   </Button>
+// );
+
 // // approvedIds: locally tracked approved IDs Set
-// const createColumns = (setConfirmId, approvedIds) => [
+// const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
 //   {
 //     id: "select",
 //     header: ({ table }) => (
@@ -102,11 +1027,7 @@
 //   },
 //   {
 //     accessorKey: "VOUCHER_TYPE",
-//     header: ({ column }) => (
-//       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//         Voucher Type <ArrowUpDown className="ml-2 h-4 w-4" />
-//       </Button>
-//     ),
+//     header: ({ column }) => <SortableHeader column={column} label="Voucher Type" />,
 //     cell: ({ row }) => {
 //       const type = row.getValue("VOUCHER_TYPE");
 //       const colorMap = {
@@ -124,112 +1045,92 @@
 //   },
 //   {
 //     accessorKey: "VOUCHERNO",
-//     header: ({ column }) => (
-//       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//         Voucher No <ArrowUpDown className="ml-2 h-4 w-4" />
-//       </Button>
-//     ),
-//     cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
+//     header: ({ column }) => <SortableHeader column={column} label="Voucher No" />,
+//     cell: ({ row }) => <div className="ml-3 text-sm text-gray-700">{row.getValue("VOUCHERNO")}</div>,
 //   },
 //   {
 //     accessorKey: "TRANS_DATE",
-//     header: ({ column }) => (
-//       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//         Transaction Date <ArrowUpDown className="ml-2 h-4 w-4" />
-//       </Button>
-//     ),
-//     cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
+//     header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
+//     cell: ({ row }) => <div className="ml-3 text-sm text-gray-700">{formatDate(row.getValue("TRANS_DATE"))}</div>,
 //   },
 //   {
 //     accessorKey: "DESCRIPTION",
-//     header: ({ column }) => (
-//       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//         Description <ArrowUpDown className="ml-2 h-4 w-4" />
-//       </Button>
-//     ),
-//     cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
+//     header: ({ column }) => <SortableHeader column={column} label="Description" />,
+//     cell: ({ row }) => <div className="ml-3 text-sm text-gray-700">{row.getValue("DESCRIPTION")}</div>,
 //   },
 //   {
-//     accessorKey: "ENTRY_BY",
-//     header: ({ column }) => (
-//       <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//         Entry By <ArrowUpDown className="ml-2 h-4 w-4" />
-//       </Button>
+//     id: "AMOUNT",
+//     header: () => (
+//       <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Debit/Credit</div>
 //     ),
-//     cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_BY")}</div>,
+//     cell: ({ row }) => {
+//       const item = row.original;
+//       const debit = parseFloat(item.TOTAL_DEBIT || 0);
+//       const credit = parseFloat(item.TOTAL_CREDIT || 0);
+//       const amount = debit !== 0 ? debit : credit;
+//       const formatted = new Intl.NumberFormat("en-US", {
+//         minimumFractionDigits: 2,
+//         maximumFractionDigits: 2,
+//       }).format(amount);
+//       return <div className="ml-3 text-sm text-gray-700 font-medium">{formatted}</div>;
+//     },
 //   },
 //   {
 //     id: "actions",
 //     enableHiding: false,
-//     header: () => <div className="text-center font-bold text-sm text-gray-800 font-sans">Actions</div>,
+//     header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</div>,
 //     cell: ({ row }) => {
 //       const item = row.original;
 //       const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
 
-//       // Check approved: either from API field (IS_POSTED/STATUS) or locally tracked
 //       const isApproved =
 //         item.POSTED === 1 ||
 //         item.POSTED === "1" ||
 //         approvedIds.has(item.ID);
 
 //       if (isApproved) {
-//   return (
-//     <div className="flex items-center justify-center gap-3">
-//       {/* Edit — disabled */}
-//       <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-//         <Pencil size={16} />
-//       </Button>
+//         return (
+//           <div className="flex items-center justify-center gap-3">
+//             <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+//               <Pencil size={16} />
+//             </Button>
 
-//       {/* Approved badge with Tooltip */}
-//       <TooltipProvider>
-//         <Tooltip>
-//           <TooltipTrigger asChild>
-//             <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-//               <BadgeCheck size={16} />
-//             </span>
-//           </TooltipTrigger>
-//           <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-//             Approved
-//           </TooltipContent>
-//         </Tooltip>
-//       </TooltipProvider>
-
-//       {/* Delete — disabled */}
-//       <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-//         <Trash2 size={18} />
-//       </Button>
-//     </div>
-//   );
-// }
+//             <TooltipProvider>
+//               <Tooltip>
+//                 <TooltipTrigger asChild>
+//                   <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+//                     <BadgeCheck size={16} />
+//                   </span>
+//                 </TooltipTrigger>
+//                 <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+//                   Approved
+//                 </TooltipContent>
+//               </Tooltip>
+//             </TooltipProvider>
+//           </div>
+//         );
+//       }
 
 //       return (
 //         <div className="flex items-center justify-center gap-3">
-//           {/* Edit */}
-//           <Link to={editRoute}>
-//             <Button variant="ghost" size="icon">
-//               <Pencil size={16} />
+//           {canEdit && (
+//             <Link to={editRoute}>
+//               <Button variant="ghost" size="icon">
+//                 <Pencil size={16} />
+//               </Button>
+//             </Link>
+//           )}
+
+//           {canApprove && (
+//             <Button
+//               variant="ghost"
+//               size="icon"
+//               className="text-green-600 hover:text-green-800 hover:bg-green-50"
+//               onClick={() => setConfirmId(item.ID)}
+//             >
+//               <FileUser size={16} />
 //             </Button>
-//           </Link>
-
-//           {/* Approve — dialog খুলবে */}
-//           <Button
-//             variant="ghost"
-//             size="icon"
-//             className="text-green-600 hover:text-green-800 hover:bg-green-50"
-//             onClick={() => setConfirmId(item.ID)}
-//           >
-//             <FileUser size={16} />
-//           </Button>
-
-//           {/* Delete */}
-//           <Button
-//             // variant="ghost"
-//             size="icon"
-//             // className="text-red-600 hover:text-red-800 hover:bg-red-50"
-//             onClick={() => console.log("Delete ID:", item.ID)}
-//           >
-//             <Trash2 size={18} />
-//           </Button>
+//           )}
 //         </div>
 //       );
 //     },
@@ -244,7 +1145,10 @@
 //   const [confirmId, setConfirmId] = React.useState(null);
 //   const [isApproving, setIsApproving] = React.useState(false);
 
-//   // ✅ Locally approved IDs track করার জন্য — API refetch ছাড়াই UI instantly update হবে
+//   const canEdit    = useHasPermission("HOME_VOUCHER_EDIT");
+//   const canApprove = useHasPermission("HOME_VOUCHER_APPROVE");
+//   const canDelete  = useHasPermission("HOME_VOUCHER_DELETE");
+
 //   const [approvedIds, setApprovedIds] = React.useState(new Set());
 
 //   const { data, isLoading, error } = useQuery({
@@ -262,16 +1166,13 @@
 //   const [columnVisibility, setColumnVisibility] = React.useState({});
 //   const [rowSelection, setRowSelection] = React.useState({});
 
-//   // ✅ Approve Handler
 //   const handleActivateVoucher = async () => {
 //     if (!confirmId) return;
 //     setIsApproving(true);
 //     try {
 //       const res = await axios.get(`${url}/api/active-voucher?id=${confirmId}`);
 //       if (res.data.success) {
-//         // ✅ Locally mark as approved — row থাকবে, approved badge দেখাবে
 //         setApprovedIds((prev) => new Set([...prev, confirmId]));
-//         // Optional: background-এ query invalidate করো (silent refresh)
 //         queryClient.invalidateQueries(["unpostedVouchers"]);
 //       } else {
 //         alert(res.data.message || "Failed to approve voucher");
@@ -285,8 +1186,8 @@
 //   };
 
 //   const columns = React.useMemo(
-//     () => createColumns(setConfirmId, approvedIds),
-//     [approvedIds] // approvedIds বদলালে columns re-render হবে
+//     () => createColumns(setConfirmId, approvedIds, canEdit, canApprove, canDelete),
+//     [approvedIds, canEdit, canApprove, canDelete]
 //   );
 
 //   const table = useReactTable({
@@ -304,7 +1205,7 @@
 //   });
 
 //   return (
-//     <div className="rounded-lg bg-white">
+//     <div className="rounded-lg  p-4">
 //       {/* Approve Confirmation Dialog */}
 //       <AlertDialog
 //         open={!!confirmId}
@@ -343,11 +1244,11 @@
 //           onChange={(e) =>
 //             table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
 //           }
-//           className="max-w-sm"
+//           className="max-w-sm bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-gray-300"
 //         />
 //         <DropdownMenu>
 //           <DropdownMenuTrigger asChild>
-//             <Button variant="outline" className="ml-auto">
+//             <Button variant="outline" className="ml-auto bg-white">
 //               Columns <ChevronDown className="ml-2 h-4 w-4" />
 //             </Button>
 //           </DropdownMenuTrigger>
@@ -370,13 +1271,13 @@
 //       </div>
 
 //       {/* Table */}
-//       <div className="overflow-hidden rounded-md border">
+//       <div className="overflow-hidden rounded-md border border-gray-200">
 //         <Table>
-//           <TableHeader>
+//           <TableHeader className="bg-gray-50">
 //             {table.getHeaderGroups().map((group) => (
 //               <TableRow key={group.id}>
 //                 {group.headers.map((header) => (
-//                   <TableHead key={header.id}>
+//                   <TableHead key={header.id} className="text-xs font-semibold text-gray-500 bg-white uppercase tracking-wide">
 //                     {header.isPlaceholder
 //                       ? null
 //                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -388,14 +1289,14 @@
 //           <TableBody>
 //             {isLoading && (
 //               <TableRow>
-//                 <TableCell colSpan={columns.length} className="text-center h-24">
+//                 <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
 //                   Loading...
 //                 </TableCell>
 //               </TableRow>
 //             )}
 //             {error && (
 //               <TableRow>
-//                 <TableCell colSpan={columns.length} className="text-center h-24 text-red-600">
+//                 <TableCell colSpan={columns.length} className="text-center h-24 text-red-600 text-sm">
 //                   Error: {error.message}
 //                 </TableCell>
 //               </TableRow>
@@ -405,10 +1306,10 @@
 //                 <TableRow
 //                   key={row.id}
 //                   data-state={row.getIsSelected() && "selected"}
-//                   className="hover:bg-gray-50"
+//                   className="hover:bg-gray-50/70 transition-colors"
 //                 >
 //                   {row.getVisibleCells().map((cell) => (
-//                     <TableCell key={cell.id}>
+//                     <TableCell key={cell.id} className="text-sm text-gray-700">
 //                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
 //                     </TableCell>
 //                   ))}
@@ -416,7 +1317,7 @@
 //               ))}
 //             {!isLoading && !error && table.getRowModel().rows.length === 0 && (
 //               <TableRow>
-//                 <TableCell colSpan={columns.length} className="text-center h-24">
+//                 <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
 //                   No results.
 //                 </TableCell>
 //               </TableRow>
@@ -458,6 +1359,8 @@ import {
   FileUser,
   CheckCircle,
   BadgeCheck,
+  Search,
+  ReceiptText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -512,13 +1415,24 @@ const getEditRoute = (type, id) => {
 const formatDate = (value) => {
   if (!value) return "—";
   const date = new Date(value);
-  if (isNaN(date.getTime())) return value; // parse na hole original dekhay
+  if (isNaN(date.getTime())) return value;
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
   });
 };
+
+// Reusable sortable header — clean uppercase gray style
+const SortableHeader = ({ column, label }) => (
+  <Button
+    variant="ghost"
+    className="text-xs font-semibold text-gray-500 uppercase tracking-wide p-0 h-auto hover:bg-transparent"
+    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  >
+    {label} <ArrowUpDown className="ml-1 h-3 w-3" />
+  </Button>
+);
 
 // approvedIds: locally tracked approved IDs Set
 const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
@@ -546,11 +1460,7 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
   },
   {
     accessorKey: "VOUCHER_TYPE",
-    header: ({ column }) => (
-      <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Voucher Type <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
+    header: ({ column }) => <SortableHeader column={column} label="Voucher Type" />,
     cell: ({ row }) => {
       const type = row.getValue("VOUCHER_TYPE");
       const colorMap = {
@@ -568,67 +1478,44 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
   },
   {
     accessorKey: "VOUCHERNO",
-    header: ({ column }) => (
-      <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Voucher No <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
+    header: ({ column }) => <SortableHeader column={column} label="Voucher No" />,
+    cell: ({ row }) => <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>,
   },
   {
-  accessorKey: "TRANS_DATE",
-  header: ({ column }) => (
-    <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-      Transaction Date <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  ),
-  cell: ({ row }) => <div className="ml-3">{formatDate(row.getValue("TRANS_DATE"))}</div>,
-},
+    accessorKey: "TRANS_DATE",
+    header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
+    cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{formatDate(row.getValue("TRANS_DATE"))}</div>,
+  },
   {
     accessorKey: "DESCRIPTION",
-    header: ({ column }) => (
-      <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Description <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+    header: ({ column }) => <SortableHeader column={column} label="Description" />,
+    cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("DESCRIPTION")}</div>,
+  },
+  {
+    id: "AMOUNT",
+    header: () => (
+      <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Debit/Credit</div>
     ),
-    cell: ({ row }) => <div className="ml-3">{row.getValue("DESCRIPTION")}</div>,
+    cell: ({ row }) => {
+      const item = row.original;
+      const debit = parseFloat(item.TOTAL_DEBIT || 0);
+      const credit = parseFloat(item.TOTAL_CREDIT || 0);
+      const amount = debit !== 0 ? debit : credit;
+      const formatted = new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+      return <div className="ml-3 text-sm font-semibold text-gray-800">{formatted}</div>;
+    },
   },
-
- {
-  id: "AMOUNT",
-  header: () => (
-    <div className="text-left font-bold text-sm text-gray-800 font-sans">Debit/Credit</div>
-  ),
-  cell: ({ row }) => {
-    const item = row.original;
-    const debit = parseFloat(item.TOTAL_DEBIT || 0);
-    const credit = parseFloat(item.TOTAL_CREDIT || 0);
-    const amount = debit !== 0 ? debit : credit;
-    const formatted = new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-    return <div className="ml-3 font-medium">{formatted}</div>;
-  },
-},
-  // {
-  //   accessorKey: "ENTRY_BY",
-  //   header: ({ column }) => (
-  //     <Button variant="ghost" className="font-bold text-sm text-gray-800 font-sans" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-  //       Entry By <ArrowUpDown className="ml-2 h-4 w-4" />
-  //     </Button>
-  //   ),
-  //   cell: ({ row }) => <div className="ml-3">{row.getValue("ENTRY_BY")}</div>,
-  // },
   {
     id: "actions",
     enableHiding: false,
-    header: () => <div className="text-center font-bold text-sm text-gray-800 font-sans">Actions</div>,
+    header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</div>,
     cell: ({ row }) => {
       const item = row.original;
       const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
 
-      // Check approved: either from API field (IS_POSTED/STATUS) or locally tracked
       const isApproved =
         item.POSTED === 1 ||
         item.POSTED === "1" ||
@@ -637,12 +1524,10 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
       if (isApproved) {
         return (
           <div className="flex items-center justify-center gap-3">
-            {/* Edit — disabled */}
             <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
               <Pencil size={16} />
             </Button>
 
-            {/* Approved badge with Tooltip */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -655,27 +1540,20 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
-            {/* Delete — disabled */}
-            {/* <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-              <Trash2 size={18} />
-            </Button> */}
           </div>
         );
       }
 
       return (
         <div className="flex items-center justify-center gap-3">
-          {/* Edit */}
           {canEdit && (
             <Link to={editRoute}>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
                 <Pencil size={16} />
               </Button>
             </Link>
           )}
 
-          {/* Approve — dialog খুলবে */}
           {canApprove && (
             <Button
               variant="ghost"
@@ -686,16 +1564,6 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
               <FileUser size={16} />
             </Button>
           )}
-
-          {/* Delete */}
-          {/* {canDelete && (
-            <Button
-              size="icon"
-              onClick={() => console.log("Delete ID:", item.ID)}
-            >
-              <Trash2 size={18} />
-            </Button>
-          )} */}
         </div>
       );
     },
@@ -714,7 +1582,6 @@ export function DashboardHomeTable() {
   const canApprove = useHasPermission("HOME_VOUCHER_APPROVE");
   const canDelete  = useHasPermission("HOME_VOUCHER_DELETE");
 
-  // ✅ Locally approved IDs track করার জন্য — API refetch ছাড়াই UI instantly update হবে
   const [approvedIds, setApprovedIds] = React.useState(new Set());
 
   const { data, isLoading, error } = useQuery({
@@ -732,16 +1599,13 @@ export function DashboardHomeTable() {
   const [columnVisibility, setColumnVisibility] = React.useState({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // ✅ Approve Handler
   const handleActivateVoucher = async () => {
     if (!confirmId) return;
     setIsApproving(true);
     try {
       const res = await axios.get(`${url}/api/active-voucher?id=${confirmId}`);
       if (res.data.success) {
-        // ✅ Locally mark as approved — row থাকবে, approved badge দেখাবে
         setApprovedIds((prev) => new Set([...prev, confirmId]));
-        // Optional: background-এ query invalidate করো (silent refresh)
         queryClient.invalidateQueries(["unpostedVouchers"]);
       } else {
         alert(res.data.message || "Failed to approve voucher");
@@ -774,7 +1638,8 @@ export function DashboardHomeTable() {
   });
 
   return (
-    <div className="rounded-lg bg-white">
+    <div className="p-4 md:p-6">
+    <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
       {/* Approve Confirmation Dialog */}
       <AlertDialog
         open={!!confirmId}
@@ -805,97 +1670,116 @@ export function DashboardHomeTable() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Search & Column Toggle */}
-      <div className="flex items-center py-4 gap-4">
-        <Input
-          placeholder="Filter descriptions..."
-          value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
-          onChange={(e) =>
-            table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((col) => col.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="capitalize"
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                >
-                  {column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600">
+            <ReceiptText size={16} />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">Home Voucher</h2>
+            <p className="text-xs text-gray-400">{apiData.length} total — unposted vouchers</p>
+          </div>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((group) => (
-              <TableRow key={group.id}>
-                {group.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
+      <div className="p-5 space-y-4">
+        {/* Search & Column Toggle */}
+        <div className="flex items-center gap-4">
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Filter descriptions..."
+              value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+              onChange={(e) =>
+                table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+              }
+              className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto bg-white border-gray-200">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((col) => col.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            )}
-            {error && (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24 text-red-600">
-                  Error: {error.message}
-                </TableCell>
-              </TableRow>
-            )}
-            {!isLoading && !error &&
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-gray-50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-hidden rounded-md border border-gray-200">
+          <Table>
+            <TableHeader className="bg-gray-50">
+              {table.getHeaderGroups().map((group) => (
+                <TableRow key={group.id}>
+                  {group.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
               ))}
-            {!isLoading && !error && table.getRowModel().rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              )}
+              {error && (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-red-600 text-sm">
+                    Error: {error.message}
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && !error &&
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-gray-50/70 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="text-sm text-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              {!isLoading && !error && table.getRowModel().rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-      <DataTablePagination table={table} />
+        <DataTablePagination table={table} />
+      </div>
+    </div>
     </div>
   );
 }

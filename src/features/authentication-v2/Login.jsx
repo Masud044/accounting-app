@@ -408,7 +408,8 @@ import { useAuthV2 } from "./use-auth-v2";
 import logo from "@/assets/account-image.jpeg";
 // Replace this with a real farm/field photo in your assets folder
 // (rice paddy / tea garden works great — matches the mockup)
-import fieldImage from "@/assets/hero.jpeg";
+// import fieldImage from "@/assets/hero.jpeg";
+import fieldImage from "@/assets/agro.png";
 
 export default function LoginFormV2() {
   const id = useId();
