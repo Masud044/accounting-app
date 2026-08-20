@@ -33,11 +33,14 @@ const HomeLayout = () => {
           <Helmet>
           <title>Dashboard|Accounting</title>
           </Helmet>
-    
+     <div className="fixed top-0 left-0 w-full h-1 bg-blue-500 z-[9999]" />
           <SidebarProvider>
             <AppSidebar />
+           
     
             <SidebarInset className="flex flex-col min-h-screen min-w-0 bg-background">
+               
+              
               <Navbar />
               <main className="flex-1 min-w-0 overflow-x-hidden">
                 <Outlet />
