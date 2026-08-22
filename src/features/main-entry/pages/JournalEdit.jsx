@@ -536,7 +536,7 @@
 
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Trash2, FileText, Receipt, ListChecks } from "lucide-react";
+import { ArrowLeft, Trash2, FileText, Receipt, ListChecks, Lock, AlertTriangle } from "lucide-react";
 import Select from "react-select";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -565,7 +565,24 @@ const fieldLabel =
 const fieldInput =
   "w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 text-slate-800 placeholder:text-slate-400 hover:border-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white disabled:bg-slate-100 disabled:text-slate-400 disabled:hover:border-slate-200 transition-all";
 
-const JournalEdit = () => {
+const PeriodStatusBadge = ({ isPeriodClosed, noPeriodDefined }) => {
+  if (isPeriodClosed) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+        <Lock size={10} /> Period Closed
+      </span>
+    );
+  }
+  if (noPeriodDefined) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+        <AlertTriangle size={10} /> No Period
+      </span>
+    );
+  }
+  return null;
+};
+  const JournalEdit = () => {
   const { voucherId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -861,26 +878,28 @@ const JournalEdit = () => {
                 />
               </div>
 
-              <div>
-                <label className={fieldLabel}>GL Date</label>
-                <input
-                  type="date"
-                  value={form.glDate}
-                  onChange={(e) => setForm({ ...form, glDate: e.target.value })}
-                  disabled={isSubmitting}
-                  className={`${fieldInput} ${isPeriodClosed ? "border-red-400" : ""}`}
-                />
-                {isPeriodClosed && (
-                  <p className="text-xs text-red-500 mt-1">
-                    ⚠ Period "{periodStatus.PERIOD_NAME}" is closed for GL postings.
-                  </p>
-                )}
-                {noPeriodDefined && (
-                  <p className="text-xs text-amber-500 mt-1">
-                    ⚠ No ledger period found for this date.
-                  </p>
-                )}
-              </div>
+           <div>
+  <div className="flex items-center justify-between mb-1.5">
+    <label className={`${fieldLabel} mb-0`}>GL Date</label>
+    <PeriodStatusBadge
+      isPeriodClosed={isPeriodClosed}
+      noPeriodDefined={noPeriodDefined}
+    />
+  </div>
+  <input
+    type="date"
+    value={form.glDate}
+    onChange={(e) => setForm({ ...form, glDate: e.target.value })}
+    disabled={isSubmitting}
+    className={`${fieldInput} ${
+      isPeriodClosed
+        ? "border-red-300 bg-red-50/40 focus:border-red-400 focus:ring-red-500/10"
+        : noPeriodDefined
+          ? "border-amber-300 bg-amber-50/40 focus:border-amber-400 focus:ring-amber-500/10"
+          : ""
+    }`}
+  />
+</div>
             </div>
 
             <div className="px-6 pb-6">
@@ -963,7 +982,7 @@ const JournalEdit = () => {
                 <Button
                   type="button"
                   onClick={addRow}
-                  disabled={isSubmitting}
+                     disabled={isSubmitting || isPeriodClosed || noPeriodDefined}
                   className="cursor-pointer text-white px-4 py-2 rounded-lg flex items-center font-semibold text-sm shadow-sm transition-colors disabled:opacity-50"
                 >
                   <span className="mr-1.5 font-bold text-base leading-none">+</span>
