@@ -1,3 +1,386 @@
+// // import { useState } from "react";
+// // import {
+// //   flexRender, getCoreRowModel, getFilteredRowModel,
+// //   getPaginationRowModel, getSortedRowModel, useReactTable,
+// // } from "@tanstack/react-table";
+// // import {
+// //   ArrowUpDown, ChevronDown, Trash2, AlertCircle, RefreshCw, FileText,
+// // } from "lucide-react";
+// // import { toast } from "react-toastify";
+// // import { IconCircleDashedPlus, IconEdit } from "@tabler/icons-react";
+
+// // import { Button } from "@/components/ui/button";
+// // import {
+// //   DropdownMenu, DropdownMenuCheckboxItem,
+// //   DropdownMenuContent, DropdownMenuTrigger,
+// // } from "@/components/ui/dropdown-menu";
+// // import { Input } from "@/components/ui/input";
+// // import {
+// //   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+// // } from "@/components/ui/table";
+// // import { DataTablePagination } from "@/components/DataTablePagination";
+// // import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// // import { useConfirmationDialog } from "@/hooks/useConfirmationDialog";
+// // import { Spinner } from "@/components/ui/spinner";
+// // import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+
+// // import { useInvoices, useDeleteInvoice } from "./queries";
+// // import AddInvoiceSheet from "./create-sale-invoice-sheet";
+// // // import InvoiceDetailSheet from "./sale-invoice-detail-page";
+// // import EditInvoiceSheet from "./edit-sale-invoice-sheet";
+
+// // const fmtDate = (val) => {
+// //   if (!val) return "—";
+// //   return new Date(val).toLocaleDateString("en-GB", {
+// //     day: "2-digit", month: "short", year: "numeric",
+// //   });
+// // };
+// // const fmtAmt = (v) =>
+// //     Number(v || 0).toLocaleString(undefined, {
+// //     minimumFractionDigits: 2, maximumFractionDigits: 2,
+// //   });
+
+// // export default function InvoiceList() {
+// //   const [sorting,          setSorting]          = useState([]);
+// //   const [columnFilters,    setColumnFilters]    = useState([]);
+// //   const [columnVisibility, setColumnVisibility] = useState({});
+// //   const [rowSelection,     setRowSelection]     = useState({});
+// //   const [globalFilter,     setGlobalFilter]     = useState("");
+
+// //   const [isAddOpen,    setIsAddOpen]    = useState(false);
+// //   const [isDetailOpen, setIsDetailOpen] = useState(false);
+// //   const [selectedHid,  setSelectedHid]  = useState(null);
+
+// //   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
+// //   const { data: invoices = [], isLoading, isError, error, refetch, isFetching } = useInvoices();
+// //   const deleteMutation = useDeleteInvoice();
+
+// //   const handleView = (hid) => {
+// //     setSelectedHid(hid);
+// //     setIsDetailOpen(true);
+// //   };
+
+// //   const handleDelete = async (invoice) => {
+// //     const confirmed = await showConfirmation({
+// //       title: "Delete invoice?",
+// //       description: `Delete invoice #${invoice.HID} for ${invoice.CUSTOMER_NAME}? This cannot be undone.`,
+// //       confirmText: "Delete", cancelText: "Cancel", variant: "destructive",
+// //     });
+// //     if (confirmed) {
+// //       try {
+// //         await deleteMutation.mutateAsync(invoice.HID);
+// //         toast.success("Invoice deleted successfully!");
+// //       } catch (err) {
+// //         toast.error(err?.message || "Failed to delete invoice.");
+// //       }
+// //     }
+// //   };
+
+// //   const columns = [
+// //     {
+// //       accessorKey: "HID",
+// //       header: ({ column }) => (
+// //         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //           Invoice # <ArrowUpDown className="ml-2 h-4 w-4" />
+// //         </Button>
+// //       ),
+     
+// //       cell: ({ row }) => (
+// //   <div className="font-mono text-sm ps-2 font-medium flex items-center gap-2">
+// //     #{row.getValue("HID")}
+// //     {Number(row.original.RECEIVE_CREATED) === 1 && (
+// //       <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">
+// //         Received
+// //       </span>
+// //     )}
+// //   </div>
+// // ),
+// //     },
+// //     {
+// //       accessorKey: "INVOICE_DATE",
+// //       header: ({ column }) => (
+// //         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //           Invoice Date <ArrowUpDown className="ml-2 h-4 w-4" />
+// //         </Button>
+// //       ),
+// //       cell: ({ row }) => (
+// //         <div className="ps-2">{fmtDate(row.getValue("INVOICE_DATE"))}</div>
+// //       ),
+// //     },
+
+
+    
+// //     {
+// //       accessorKey: "CUSTOMER_NAME",
+// //       header: ({ column }) => (
+// //         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// //           Customer <ArrowUpDown className="ml-2 h-4 w-4" />
+// //         </Button>
+// //       ),
+// //       cell: ({ row }) => (
+// //         <div className="font-medium ps-2">{row.getValue("CUSTOMER_NAME") || "—"}</div>
+// //       ),
+// //     },
+    
+// //     {
+// //   accessorKey: "PRODUCTION_QTY",
+// //   header: "Quantity (Eggs)",
+// //   cell: ({ row }) => (
+// //     <div className="tabular-nums text-left pr-4">
+// //       {Number(row.getValue("PRODUCTION_QTY") || 0).toLocaleString()}
+// //     </div>
+// //   ),
+// // },
+// //     {
+// //       accessorKey: "TOT_QTY",
+// //       header: "Sales Qty",
+// //       cell: ({ row }) => (
+// //         <div className="tabular-nums text-left pr-4">
+// //           {Number(row.getValue("TOT_QTY") || 0).toLocaleString()}
+// //         </div>
+// //       ),
+// //     },
+// //     //  {
+// //     //   accessorKey: "TOT_QTY",
+// //     //   header: "Total Qty",
+// //     //   cell: ({ row }) => (
+// //     //     <div className="tabular-nums text-left pr-4">
+// //     //       {Number(row.getValue("TOT_QTY") || 0).toLocaleString()}
+// //     //     </div>
+// //     //   ),
+// //     // },
+// //     {
+// //   accessorKey: "TOT_AMT",
+// //   header: "Total Amount",
+// //   cell: ({ row }) => (
+// //     <div className="tabular-nums font-medium text-left pr-4 text-primary">
+// //       {fmtAmt(row.getValue("TOT_AMT"))}
+// //     </div>
+// //   ),
+// // },
+// //     // {
+// //     //   accessorKey: "CREATION_DATE",
+// //     //   header: "Created At",
+// //     //   cell: ({ row }) => (
+// //     //     <div className="text-muted-foreground text-sm">
+// //     //       {fmtDate(row.getValue("CREATION_DATE"))}
+// //     //     </div>
+// //     //   ),
+// //     // },
+// //   {
+// //   id: "actions",
+// //   header: "Actions",
+// //   enableHiding: false,
+// //   cell: ({ row }) => {
+// //     const inv = row.original;
+// //     const isLocked = Number(inv.RECEIVE_CREATED) === 1;
+// //     return (
+// //       <div className="flex items-center gap-1">
+// //         <Button
+// //           variant="ghost" size="icon" className="h-8 w-8"
+// //           onClick={() => handleView(inv.HID)}
+// //           title={isLocked ? "View only — Receive Voucher already created" : "Edit"}
+// //         >
+// //           <IconEdit className="h-4 w-4" />
+// //           <span className="sr-only">View</span>
+// //         </Button>
+// //         <Button
+// //           variant="ghost" size="icon"
+// //           className="h-8 w-8 text-destructive hover:text-destructive"
+// //           onClick={() => handleDelete(inv)}
+// //           disabled={deleteMutation.isPending || isLocked}
+// //           title={isLocked ? "Receive Voucher already created — cannot delete" : "Delete"}
+// //         >
+// //           {deleteMutation.isPending
+// //             ? <Spinner className="h-4 w-4" />
+// //             : <Trash2 className="h-4 w-4" />}
+// //           <span className="sr-only">Delete</span>
+// //         </Button>
+// //       </div>
+// //     );
+// //   },
+// // },
+// //   ];
+
+// //   const table = useReactTable({
+// //     data: invoices,
+// //     columns,
+// //     onSortingChange: setSorting,
+// //     onColumnFiltersChange: setColumnFilters,
+// //     getCoreRowModel: getCoreRowModel(),
+// //     getPaginationRowModel: getPaginationRowModel(),
+// //     getSortedRowModel: getSortedRowModel(),
+// //     getFilteredRowModel: getFilteredRowModel(),
+// //     onColumnVisibilityChange: setColumnVisibility,
+// //     onRowSelectionChange: setRowSelection,
+// //     onGlobalFilterChange: setGlobalFilter,
+// //     state: { sorting, columnFilters, columnVisibility, rowSelection, globalFilter },
+// //   });
+
+// //   // ── Loading ──────────────────────────────────────────────────────────────────
+// //   if (isLoading) {
+// //     return (
+// //       <div>
+// //         <div className="bg-card rounded-sm shadow-sm p-4 mb-4">
+// //           <div className="flex items-center justify-between">
+// //             <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Sales Invoices</h1>
+// //             <Button disabled><IconCircleDashedPlus className="mr-1" />New Invoice</Button>
+// //           </div>
+// //         </div>
+// //         <div className="bg-card rounded-lg shadow-sm p-4">
+// //           <div className="flex flex-col items-center justify-center py-16">
+// //             <Spinner className="h-12 w-12 mb-4" />
+// //             <p className="text-muted-foreground">Loading invoices...</p>
+// //           </div>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   // ── Error ────────────────────────────────────────────────────────────────────
+// //   if (isError) {
+// //     return (
+// //       <div>
+// //         <div className="bg-card rounded-sm shadow-sm p-4 mb-4">
+// //           <div className="flex items-center justify-between">
+// //             <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Sales Invoices</h1>
+// //             <Button onClick={() => setIsAddOpen(true)}>
+// //               <IconCircleDashedPlus className="mr-1" />New Invoice
+// //             </Button>
+// //           </div>
+// //         </div>
+// //         <div className="bg-card rounded-lg shadow-sm p-4">
+// //           <Alert variant="destructive">
+// //             <AlertCircle className="h-4 w-4" />
+// //             <AlertTitle>Error Loading Invoices</AlertTitle>
+// //             <AlertDescription className="mt-2 flex flex-col gap-2">
+// //               <p>{error?.message || "Failed to load invoices."}</p>
+// //               <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="w-fit">
+// //                 {isFetching
+// //                   ? <><Spinner className="mr-2 h-4 w-4" />Retrying...</>
+// //                   : <><RefreshCw className="mr-2 h-4 w-4" />Retry</>}
+// //               </Button>
+// //             </AlertDescription>
+// //           </Alert>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   // ── Main ─────────────────────────────────────────────────────────────────────
+// //   return (
+// //     <div>
+// //       {/* Header */}
+// //       <div className="bg-card rounded-md shadow-sm p-4 mb-4">
+// //         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+// //           <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Sales Invoices</h1>
+// //           <div className="flex items-center gap-2">
+// //             <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+// //               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+// //               <span className="sr-only">Refresh</span>
+// //             </Button>
+// //             <Button onClick={() => setIsAddOpen(true)}>
+// //               <IconCircleDashedPlus className="mr-1" />New Invoice
+// //             </Button>
+// //           </div>
+// //         </div>
+// //       </div>
+
+// //       {/* Table */}
+// //       <div className="bg-card rounded-md shadow-sm p-4">
+// //         <div className="space-y-4">
+// //           <div className="flex flex-col sm:flex-row gap-4">
+// //             <Input
+// //               placeholder="Search by customer, date..."
+// //               value={globalFilter ?? ""}
+// //               onChange={(e) => setGlobalFilter(e.target.value)}
+// //               className="max-w-sm"
+// //             />
+// //             <DropdownMenu>
+// //               <DropdownMenuTrigger asChild>
+// //                 <Button variant="outline" className="ml-auto">
+// //                   Columns <ChevronDown className="ml-2 h-4 w-4" />
+// //                 </Button>
+// //               </DropdownMenuTrigger>
+// //               <DropdownMenuContent align="end">
+// //                 {table.getAllColumns().filter((col) => col.getCanHide()).map((col) => (
+// //                   <DropdownMenuCheckboxItem
+// //                     key={col.id}
+// //                     className="capitalize"
+// //                     checked={col.getIsVisible()}
+// //                     onCheckedChange={(v) => col.toggleVisibility(!!v)}
+// //                   >
+// //                     {col.id.replace(/_/g, " ").toLowerCase()}
+// //                   </DropdownMenuCheckboxItem>
+// //                 ))}
+// //               </DropdownMenuContent>
+// //             </DropdownMenu>
+// //           </div>
+
+// //           <div className="overflow-hidden rounded-md border">
+// //             <Table>
+// //               <TableHeader>
+// //                 {table.getHeaderGroups().map((hg) => (
+// //                   <TableRow key={hg.id}>
+// //                     {hg.headers.map((h) => (
+// //                       <TableHead key={h.id}>
+// //                         {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+// //                       </TableHead>
+// //                     ))}
+// //                   </TableRow>
+// //                 ))}
+// //               </TableHeader>
+// //               <TableBody>
+// //                 {table.getRowModel().rows?.length ? (
+// //                   table.getRowModel().rows.map((row) => (
+// //                     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+// //                       {row.getVisibleCells().map((cell) => (
+// //                         <TableCell key={cell.id}>
+// //                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// //                         </TableCell>
+// //                       ))}
+// //                     </TableRow>
+// //                   ))
+// //                 ) : (
+// //                   <TableRow>
+// //                     <TableCell colSpan={columns.length} className="h-24 text-center">
+// //                       <Empty>
+// //                         <EmptyHeader>
+// //                           <EmptyMedia variant="icon"><FileText /></EmptyMedia>
+// //                           <EmptyTitle>No Invoices Found</EmptyTitle>
+// //                         </EmptyHeader>
+// //                       </Empty>
+// //                     </TableCell>
+// //                   </TableRow>
+// //                 )}
+// //               </TableBody>
+// //             </Table>
+// //           </div>
+// //           <DataTablePagination table={table} />
+// //         </div>
+// //       </div>
+
+// //       {isAddOpen && (
+// //         <AddInvoiceSheet
+// //           open={isAddOpen}
+// //           onOpenChange={setIsAddOpen}
+// //           showConfirmation={showConfirmation}
+// //         />
+// //       )}
+// //       {isDetailOpen && (
+// //   <EditInvoiceSheet
+// //     open={isDetailOpen}
+// //     onOpenChange={setIsDetailOpen}
+// //     hid={selectedHid}
+// //     showConfirmation={showConfirmation}
+// //   />
+// // )}
+     
+// //       <ConfirmationDialog />
+// //     </div>
+// //   );
+// // }
+
 // import { useState } from "react";
 // import {
 //   flexRender, getCoreRowModel, getFilteredRowModel,
@@ -5,6 +388,7 @@
 // } from "@tanstack/react-table";
 // import {
 //   ArrowUpDown, ChevronDown, Trash2, AlertCircle, RefreshCw, FileText,
+//   Search, ReceiptText,
 // } from "lucide-react";
 // import { toast } from "react-toastify";
 // import { IconCircleDashedPlus, IconEdit } from "@tabler/icons-react";
@@ -26,7 +410,6 @@
 
 // import { useInvoices, useDeleteInvoice } from "./queries";
 // import AddInvoiceSheet from "./create-sale-invoice-sheet";
-// // import InvoiceDetailSheet from "./sale-invoice-detail-page";
 // import EditInvoiceSheet from "./edit-sale-invoice-sheet";
 
 // const fmtDate = (val) => {
@@ -36,9 +419,20 @@
 //   });
 // };
 // const fmtAmt = (v) =>
-//     Number(v || 0).toLocaleString(undefined, {
+//   Number(v || 0).toLocaleString(undefined, {
 //     minimumFractionDigits: 2, maximumFractionDigits: 2,
 //   });
+
+// // Reusable sortable header — journal table's uppercase gray style
+// const SortableHeader = ({ column, label }) => (
+//   <Button
+//     variant="ghost"
+//     className="text-xs font-semibold text-gray-500 uppercase tracking-wide p-0 h-auto hover:bg-transparent"
+//     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//   >
+//     {label} <ArrowUpDown className="ml-1 h-3 w-3" />
+//   </Button>
+// );
 
 // export default function InvoiceList() {
 //   const [sorting,          setSorting]          = useState([]);
@@ -79,127 +473,108 @@
 //   const columns = [
 //     {
 //       accessorKey: "HID",
-//       header: ({ column }) => (
-//         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//           Invoice # <ArrowUpDown className="ml-2 h-4 w-4" />
-//         </Button>
-//       ),
-     
+//       header: ({ column }) => <SortableHeader column={column} label="Invoice #" />,
 //       cell: ({ row }) => (
-//   <div className="font-mono text-sm ps-2 font-medium flex items-center gap-2">
-//     #{row.getValue("HID")}
-//     {Number(row.original.RECEIVE_CREATED) === 1 && (
-//       <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">
-//         Received
-//       </span>
-//     )}
-//   </div>
-// ),
+//         <div className="ml-3 font-mono text-sm font-medium text-gray-800 flex items-center gap-2">
+//           #{row.getValue("HID")}
+//           {Number(row.original.RECEIVE_CREATED) === 1 && (
+//             <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">
+//               Received
+//             </span>
+//           )}
+//         </div>
+//       ),
 //     },
 //     {
 //       accessorKey: "INVOICE_DATE",
-//       header: ({ column }) => (
-//         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//           Invoice Date <ArrowUpDown className="ml-2 h-4 w-4" />
-//         </Button>
-//       ),
+//       header: ({ column }) => <SortableHeader column={column} label="Invoice Date" />,
 //       cell: ({ row }) => (
-//         <div className="ps-2">{fmtDate(row.getValue("INVOICE_DATE"))}</div>
+//         <div className="ml-3 text-sm text-gray-600">{fmtDate(row.getValue("INVOICE_DATE"))}</div>
 //       ),
 //     },
-
-
-    
 //     {
 //       accessorKey: "CUSTOMER_NAME",
-//       header: ({ column }) => (
-//         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-//           Customer <ArrowUpDown className="ml-2 h-4 w-4" />
-//         </Button>
-//       ),
+//       header: ({ column }) => <SortableHeader column={column} label="Customer" />,
 //       cell: ({ row }) => (
-//         <div className="font-medium ps-2">{row.getValue("CUSTOMER_NAME") || "—"}</div>
+//         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("CUSTOMER_NAME") || "—"}</div>
 //       ),
 //     },
-    
 //     {
-//   accessorKey: "PRODUCTION_QTY",
-//   header: "Quantity (Eggs)",
-//   cell: ({ row }) => (
-//     <div className="tabular-nums text-left pr-4">
-//       {Number(row.getValue("PRODUCTION_QTY") || 0).toLocaleString()}
-//     </div>
-//   ),
-// },
+//       accessorKey: "PRODUCTION_QTY",
+//       header: () => (
+//         <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Quantity (Eggs)
+//         </div>
+//       ),
+//       cell: ({ row }) => (
+//         <div className="tabular-nums text-sm text-gray-600 text-left pr-4">
+//           {Number(row.getValue("PRODUCTION_QTY") || 0).toLocaleString()}
+//         </div>
+//       ),
+//     },
 //     {
 //       accessorKey: "TOT_QTY",
-//       header: "Sales Qty",
+//       header: () => (
+//         <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Sales Qty
+//         </div>
+//       ),
 //       cell: ({ row }) => (
-//         <div className="tabular-nums text-left pr-4">
+//         <div className="tabular-nums text-sm text-gray-600 text-left pr-4">
 //           {Number(row.getValue("TOT_QTY") || 0).toLocaleString()}
 //         </div>
 //       ),
 //     },
-//     //  {
-//     //   accessorKey: "TOT_QTY",
-//     //   header: "Total Qty",
-//     //   cell: ({ row }) => (
-//     //     <div className="tabular-nums text-left pr-4">
-//     //       {Number(row.getValue("TOT_QTY") || 0).toLocaleString()}
-//     //     </div>
-//     //   ),
-//     // },
 //     {
-//   accessorKey: "TOT_AMT",
-//   header: "Total Amount",
-//   cell: ({ row }) => (
-//     <div className="tabular-nums font-medium text-left pr-4 text-primary">
-//       {fmtAmt(row.getValue("TOT_AMT"))}
-//     </div>
-//   ),
-// },
-//     // {
-//     //   accessorKey: "CREATION_DATE",
-//     //   header: "Created At",
-//     //   cell: ({ row }) => (
-//     //     <div className="text-muted-foreground text-sm">
-//     //       {fmtDate(row.getValue("CREATION_DATE"))}
-//     //     </div>
-//     //   ),
-//     // },
-//   {
-//   id: "actions",
-//   header: "Actions",
-//   enableHiding: false,
-//   cell: ({ row }) => {
-//     const inv = row.original;
-//     const isLocked = Number(inv.RECEIVE_CREATED) === 1;
-//     return (
-//       <div className="flex items-center gap-1">
-//         <Button
-//           variant="ghost" size="icon" className="h-8 w-8"
-//           onClick={() => handleView(inv.HID)}
-//           title={isLocked ? "View only — Receive Voucher already created" : "Edit"}
-//         >
-//           <IconEdit className="h-4 w-4" />
-//           <span className="sr-only">View</span>
-//         </Button>
-//         <Button
-//           variant="ghost" size="icon"
-//           className="h-8 w-8 text-destructive hover:text-destructive"
-//           onClick={() => handleDelete(inv)}
-//           disabled={deleteMutation.isPending || isLocked}
-//           title={isLocked ? "Receive Voucher already created — cannot delete" : "Delete"}
-//         >
-//           {deleteMutation.isPending
-//             ? <Spinner className="h-4 w-4" />
-//             : <Trash2 className="h-4 w-4" />}
-//           <span className="sr-only">Delete</span>
-//         </Button>
-//       </div>
-//     );
-//   },
-// },
+//       accessorKey: "TOT_AMT",
+//       header: () => (
+//         <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Total Amount
+//         </div>
+//       ),
+//       cell: ({ row }) => (
+//         <div className="tabular-nums text-sm font-semibold text-gray-800 text-left pr-4">
+//           {fmtAmt(row.getValue("TOT_AMT"))}
+//         </div>
+//       ),
+//     },
+//     {
+//       id: "actions",
+//       enableHiding: false,
+//       header: () => (
+//         <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Actions
+//         </div>
+//       ),
+//       cell: ({ row }) => {
+//         const inv = row.original;
+//         const isLocked = Number(inv.RECEIVE_CREATED) === 1;
+//         return (
+//           <div className="flex items-center justify-center gap-1">
+//             <Button
+//               variant="ghost" size="icon" className="h-8 w-8 hover:bg-violet-50 hover:text-violet-700"
+//               onClick={() => handleView(inv.HID)}
+//               title={isLocked ? "View only — Receive Voucher already created" : "Edit"}
+//             >
+//               <IconEdit className="h-4 w-4" />
+//               <span className="sr-only">View</span>
+//             </Button>
+//             <Button
+//               variant="ghost" size="icon"
+//               className="h-8 w-8  hover:text-destructive"
+//               onClick={() => handleDelete(inv)}
+//               disabled={deleteMutation.isPending || isLocked}
+//               title={isLocked ? "Receive Voucher already created — cannot delete" : "Delete"}
+//             >
+//               {deleteMutation.isPending
+//                 ? <Spinner className="h-4 w-4" />
+//                 : <Trash2 className="h-4 w-4" />}
+//               <span className="sr-only">Delete</span>
+//             </Button>
+//           </div>
+//         );
+//       },
+//     },
 //   ];
 
 //   const table = useReactTable({
@@ -217,65 +592,58 @@
 //     state: { sorting, columnFilters, columnVisibility, rowSelection, globalFilter },
 //   });
 
-//   // ── Loading ──────────────────────────────────────────────────────────────────
+//   // ── Loading ──────────────────────────────────────────────────────────────
 //   if (isLoading) {
 //     return (
-//       <div>
-//         <div className="bg-card rounded-sm shadow-sm p-4 mb-4">
-//           <div className="flex items-center justify-between">
-//             <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Sales Invoices</h1>
-//             <Button disabled><IconCircleDashedPlus className="mr-1" />New Invoice</Button>
-//           </div>
-//         </div>
-//         <div className="bg-card rounded-lg shadow-sm p-4">
-//           <div className="flex flex-col items-center justify-center py-16">
-//             <Spinner className="h-12 w-12 mb-4" />
-//             <p className="text-muted-foreground">Loading invoices...</p>
+//       <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
+//         <div className="flex items-center justify-center py-12">
+//           <div className="flex flex-col items-center">
+//             <Spinner className="h-10 w-10 mb-3" />
+//             <p className="text-sm text-gray-500">Loading invoices...</p>
 //           </div>
 //         </div>
 //       </div>
 //     );
 //   }
 
-//   // ── Error ────────────────────────────────────────────────────────────────────
+//   // ── Error ────────────────────────────────────────────────────────────────
 //   if (isError) {
 //     return (
-//       <div>
-//         <div className="bg-card rounded-sm shadow-sm p-4 mb-4">
-//           <div className="flex items-center justify-between">
-//             <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Sales Invoices</h1>
-//             <Button onClick={() => setIsAddOpen(true)}>
-//               <IconCircleDashedPlus className="mr-1" />New Invoice
+//       <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
+//         <Alert variant="destructive">
+//           <AlertCircle className="h-4 w-4" />
+//           <AlertTitle>Error Loading Invoices</AlertTitle>
+//           <AlertDescription className="mt-2 flex flex-col gap-2">
+//             <p>{error?.message || "Failed to load invoices."}</p>
+//             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="w-fit">
+//               {isFetching
+//                 ? <><Spinner className="mr-2 h-4 w-4" />Retrying...</>
+//                 : <><RefreshCw className="mr-2 h-4 w-4" />Retry</>}
 //             </Button>
-//           </div>
-//         </div>
-//         <div className="bg-card rounded-lg shadow-sm p-4">
-//           <Alert variant="destructive">
-//             <AlertCircle className="h-4 w-4" />
-//             <AlertTitle>Error Loading Invoices</AlertTitle>
-//             <AlertDescription className="mt-2 flex flex-col gap-2">
-//               <p>{error?.message || "Failed to load invoices."}</p>
-//               <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="w-fit">
-//                 {isFetching
-//                   ? <><Spinner className="mr-2 h-4 w-4" />Retrying...</>
-//                   : <><RefreshCw className="mr-2 h-4 w-4" />Retry</>}
-//               </Button>
-//             </AlertDescription>
-//           </Alert>
-//         </div>
+//           </AlertDescription>
+//         </Alert>
 //       </div>
 //     );
 //   }
 
-//   // ── Main ─────────────────────────────────────────────────────────────────────
+//   // ── Main ─────────────────────────────────────────────────────────────────
 //   return (
-//     <div>
-//       {/* Header */}
-//       <div className="bg-card rounded-md shadow-sm p-4 mb-4">
-//         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-//           <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Sales Invoices</h1>
+//     <div className="p-4 md:p-6">
+//       <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+//         {/* Header */}
+//         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
 //           <div className="flex items-center gap-2">
-//             <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+//             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-violet-50 text-violet-600">
+//               <ReceiptText size={16} />
+//             </div>
+//             <div>
+//               <h2 className="text-sm font-bold text-gray-900">Sales Invoices</h2>
+//               <p className="text-xs text-gray-400">{invoices.length} total — sales invoices</p>
+//             </div>
+//           </div>
+
+//           <div className="flex items-center gap-2">
+//             <Button variant="outline" size="icon" className="bg-white border-gray-200" onClick={() => refetch()} disabled={isFetching}>
 //               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
 //               <span className="sr-only">Refresh</span>
 //             </Button>
@@ -284,21 +652,23 @@
 //             </Button>
 //           </div>
 //         </div>
-//       </div>
 
-//       {/* Table */}
-//       <div className="bg-card rounded-md shadow-sm p-4">
-//         <div className="space-y-4">
-//           <div className="flex flex-col sm:flex-row gap-4">
-//             <Input
-//               placeholder="Search by customer, date..."
-//               value={globalFilter ?? ""}
-//               onChange={(e) => setGlobalFilter(e.target.value)}
-//               className="max-w-sm"
-//             />
+//         <div className="p-5 space-y-4">
+//           {/* Search + Column visibility */}
+//           <div className="flex flex-col sm:flex-row gap-3">
+//             <div className="relative max-w-sm w-full">
+//               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <Input
+//                 placeholder="Search by customer, date..."
+//                 value={globalFilter ?? ""}
+//                 onChange={(e) => setGlobalFilter(e.target.value)}
+//                 className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+//               />
+//             </div>
+
 //             <DropdownMenu>
 //               <DropdownMenuTrigger asChild>
-//                 <Button variant="outline" className="ml-auto">
+//                 <Button variant="outline" className="ml-auto bg-white border-gray-200">
 //                   Columns <ChevronDown className="ml-2 h-4 w-4" />
 //                 </Button>
 //               </DropdownMenuTrigger>
@@ -317,13 +687,14 @@
 //             </DropdownMenu>
 //           </div>
 
-//           <div className="overflow-hidden rounded-md border">
+//           {/* Table */}
+//           <div className="overflow-hidden rounded-md border border-gray-200">
 //             <Table>
-//               <TableHeader>
+//               <TableHeader className="bg-gray-50">
 //                 {table.getHeaderGroups().map((hg) => (
 //                   <TableRow key={hg.id}>
 //                     {hg.headers.map((h) => (
-//                       <TableHead key={h.id}>
+//                       <TableHead key={h.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
 //                         {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
 //                       </TableHead>
 //                     ))}
@@ -333,9 +704,13 @@
 //               <TableBody>
 //                 {table.getRowModel().rows?.length ? (
 //                   table.getRowModel().rows.map((row) => (
-//                     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+//                     <TableRow
+//                       key={row.id}
+//                       data-state={row.getIsSelected() && "selected"}
+//                       className="hover:bg-gray-50/70 transition-colors"
+//                     >
 //                       {row.getVisibleCells().map((cell) => (
-//                         <TableCell key={cell.id}>
+//                         <TableCell key={cell.id} className="text-sm text-gray-700">
 //                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
 //                         </TableCell>
 //                       ))}
@@ -356,6 +731,7 @@
 //               </TableBody>
 //             </Table>
 //           </div>
+
 //           <DataTablePagination table={table} />
 //         </div>
 //       </div>
@@ -368,20 +744,21 @@
 //         />
 //       )}
 //       {isDetailOpen && (
-//   <EditInvoiceSheet
-//     open={isDetailOpen}
-//     onOpenChange={setIsDetailOpen}
-//     hid={selectedHid}
-//     showConfirmation={showConfirmation}
-//   />
-// )}
-     
+//         <EditInvoiceSheet
+//           open={isDetailOpen}
+//           onOpenChange={setIsDetailOpen}
+//           hid={selectedHid}
+//           showConfirmation={showConfirmation}
+//         />
+//       )}
+
 //       <ConfirmationDialog />
 //     </div>
 //   );
 // }
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   flexRender, getCoreRowModel, getFilteredRowModel,
   getPaginationRowModel, getSortedRowModel, useReactTable,
@@ -409,8 +786,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 import { useInvoices, useDeleteInvoice } from "./queries";
-import AddInvoiceSheet from "./create-sale-invoice-sheet";
-import EditInvoiceSheet from "./edit-sale-invoice-sheet";
 
 const fmtDate = (val) => {
   if (!val) return "—";
@@ -435,23 +810,20 @@ const SortableHeader = ({ column, label }) => (
 );
 
 export default function InvoiceList() {
+  const navigate = useNavigate();
+
   const [sorting,          setSorting]          = useState([]);
   const [columnFilters,    setColumnFilters]    = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection,     setRowSelection]     = useState({});
   const [globalFilter,     setGlobalFilter]     = useState("");
 
-  const [isAddOpen,    setIsAddOpen]    = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedHid,  setSelectedHid]  = useState(null);
-
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
   const { data: invoices = [], isLoading, isError, error, refetch, isFetching } = useInvoices();
   const deleteMutation = useDeleteInvoice();
 
   const handleView = (hid) => {
-    setSelectedHid(hid);
-    setIsDetailOpen(true);
+    navigate(`/dashboard/sale-invoice/edit/${hid}`);
   };
 
   const handleDelete = async (invoice) => {
@@ -552,7 +924,7 @@ export default function InvoiceList() {
         return (
           <div className="flex items-center justify-center gap-1">
             <Button
-              variant="ghost" size="icon" className="h-8 w-8 hover:bg-violet-50 hover:text-violet-700"
+              variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
               onClick={() => handleView(inv.HID)}
               title={isLocked ? "View only — Receive Voucher already created" : "Edit"}
             >
@@ -561,7 +933,7 @@ export default function InvoiceList() {
             </Button>
             <Button
               variant="ghost" size="icon"
-              className="h-8 w-8  hover:text-destructive"
+              className="h-8 w-8 hover:text-destructive"
               onClick={() => handleDelete(inv)}
               disabled={deleteMutation.isPending || isLocked}
               title={isLocked ? "Receive Voucher already created — cannot delete" : "Delete"}
@@ -633,7 +1005,7 @@ export default function InvoiceList() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-violet-50 text-violet-600">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary">
               <ReceiptText size={16} />
             </div>
             <div>
@@ -647,7 +1019,7 @@ export default function InvoiceList() {
               <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
               <span className="sr-only">Refresh</span>
             </Button>
-            <Button onClick={() => setIsAddOpen(true)}>
+            <Button onClick={() => navigate("/dashboard/sale-invoice/new")}>
               <IconCircleDashedPlus className="mr-1" />New Invoice
             </Button>
           </div>
@@ -662,7 +1034,7 @@ export default function InvoiceList() {
                 placeholder="Search by customer, date..."
                 value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+                className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-primary/30"
               />
             </div>
 
@@ -735,22 +1107,6 @@ export default function InvoiceList() {
           <DataTablePagination table={table} />
         </div>
       </div>
-
-      {isAddOpen && (
-        <AddInvoiceSheet
-          open={isAddOpen}
-          onOpenChange={setIsAddOpen}
-          showConfirmation={showConfirmation}
-        />
-      )}
-      {isDetailOpen && (
-        <EditInvoiceSheet
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-          hid={selectedHid}
-          showConfirmation={showConfirmation}
-        />
-      )}
 
       <ConfirmationDialog />
     </div>
