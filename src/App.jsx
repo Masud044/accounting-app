@@ -785,6 +785,14 @@ import MeetingRoomsPage from "./features/meeting-room/index";
 import MeetingDetailPage from "./features/agenda-management/meeting-details";
 import LedgerPeriodPage from "./features/ledger-period-calendar/index";
 import DashboardExpenseIncomeIndex from "./features/main-entry/pages/dashboard-expense-income-index";
+import CreateDispatchPage from "./features/inventory-page/requisition-master/add-requisition-sheet";
+import EditDispatchPage from "./features/inventory-page/requisition-master/update-requisition-sheet";
+import CreateInventoryPage from "./features/inventory-page/inventory/add-inventory-sheet";
+import EditInventoryPage from "./features/inventory-page/inventory/update-inventory-sheet";
+import CreateRecognitionPage from "./features/purchase-recognition/create-recognition-sheet";
+import EditRecognitionPage from "./features/purchase-recognition/update-recognition-sheet";
+import CreateInvoicePage from "./features/sale-invoice/create-sale-invoice-sheet";
+import EditInvoicePage from "./features/sale-invoice/edit-sale-invoice-sheet";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1105,6 +1113,22 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+               <Route
+                path="inventory-create"
+                element={
+                  <ProtectedRoute anyPermission="INVENTORY_VIEW">
+                    <CreateInventoryPage />
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="inventory-edit/:hid"
+                element={
+                  <ProtectedRoute anyPermission="INVENTORY_VIEW">
+                    <EditInventoryPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="item-stock"
                 element={
@@ -1126,6 +1150,22 @@ function App() {
                 element={
                   <ProtectedRoute anyPermission="DISPATCH_VIEW">
                     <Requisitions />
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="dispatch-create"
+                element={
+                  <ProtectedRoute anyPermission="DISPATCH_VIEW">
+                    <CreateDispatchPage />
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="dispatch-edit/:tid"
+                element={
+                  <ProtectedRoute anyPermission="DISPATCH_VIEW">
+                    <EditDispatchPage />
                   </ProtectedRoute>
                 }
               />
@@ -1426,6 +1466,22 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+               <Route
+                path="sale-invoice/new"
+                element={
+                  <ProtectedRoute anyPermission="SALE_INVOICE_VIEW">
+                    <CreateInvoicePage />
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="sale-invoice/edit/:hid"
+                element={
+                  <ProtectedRoute anyPermission="SALE_INVOICE_VIEW">
+                    <EditInvoicePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="egg-production"
                 element={
@@ -1442,6 +1498,22 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+  path="purchase-recognition/new"
+  element={
+    <ProtectedRoute anyPermission="PURCHASE_RECOGNITION_VIEW">
+      <CreateRecognitionPage/>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="purchase-recognition/edit/:formId"
+  element={
+    <ProtectedRoute anyPermission="PURCHASE_RECOGNITION_VIEW">
+      <EditRecognitionPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="chart-account"
                 element={
