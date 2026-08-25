@@ -462,6 +462,7 @@ import { ArrowLeft, FileText, Trash2, Plus } from "lucide-react";
 import { useCreatePurchaseRecognition, useActiveSuppliers, useUoms, useInvTypes, usePaymentCodes } from "./queries";
 import ItemPicker from "./item-picker";
 import SupplierPicker from "./supplier-picker";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const today = () => new Date().toISOString().split("T")[0];
 
@@ -498,6 +499,7 @@ const editableCell =
 
 export default function CreateRecognitionPage() {
   const navigate = useNavigate();
+  const userId = useAuthUserId();
   const createMutation = useCreatePurchaseRecognition();
   const { data: suppliers = [] } = useActiveSuppliers();
   const { data: uoms = [] } = useUoms();
@@ -598,6 +600,7 @@ export default function CreateRecognitionPage() {
         unit: it.unit || null,
         unitPrice: Number(it.unitPrice),
       })),
+      createdBy: userId,
     };
 
     try {
