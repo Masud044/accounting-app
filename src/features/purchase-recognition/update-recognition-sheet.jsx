@@ -1544,6 +1544,7 @@ import {
 } from "./queries";
 import ItemPicker from "./item-picker";
 import SupplierPicker from "./supplier-picker";
+import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const today = () => new Date().toISOString().split("T")[0];
 
@@ -1574,6 +1575,7 @@ const editableCell =
 export default function EditRecognitionPage() {
   const { formId } = useParams();
   const navigate = useNavigate();
+  const userId = useAuthUserId();
 
   const { data: formData, isLoading: isLoadingForm } = usePurchaseRecognitionByFormId(formId);
   const updateMutation = useUpdatePurchaseRecognition(formId);
@@ -1726,6 +1728,7 @@ export default function EditRecognitionPage() {
         unitId: it.unitId ? Number(it.unitId) : null,
         unitPrice: Number(it.unitPrice),
       })),
+      updatedBy: userId,
     };
 
     try {
