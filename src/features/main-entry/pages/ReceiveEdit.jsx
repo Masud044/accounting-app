@@ -1241,6 +1241,7 @@ const ReceiveEdit = () => {
       .filter((d) => d.credit && Number(d.credit) > 0 && d.code !== paymentCode)
       .map((d) => {
         const account = accounts.find((a) => a.value === d.code);
+     
         return {
           id: d.id,
           accountCode: d.code || "",
@@ -1248,6 +1249,7 @@ const ReceiveEdit = () => {
           amount: parseFloat(d.credit),
           creditId: d.id,
           isExisting: true,
+          
         };
       });
 
@@ -1268,12 +1270,63 @@ const ReceiveEdit = () => {
       totalAmount: total,
       inv_type: master.INV_TYPE ? String(master.INV_TYPE) : "",
       sale_invoice_no: master.SALE_INVOICE_NO ? String(master.SALE_INVOICE_NO) : "",
+      type: master.TYPE || "MANUAL",  
     });
     setRows(mappedRows);
     initializedRef.current = true;
   }, [voucherId, voucherData, accounts]);
 
   // ── Voucher Mutation ──────────────────────────────────────────────────────────
+  
+  
+//   useEffect(() => {
+//   if (!voucherId || voucherData?.status !== "success") return;
+//   if (initializedRef.current) return;
+//   const master = voucherData.master || {};
+//   const details = voucherData.details || {};
+//   const paymentCode = master.CASHACCOUNT || "";
+
+//   const mappedRows = details
+//     .filter((d) => {
+//       const amt = Number(d.credit || d.debit || 0);
+//       return amt > 0 && d.code !== paymentCode;
+//     })
+//     .map((d) => {
+//       const amt = Number(d.credit || d.debit || 0);
+//       const account = accounts.find((a) => a.value === d.code);
+//       return {
+//         id: d.id,
+//         accountCode: d.code || "",
+//         particulars: account ? account.label : d.codedescription || "",
+//         amount: amt,
+//         creditId: d.id,
+//         isExisting: true,
+//       };
+//     });
+
+//   const total = mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0);
+
+//   setForm({
+//     entryDate: toInputDate(master.TRANS_DATE),
+//     glDate: toInputDate(master.GL_ENTRY_DATE),
+//     invoiceNo: master.VOUCHERNO || "",
+//     supporting: master.SUPPORTING || "",
+//     description: master.DESCRIPTION || "",
+//     customer: master.CUSTOMER_ID ? String(master.CUSTOMER_ID) : "",
+//     ReceiveCode: paymentCode,
+//     paymentCode: paymentCode,
+//     accountId: "",
+//     particular: "",
+//     amount: "",
+//     totalAmount: total,
+//     inv_type: master.INV_TYPE ? String(master.INV_TYPE) : "",
+//     sale_invoice_no: master.SALE_INVOICE_NO ? String(master.SALE_INVOICE_NO) : "",
+//     type: master.TYPE || "MANUAL",
+//   });
+//   setRows(mappedRows);
+//   initializedRef.current = true;
+// }, [voucherId, voucherData, accounts]);
+
   const mutation = useMutation({
     mutationFn: async (payload) => {
       const res = await ReceiveService.update(payload);
@@ -1449,6 +1502,7 @@ const ReceiveEdit = () => {
         return p.length > 1 ? p[1] : r.particulars;
       }),
       update_by: userId,
+      type: form.type,
     });
   };
 
@@ -1629,6 +1683,19 @@ const ReceiveEdit = () => {
                   ))}
                 </select>
               </div>
+
+              <div>
+  <label className={fieldLabel}>Entry Type</label>
+  <select
+    value={form.type}
+    onChange={(e) => setForm({ ...form, type: e.target.value })}
+    disabled={isSubmitting}
+    className={fieldInput}
+  >
+    <option value="MANUAL">Manual</option>
+    <option value="REVERSE">Reverse</option>
+  </select>
+</div>
 
               <div>
                 <label className={fieldLabel}>Payment Code</label>

@@ -1943,6 +1943,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { RotateCcw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { ReceiveService } from "@/api/AccontingApi";
@@ -1972,6 +1983,9 @@ const toISODateString = (val) => {
 };
 
 export default function ReceiveTable() {
+
+  const [reverseId, setReverseId] = useState(null);
+const [isReversing, setIsReversing] = useState(false);
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -2018,7 +2032,24 @@ export default function ReceiveTable() {
   const confirmDelete = () => {
     if (deleteModal.id) deleteMutation.mutate(deleteModal.id);
   };
-
+const handleReverseVoucher = async () => {
+  if (!reverseId) return;
+  setIsReversing(true);
+  try {
+    const res = await axios.post(`${BASE_URL}/api/reverse-voucher`, { id: reverseId });
+    if (res.data.status === "success") {
+      toast.success(res.data.message || "Voucher reversed successfully!");
+      queryClient.invalidateQueries(["unpostedVouchers"]);
+    } else {
+      toast.error(res.data.message || "Failed to reverse voucher");
+    }
+  } catch (error) {
+    toast.error("Error reversing voucher: " + (error.response?.data?.message || error.message));
+  } finally {
+    setIsReversing(false);
+    setReverseId(null);
+  }
+};
   const sortedVouchers = useMemo(() => {
     const vouchers = Array.isArray(data?.data) ? data.data : [];
     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
@@ -2187,20 +2218,54 @@ export default function ReceiveTable() {
               </DropdownMenu>
             )}
 
-            {isApproved && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-                      <BadgeCheck size={16} />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-                    Approved
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+          {isApproved && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+          <BadgeCheck size={16} />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+        Approved
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{/* ── Reverse icon / Reversed badge ── */}
+{isApproved && String(voucher.TYPE).toUpperCase() === "REVERSE" && (
+  voucher.REF_REVERSE_ENTRY ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
+            <RotateCcw size={16} />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="bg-red-700 text-white text-xs">
+          Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+            onClick={() => setReverseId(voucher.ID)}
+          >
+            <RotateCcw size={16} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">Reverse Entry</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+)}
           </div>
         );
       },
@@ -2445,6 +2510,31 @@ export default function ReceiveTable() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={!!reverseId} onOpenChange={() => !isReversing && setReverseId(null)}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle className="flex items-center gap-2">
+        <RotateCcw className="text-orange-600" size={20} />
+        Reverse Voucher?
+      </AlertDialogTitle>
+      <AlertDialogDescription>
+        A new reversal entry will be created with debit/credit swapped.{" "}
+        <span className="text-red-500 font-medium">This action cannot be undone.</span>
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel disabled={isReversing}>Cancel</AlertDialogCancel>
+      <AlertDialogAction
+        onClick={handleReverseVoucher}
+        disabled={isReversing}
+        className="bg-orange-600 hover:bg-orange-700"
+      >
+        {isReversing ? "Reversing..." : "Yes, Reverse"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
     </>
   );
 }

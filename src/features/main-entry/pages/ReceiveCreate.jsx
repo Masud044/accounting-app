@@ -915,6 +915,8 @@ const ReceiveCreate = () => {
     totalAmount: 0,
     inv_type: "",
     sale_invoice_no: "",
+   
+type: "MANUAL",   // ← notun
   });
 
   const { data: periodStatus } = usePeriodStatusForDate("AR", form.glDate);
@@ -1003,6 +1005,7 @@ const ReceiveCreate = () => {
           totalAmount: 0,
           inv_type: "",
           sale_invoice_no: "",
+          type: "MANUAL",
         });
         setRows([{ id: "dummy", accountCode: "", particulars: "", amount: 0 }]);
         queryClient.invalidateQueries(["unpostedVouchers"]);
@@ -1148,6 +1151,7 @@ const ReceiveCreate = () => {
       inv_type: form.inv_type ? Number(form.inv_type) : null,
       sale_invoice_no: form.sale_invoice_no ? Number(form.sale_invoice_no) : null,
       entry_by: userId,
+      type: form.type, 
     });
   };
 
@@ -1372,6 +1376,19 @@ const ReceiveCreate = () => {
                   }`}
                 />
               </div>
+
+              <div>
+  <label className={fieldLabel}>Entry Type</label>
+  <select
+    value={form.type}
+    onChange={(e) => setForm({ ...form, type: e.target.value })}
+    disabled={isSubmitting}
+    className={fieldInput}
+  >
+    <option value="MANUAL">Manual</option>
+    <option value="REVERSE">Reverse</option>
+  </select>
+</div>
 
               <div>
                 <label className={fieldLabel}>Type</label>
