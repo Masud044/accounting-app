@@ -2233,38 +2233,37 @@ const handleReverseVoucher = async () => {
   </TooltipProvider>
 )}
 
-{/* ── Reverse icon / Reversed badge ── */}
-{isApproved && String(voucher.TYPE).toUpperCase() === "REVERSE" && (
-  voucher.REF_REVERSE_ENTRY ? (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
-            <RotateCcw size={16} />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="bg-red-700 text-white text-xs">
-          Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  ) : (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
-            onClick={() => setReverseId(voucher.ID)}
-          >
-            <RotateCcw size={16} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top">Reverse Entry</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
+{isApproved && String(voucher.TYPE).toUpperCase() !== "REVERSE" && !voucher.REF_REVERSE_ENTRY && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+          onClick={() => setReverseId(voucher.ID)}
+        >
+          <RotateCcw size={16} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">Reverse Entry</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+{isApproved && voucher.REF_REVERSE_ENTRY && (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
+          <RotateCcw size={16} />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-red-700 text-white text-xs">
+        Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
 )}
           </div>
         );

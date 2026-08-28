@@ -1948,9 +1948,9 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
     cell: ({ row }) => <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>,
   },
   {
-    accessorKey: "TRANS_DATE",
-    header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
-    cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{formatDate(row.getValue("TRANS_DATE"))}</div>,
+    accessorKey: "GL_ENTRY_DATE",
+    header: ({ column }) => <SortableHeader column={column} label="Gl Date" />,
+    cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{formatDate(row.getValue("GL_ENTRY_DATE"))}</div>,
   },
   {
     accessorKey: "DESCRIPTION",
