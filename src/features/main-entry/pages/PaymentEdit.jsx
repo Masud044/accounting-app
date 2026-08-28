@@ -4378,32 +4378,69 @@ const PaymentEdit = () => {
       return;
     if (initializedRef.current) return;
 
+    // const master = voucherData.master || {};
+    // const details = voucherData.details || [];
+
+    // const creditEntry = details.find(
+    //   (d) => Number(d.CREDIT ?? d.credit ?? 0) > 0,
+    // );
+
+    // const mappedRows = details
+    //   .filter((d) => Number(d.DEBIT ?? d.debit ?? 0) > 0)
+    //   .map((d, i) => {
+    //     const code = d.CODE ?? d.code ?? "";
+    //     const debitId = d.ID ?? d.id ?? `${code}-${i}`;
+    //     const rawDesc = d.CODEDESCRIPTION ?? d.codedescription ?? "";
+    //     const account = accounts.find((a) => a.value === code);
+    //     const particulars = rawDesc || (account ? account.label : code);
+    //     const amount = parseFloat(d.DEBIT ?? d.debit ?? 0);
+
+    //     return {
+    //       id: debitId,
+    //       accountCode: code,
+    //       particulars,
+    //       amount,
+    //       debitId,
+    //       isExisting: true,
+    //     };
+    //   });
+
     const master = voucherData.master || {};
-    const details = voucherData.details || [];
+const details = voucherData.details || [];
+const paymentCode = master.CASHACCOUNT || "";
 
-    const creditEntry = details.find(
-      (d) => Number(d.CREDIT ?? d.credit ?? 0) > 0,
-    );
+// payment/cash code row (direction-agnostic — code দিয়ে খুঁজি, DEBIT/CREDIT দিয়ে না)
+const creditEntry = details.find(
+  (d) => (d.CODE ?? d.code ?? "") === paymentCode
+);
 
-    const mappedRows = details
-      .filter((d) => Number(d.DEBIT ?? d.debit ?? 0) > 0)
-      .map((d, i) => {
-        const code = d.CODE ?? d.code ?? "";
-        const debitId = d.ID ?? d.id ?? `${code}-${i}`;
-        const rawDesc = d.CODEDESCRIPTION ?? d.codedescription ?? "";
-        const account = accounts.find((a) => a.value === code);
-        const particulars = rawDesc || (account ? account.label : code);
-        const amount = parseFloat(d.DEBIT ?? d.debit ?? 0);
+// distribution rows — direction যাই হোক (DEBIT বা CREDIT), code পেমেন্ট কোড না হলেই distribution
+const mappedRows = details
+  .filter((d) => {
+    const code = d.CODE ?? d.code ?? "";
+    const debit = Number(d.DEBIT ?? d.debit ?? 0);
+    const credit = Number(d.CREDIT ?? d.credit ?? 0);
+    return code !== paymentCode && (debit > 0 || credit > 0);
+  })
+  .map((d, i) => {
+    const code = d.CODE ?? d.code ?? "";
+    const debitId = d.ID ?? d.id ?? `${code}-${i}`;
+    const rawDesc = d.CODEDESCRIPTION ?? d.codedescription ?? "";
+    const account = accounts.find((a) => a.value === code);
+    const particulars = rawDesc || (account ? account.label : code);
+    const debit = Number(d.DEBIT ?? d.debit ?? 0);
+    const credit = Number(d.CREDIT ?? d.credit ?? 0);
+    const amount = debit > 0 ? debit : credit;  // যেদিকে amount আছে সেটাই নাও
 
-        return {
-          id: debitId,
-          accountCode: code,
-          particulars,
-          amount,
-          debitId,
-          isExisting: true,
-        };
-      });
+    return {
+      id: debitId,
+      accountCode: code,
+      particulars,
+      amount,
+      debitId,
+      isExisting: true,
+    };
+  });
 
     const total = mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0);
 
