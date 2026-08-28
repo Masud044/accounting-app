@@ -1237,21 +1237,42 @@ const ReceiveEdit = () => {
     const details = voucherData.details || {};
     const paymentCode = master.CASHACCOUNT || "";
 
-    const mappedRows = details
-      .filter((d) => d.credit && Number(d.credit) > 0 && d.code !== paymentCode)
-      .map((d) => {
-        const account = accounts.find((a) => a.value === d.code);
+    // const mappedRows = details
+    //   .filter((d) => d.credit && Number(d.credit) > 0 && d.code !== paymentCode)
+    //   .map((d) => {
+    //     const account = accounts.find((a) => a.value === d.code);
      
-        return {
-          id: d.id,
-          accountCode: d.code || "",
-          particulars: account ? account.label : d.codedescription || "",
-          amount: parseFloat(d.credit),
-          creditId: d.id,
-          isExisting: true,
+    //     return {
+    //       id: d.id,
+    //       accountCode: d.code || "",
+    //       particulars: account ? account.label : d.codedescription || "",
+    //       amount: parseFloat(d.credit),
+    //       creditId: d.id,
+    //       isExisting: true,
           
-        };
-      });
+    //     };
+    //   });
+    const mappedRows = details
+  .filter((d) => {
+    const debit = Number(d.debit || 0);
+    const credit = Number(d.credit || 0);
+    return d.code !== paymentCode && (debit > 0 || credit > 0);
+  })
+  .map((d) => {
+    const account = accounts.find((a) => a.value === d.code);
+    const debit = Number(d.debit || 0);
+    const credit = Number(d.credit || 0);
+    const amount = credit > 0 ? credit : debit;   // যেটা non-zero সেটাই amount
+
+    return {
+      id: d.id,
+      accountCode: d.code || "",
+      particulars: account ? account.label : d.codedescription || "",
+      amount,
+      creditId: d.id,
+      isExisting: true,
+    };
+  });
 
     const total = mappedRows.reduce((s, r) => s + Number(r.amount || 0), 0);
 
@@ -1471,10 +1492,14 @@ const ReceiveEdit = () => {
       return;
     }
 
+    // const firstDebitEntry = voucherData?.details?.find(
+    //   (d) => d.code === form.paymentCode && d.debit && Number(d.debit) > 0,
+    // );
+    // const creditId = firstDebitEntry?.id || null;
     const firstDebitEntry = voucherData?.details?.find(
-      (d) => d.code === form.paymentCode && d.debit && Number(d.debit) > 0,
-    );
-    const creditId = firstDebitEntry?.id || null;
+  (d) => d.code === form.paymentCode,   // debit>0 শর্ত বাদ — direction নির্বিশেষে code দিয়েই খুঁজবে
+);
+const creditId = firstDebitEntry?.id || null;
     const calculatedTotal = rows.reduce((s, r) => s + Number(r.amount || 0), 0);
 
     mutation.mutate({
@@ -1694,6 +1719,7 @@ const ReceiveEdit = () => {
   >
     <option value="MANUAL">Manual</option>
     <option value="REVERSE">Reverse</option>
+    <option value="AUTO">Auto</option>
   </select>
 </div>
 

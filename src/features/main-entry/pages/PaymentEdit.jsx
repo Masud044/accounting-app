@@ -4782,6 +4782,7 @@ const PaymentEdit = () => {
               >
                 <option value="MANUAL">Manual</option>
                 <option value="REVERSE">Reverse</option>
+                <option value="AUTO">Auto</option>
               </select>
             </div>
 
