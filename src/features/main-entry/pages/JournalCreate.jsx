@@ -1297,7 +1297,7 @@ const JournalCreate = () => {
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <label className={fieldLabel}>Entry Date</label>
                 <input
                   type="date"
@@ -1306,7 +1306,21 @@ const JournalCreate = () => {
                   disabled={isSubmitting}
                   className={fieldInput}
                 />
-              </div>
+              </div> */}
+              <div>
+  <label className={fieldLabel}>Entry Date</label>
+  <div className="relative">
+    <input
+      type="date"
+      value={form.entryDate}
+      disabled
+      className={`${fieldInput} cursor-not-allowed bg-slate-100 opacity-75`}
+    />
+    <div className="absolute inset-0 cursor-not-allowed" />
+  </div>
+  <input type="hidden" name="entryDate" value={form.entryDate} />
+</div>
+
 
               <div>
                 <label className={fieldLabel}>No. of Supporting</label>
