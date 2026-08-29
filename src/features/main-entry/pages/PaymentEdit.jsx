@@ -4734,16 +4734,16 @@ const mappedRows = details
               </select>
             </div>
 
-            <div>
-              <label className={fieldLabel}>Entry Date</label>
-              <input
-                type="date"
-                value={form.entryDate}
-                disabled={isSubmitting}
-                onChange={(e) => setForm({ ...form, entryDate: e.target.value })}
-                className={fieldInput}
-              />
-            </div>
+           <div>
+  <label className={fieldLabel}>Entry Date</label>
+  <input
+    type="date"
+    value={form.entryDate}
+    disabled
+    className={`${fieldInput} cursor-not-allowed bg-slate-100 opacity-75`}
+  />
+  <input type="hidden" name="entryDate" value={form.entryDate} />
+</div>
 
             <div>
               <label className={fieldLabel}>Invoice No</label>

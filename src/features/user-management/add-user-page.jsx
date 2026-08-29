@@ -73,7 +73,7 @@ export default function AddUserPage() {
     defaultValues,
   });
 
-  const userType = form.watch("userType");
+  // const userType = form.watch("userType");
 
   const roleOptions = useMemo(
     () => roles.map((r) => ({ value: String(r.ID), label: r.ROLE_NAME })),
@@ -198,7 +198,7 @@ export default function AddUserPage() {
               </div>
 
               {/* User Type */}
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="userType"
                 render={({ field }) => (
@@ -227,10 +227,10 @@ export default function AddUserPage() {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               {/* Ref (Worker / Owner) */}
-              {userType && (
+              {/* {userType && (
                 <FormField
                   control={form.control}
                   name="refId"
@@ -256,7 +256,7 @@ export default function AddUserPage() {
                     </FormItem>
                   )}
                 />
-              )}
+              )} */}
 
               {/* Roles */}
               <FormField

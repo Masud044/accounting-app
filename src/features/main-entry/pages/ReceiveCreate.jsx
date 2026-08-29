@@ -1170,6 +1170,7 @@ type: "MANUAL",   // ← notun
       sale_invoice_no: incoming.saleInvoiceNo
         ? String(incoming.saleInvoiceNo)
         : f.sale_invoice_no,
+      type: "AUTO",
     }));
 
     if (incoming.rows && incoming.rows.length > 0) {
@@ -1312,7 +1313,7 @@ type: "MANUAL",   // ← notun
                 </select>
               </div>
 
-              <div>
+              {/* <div>
                 <label className={fieldLabel}>Entry Date</label>
                 <input
                   type="date"
@@ -1321,7 +1322,21 @@ type: "MANUAL",   // ← notun
                   onChange={(e) => setForm({ ...form, entryDate: e.target.value })}
                   className={fieldInput}
                 />
-              </div>
+              </div> */}
+              <div>
+  <label className={fieldLabel}>Entry Date</label>
+  <div className="relative">
+    <input
+      type="date"
+      value={form.entryDate}
+      disabled
+      className={`${fieldInput} cursor-not-allowed bg-slate-100 opacity-75`}
+    />
+    <div className="absolute inset-0 cursor-not-allowed" />
+  </div>
+  <input type="hidden" name="entryDate" value={form.entryDate} />
+</div>
+
 
               <div>
                 <label className={fieldLabel}>Invoice No</label>

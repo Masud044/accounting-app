@@ -1626,7 +1626,7 @@ const creditId = firstDebitEntry?.id || null;
                 </select>
               </div>
 
-              <div>
+              {/* <div>
                 <label className={fieldLabel}>Entry Date</label>
                 <input
                   type="date"
@@ -1635,7 +1635,21 @@ const creditId = firstDebitEntry?.id || null;
                   onChange={(e) => setForm({ ...form, entryDate: e.target.value })}
                   className={fieldInput}
                 />
-              </div>
+              </div> */}
+              <div>
+  <label className={fieldLabel}>Entry Date</label>
+  <div className="relative">
+    <input
+      type="date"
+      value={form.entryDate}
+      disabled
+      className={`${fieldInput} cursor-not-allowed bg-slate-100 opacity-75`}
+    />
+    <div className="absolute inset-0 cursor-not-allowed" />
+  </div>
+  <input type="hidden" name="entryDate" value={form.entryDate} />
+</div>
+
 
               <div>
                 <label className={fieldLabel}>Invoice No</label>
