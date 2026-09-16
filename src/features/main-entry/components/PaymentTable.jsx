@@ -4147,7 +4147,8 @@ export default function PaymentTable() {
 
   const sortedVouchers = useMemo(() => {
     const vouchers = Array.isArray(data?.data) ? data.data : [];
-    return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+    // return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+    return vouchers;
   }, [data]);
 
   const filteredVouchers = useMemo(() => {
