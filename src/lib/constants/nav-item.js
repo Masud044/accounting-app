@@ -476,6 +476,8 @@ export const NAV_ITEMS = [
       { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText, requiredPermission: "CASH_FLOW_VIEW" },
       { to: "/dashboard/project-profile-report", label: "Project Profile Report", Icon: FileText, requiredPermission: "PROJECT_PROFILE_REPORT_VIEW" },
       { to: "/dashboard/farm-calendar-report", label: "Project Calendar Report", Icon: FileText, requiredPermission: "FARM_CALENDAR_REPORT_VIEW" },
+     { to: "/dashboard/farm-budget-report", label: "Budget Report", Icon: FileText, requiredPermission: "BUDGET_REPORT_VIEW" },
+      
     ],
   },
   {

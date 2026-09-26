@@ -793,6 +793,8 @@ import CreateRecognitionPage from "./features/purchase-recognition/create-recogn
 import EditRecognitionPage from "./features/purchase-recognition/update-recognition-sheet";
 import CreateInvoicePage from "./features/sale-invoice/create-sale-invoice-sheet";
 import EditInvoicePage from "./features/sale-invoice/edit-sale-invoice-sheet";
+import FarmBudgetReportIndex from "./features/budget-report/index";
+import FarmBudgetReportPage from "./features/budget-report/budget-report-page";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1048,6 +1050,23 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              <Route
+  path="farm-budget-report"
+  element={
+    <ProtectedRoute anyPermission="BUDGET_REPORT_VIEW">
+      <FarmBudgetReportIndex />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="farm-budget-report/:budgetId"
+  element={
+    <ProtectedRoute anyPermission="BUDGET_REPORT_VIEW">
+      <FarmBudgetReportPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="income-expense-voucher-report"
                 element={

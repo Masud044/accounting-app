@@ -86,15 +86,25 @@ const getEditRoute = (type, id) => {
   }
 };
 
+// const formatDate = (value) => {
+//   if (!value) return "—";
+//   const date = new Date(value);
+//   if (isNaN(date.getTime())) return value;
+//   return date.toLocaleDateString("en-US", {
+//     month: "short",
+//     day: "2-digit",
+//     year: "numeric",
+//   });
+// };
+
 const formatDate = (value) => {
   if (!value) return "—";
   const date = new Date(value);
   if (isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 // Voucher type options for the filter dropdown
@@ -382,14 +392,22 @@ export function DashboardHomeTable() {
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="relative max-w-sm w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
+            {/* <Input
               placeholder="Filter descriptions..."
               value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
               onChange={(e) =>
                 table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
               }
               className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
-            />
+            /> */}
+            <Input
+  placeholder="Filter voucher no..."
+  value={table.getColumn("VOUCHERNO")?.getFilterValue() ?? ""}
+  onChange={(e) =>
+    table.getColumn("VOUCHERNO")?.setFilterValue(e.target.value)
+  }
+  className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
+/>
           </div>
 
           <div className="flex flex-col gap-1.5 w-full sm:w-48">

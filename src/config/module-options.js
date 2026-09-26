@@ -53,6 +53,7 @@ export const MODULE_OPTIONS = [
   { value: "Cash Flow Statement", label: "Cash Flow Statement Report" },
   { value: "Project Profile Report", label: "Project Profile Report" },
   { value: "Calendar-Report", label: "Project Calendar Report" },
+    { value: "Budget-Report", label: "Farm Budget Report" },
 
   // Inventory Report
   { value: "Daily Expense Report", label: "Daily Expense Report" },
