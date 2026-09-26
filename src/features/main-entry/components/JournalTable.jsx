@@ -4749,16 +4749,26 @@ export default function JournalTable() {
   const canEdit = useHasPermission("JOURNAL_VOUCHER_EDIT");
   const canDownload = useHasPermission("JOURNAL_VOUCHER_DOWNLOAD");
 
+  // const formatDate = (value) => {
+  //   if (!value) return "—";
+  //   const date = new Date(value);
+  //   if (isNaN(date.getTime())) return value;
+  //   return date.toLocaleDateString("en-US", {
+  //     month: "short",
+  //     day: "2-digit",
+  //     year: "numeric",
+  //   });
+  // };
   const formatDate = (value) => {
-    if (!value) return "—";
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return value;
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
+  if (!value) return "—";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return value;
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedJournalVouchers"],
@@ -5615,7 +5625,7 @@ export default function JournalTable() {
               <div className="flex items-center gap-2">
                 <Eye size={18} className="text-indigo-600" />
                 <h2 className="text-base font-bold text-gray-900">
-                  Review Voucher #{reviewVoucher.VOUCHERNO}
+                  Journal Voucher #{reviewVoucher.VOUCHERNO}
                 </h2>
               </div>
               <div className="flex items-center gap-2">

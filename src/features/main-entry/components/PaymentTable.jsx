@@ -1,3 +1,504 @@
+// // // // // // // import { useState, useMemo } from "react";
+// // // // // // // import {
+// // // // // // //   flexRender,
+// // // // // // //   getCoreRowModel,
+// // // // // // //   getFilteredRowModel,
+// // // // // // //   getPaginationRowModel,
+// // // // // // //   getSortedRowModel,
+// // // // // // //   useReactTable,
+// // // // // // // } from "@tanstack/react-table";
+// // // // // // // import {
+// // // // // // //   ArrowUpDown,
+// // // // // // //   ChevronDown,
+// // // // // // //   Pencil,
+// // // // // // //   Trash2,
+// // // // // // //   PlusIcon,
+// // // // // // //   Download,
+// // // // // // //   FileText,
+// // // // // // //   FileSpreadsheet,
+// // // // // // //   BadgeCheck,
+// // // // // // // } from "lucide-react";
+// // // // // // // import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// // // // // // // import { Link } from "react-router-dom";
+// // // // // // // import { Helmet } from "react-helmet";
+
+// // // // // // // import { Button } from "@/components/ui/button";
+// // // // // // // import {
+// // // // // // //   DropdownMenu,
+// // // // // // //   DropdownMenuCheckboxItem,
+// // // // // // //   DropdownMenuContent,
+// // // // // // //   DropdownMenuItem,
+// // // // // // //   DropdownMenuLabel,
+// // // // // // //   DropdownMenuSeparator,
+// // // // // // //   DropdownMenuTrigger,
+// // // // // // // } from "@/components/ui/dropdown-menu";
+// // // // // // // import { Input } from "@/components/ui/input";
+// // // // // // // import {
+// // // // // // //   Table,
+// // // // // // //   TableBody,
+// // // // // // //   TableCell,
+// // // // // // //   TableHead,
+// // // // // // //   TableHeader,
+// // // // // // //   TableRow,
+// // // // // // // } from "@/components/ui/table";
+// // // // // // // import {
+// // // // // // //   Tooltip,
+// // // // // // //   TooltipContent,
+// // // // // // //   TooltipProvider,
+// // // // // // //   TooltipTrigger,
+// // // // // // // } from "@/components/ui/tooltip";
+// // // // // // // import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+
+// // // // // // // import { DataTablePagination } from "@/components/DataTablePagination";
+// // // // // // // import { PaymentService } from "@/api/AccontingApi";
+// // // // // // // import { toast } from "react-toastify";
+// // // // // // // import axios from "axios";
+// // // // // // // import { useHasPermission } from "@/hooks/use-permission";
+
+// // // // // // // const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+
+// // // // // // // export default function PaymentTable() {
+// // // // // // //   const [sorting, setSorting]               = useState([]);
+// // // // // // //   const [columnFilters, setColumnFilters]   = useState([]);
+// // // // // // //   const [columnVisibility, setColumnVisibility] = useState({});
+// // // // // // //   const [globalFilter, setGlobalFilter]     = useState("");
+// // // // // // //   const [deleteModal, setDeleteModal]       = useState({ show: false, id: null, voucherNo: "" });
+// // // // // // //   const [downloading, setDownloading]       = useState(null);
+
+// // // // // // //   const canCreate   = useHasPermission("PAYMENT_VOUCHER_CREATE");
+// // // // // // //   const canEdit     = useHasPermission("PAYMENT_VOUCHER_EDIT");
+
+// // // // // // //   const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD")
+
+// // // // // // //   const queryClient = useQueryClient();
+
+// // // // // // //   const { data, isLoading, error } = useQuery({
+// // // // // // //     queryKey: ["unpostedPaymentVouchers"],
+// // // // // // //     queryFn: async () => {
+// // // // // // //       const res = await axios.get(`${BASE_URL}/api/payment-all-unposted`);
+// // // // // // //       return res.data;
+// // // // // // //     },
+// // // // // // //   });
+
+// // // // // // //   const deleteMutation = useMutation({
+// // // // // // //     mutationFn: async (voucherId) => {
+// // // // // // //       const res = await PaymentService.delete(voucherId);
+// // // // // // //       return res.data;
+// // // // // // //     },
+// // // // // // //     onSuccess: (data) => {
+// // // // // // //       if (data.success === 1 || data.status === "success") {
+// // // // // // //         toast.success("Voucher deleted successfully!");
+// // // // // // //         queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+// // // // // // //       } else {
+// // // // // // //         toast.error(data.message || "Delete failed!");
+// // // // // // //       }
+// // // // // // //       setDeleteModal({ show: false, id: null, voucherNo: "" });
+// // // // // // //     },
+// // // // // // //     onError: (error) => {
+// // // // // // //       toast.error("Error deleting voucher: " + error.message);
+// // // // // // //       setDeleteModal({ show: false, id: null, voucherNo: "" });
+// // // // // // //     },
+// // // // // // //   });
+
+  
+
+// // // // // // //   const confirmDelete = () => {
+// // // // // // //     if (deleteModal.id) deleteMutation.mutate(deleteModal.id);
+// // // // // // //   };
+
+// // // // // // //   const sortedVouchers = useMemo(() => {
+// // // // // // //     const vouchers = Array.isArray(data?.data) ? data.data : [];
+// // // // // // //     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+// // // // // // //   }, [data]);
+
+// // // // // // //   const handleDownload = async (voucher, type) => {
+// // // // // // //     const key = `${voucher.ID}-${type}`;
+// // // // // // //     setDownloading(key);
+// // // // // // //     try {
+// // // // // // //       const response = await fetch(`${BASE_URL}/api/voucher/download/${voucher.ID}?type=${type}`);
+// // // // // // //       if (!response.ok) {
+// // // // // // //         let errMsg = `Server error ${response.status}`;
+// // // // // // //         try { const b = await response.json(); errMsg = b.detail || b.message || errMsg; } catch { /* ignore */ }
+// // // // // // //         toast.error(`Download failed: ${errMsg}`);
+// // // // // // //         return;
+// // // // // // //       }
+// // // // // // //       const blob      = await response.blob();
+// // // // // // //       const objectUrl = URL.createObjectURL(blob);
+// // // // // // //       const anchor    = document.createElement("a");
+// // // // // // //       anchor.href     = objectUrl;
+// // // // // // //       anchor.download = `payment_voucher_${voucher.VOUCHERNO}.${type === "pdf" ? "pdf" : "xlsx"}`;
+// // // // // // //       document.body.appendChild(anchor);
+// // // // // // //       anchor.click();
+// // // // // // //       anchor.remove();
+// // // // // // //       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+// // // // // // //       toast.success(`${type.toUpperCase()} downloaded successfully!`);
+// // // // // // //     } catch (err) {
+// // // // // // //       toast.error(`Error downloading ${type.toUpperCase()}: ${err.message}`);
+// // // // // // //     } finally {
+// // // // // // //       setDownloading(null);
+// // // // // // //     }
+// // // // // // //   };
+
+// // // // // // //   const columns = [
+// // // // // // //     {
+// // // // // // //       accessorKey: "VOUCHERNO",
+// // // // // // //       header: ({ column }) => (
+// // // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
+// // // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // // // // // //           Voucher No <ArrowUpDown />
+// // // // // // //         </Button>
+// // // // // // //       ),
+// // // // // // //       cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
+// // // // // // //     },
+// // // // // // //     {
+// // // // // // //       accessorKey: "TRANS_DATE",
+// // // // // // //       header: ({ column }) => (
+// // // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
+// // // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // // // // // //           Transaction Date <ArrowUpDown />
+// // // // // // //         </Button>
+// // // // // // //       ),
+// // // // // // //       cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
+// // // // // // //     },
+// // // // // // //     {
+// // // // // // //       accessorKey: "GL_ENTRY_DATE",
+// // // // // // //       header: ({ column }) => (
+// // // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
+// // // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // // // // // //           GL Date <ArrowUpDown />
+// // // // // // //         </Button>
+// // // // // // //       ),
+// // // // // // //       cell: ({ row }) => <div className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
+// // // // // // //     },
+// // // // // // //     {
+// // // // // // //       accessorKey: "DESCRIPTION",
+// // // // // // //       header: () => <div className="text-left font-bold text-gray-800 text-sm font-sans">Description</div>,
+// // // // // // //       cell: ({ row }) => (
+// // // // // // //         <div className="max-w-[200px] truncate" title={row.getValue("DESCRIPTION")}>
+// // // // // // //           {row.getValue("DESCRIPTION")}
+// // // // // // //         </div>
+// // // // // // //       ),
+// // // // // // //     },
+// // // // // // //     {
+// // // // // // //       accessorKey: "CREDIT",
+// // // // // // //       header: ({ column }) => (
+// // // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
+// // // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+// // // // // // //           Credit <ArrowUpDown />
+// // // // // // //         </Button>
+// // // // // // //       ),
+// // // // // // //       cell: ({ row }) => {
+// // // // // // //         const amount    = parseFloat(row.getValue("CREDIT") || 0);
+// // // // // // //         const formatted = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+// // // // // // //         return <div className="font-medium ml-3">{formatted}</div>;
+// // // // // // //       },
+// // // // // // //     },
+// // // // // // //     {
+// // // // // // //       id: "actions",
+// // // // // // //       enableHiding: false,
+// // // // // // //       header: () => <div className="text-center font-bold text-gray-800 text-sm font-sans">Actions</div>,
+// // // // // // //       // cell: ({ row }) => {
+// // // // // // //       //   const voucher    = row.original;
+// // // // // // //       //   const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
+
+// // // // // // //       //   return (
+// // // // // // //       //     <div className="flex items-center justify-center gap-1">
+
+// // // // // // //       //       {/* Edit */}
+// // // // // // //       //       {isApproved ? (
+// // // // // // //       //         <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// // // // // // //       //           <Pencil size={16} />
+// // // // // // //       //         </Button>
+// // // // // // //       //       ) : (
+// // // // // // //       //         /* ← updated route to use the new PaymentEdit page */
+// // // // // // //       //         <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+// // // // // // //       //           <Button variant="ghost" size="icon">
+// // // // // // //       //             <Pencil size={16} />
+// // // // // // //       //           </Button>
+// // // // // // //       //         </Link>
+// // // // // // //       //       )}
+
+// // // // // // //       //       {/* Download */}
+// // // // // // //       //       <DropdownMenu>
+// // // // // // //       //         <DropdownMenuTrigger asChild>
+// // // // // // //       //           <Button variant="ghost" size="icon" title="Download"
+// // // // // // //       //             disabled={downloading?.startsWith(`${voucher.ID}-`)}>
+// // // // // // //       //             <Download size={16} />
+// // // // // // //       //           </Button>
+// // // // // // //       //         </DropdownMenuTrigger>
+// // // // // // //       //         <DropdownMenuContent align="end" className="w-40">
+// // // // // // //       //           <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
+// // // // // // //       //           <DropdownMenuSeparator />
+// // // // // // //       //           <DropdownMenuItem className="cursor-pointer gap-2"
+// // // // // // //       //             disabled={downloading === `${voucher.ID}-pdf`}
+// // // // // // //       //             onClick={() => handleDownload(voucher, "pdf")}>
+// // // // // // //       //             <FileText size={14} className="text-red-500" />
+// // // // // // //       //             {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+// // // // // // //       //           </DropdownMenuItem>
+// // // // // // //       //           <DropdownMenuItem className="cursor-pointer gap-2"
+// // // // // // //       //             disabled={downloading === `${voucher.ID}-excel`}
+// // // // // // //       //             onClick={() => handleDownload(voucher, "excel")}>
+// // // // // // //       //             <FileSpreadsheet size={14} className="text-green-600" />
+// // // // // // //       //             {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+// // // // // // //       //           </DropdownMenuItem>
+// // // // // // //       //         </DropdownMenuContent>
+// // // // // // //       //       </DropdownMenu>
+
+// // // // // // //       //       {/* Approved badge OR Delete */}
+// // // // // // //       //       {isApproved ? (
+// // // // // // //       //         <TooltipProvider>
+// // // // // // //       //           <Tooltip>
+// // // // // // //       //             <TooltipTrigger asChild>
+// // // // // // //       //               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+// // // // // // //       //                 <BadgeCheck size={16} />
+// // // // // // //       //               </span>
+// // // // // // //       //             </TooltipTrigger>
+// // // // // // //       //             <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+// // // // // // //       //               Approved
+// // // // // // //       //             </TooltipContent>
+// // // // // // //       //           </Tooltip>
+// // // // // // //       //         </TooltipProvider>
+// // // // // // //       //       ) : (
+// // // // // // //       //         <Button size="icon" onClick={() => handleDeleteClick(voucher)} title="Delete Voucher">
+// // // // // // //       //           <Trash2 size={16} />
+// // // // // // //       //         </Button>
+// // // // // // //       //       )}
+// // // // // // //       //     </div>
+// // // // // // //       //   );
+// // // // // // //       // },
+
+// // // // // // //       cell: ({ row }) => {
+// // // // // // //   const voucher    = row.original;
+// // // // // // //   const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
+
+// // // // // // //   return (
+// // // // // // //     <div className="flex items-center justify-center gap-1">
+
+// // // // // // //       {/* Edit */}
+// // // // // // //       {canEdit && (
+// // // // // // //         isApproved ? (
+// // // // // // //           <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// // // // // // //             <Pencil size={16} />
+// // // // // // //           </Button>
+// // // // // // //         ) : (
+// // // // // // //           <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+// // // // // // //             <Button variant="ghost" size="icon">
+// // // // // // //               <Pencil size={16} />
+// // // // // // //             </Button>
+// // // // // // //           </Link>
+// // // // // // //         )
+// // // // // // //       )}
+
+// // // // // // //       {/* Download */}
+// // // // // // //       {canDownload && (
+// // // // // // //         <DropdownMenu>
+// // // // // // //           <DropdownMenuTrigger asChild>
+// // // // // // //             <Button variant="ghost" size="icon" title="Download"
+// // // // // // //               disabled={downloading?.startsWith(`${voucher.ID}-`)}>
+// // // // // // //               <Download size={16} />
+// // // // // // //             </Button>
+// // // // // // //           </DropdownMenuTrigger>
+// // // // // // //           <DropdownMenuContent align="end" className="w-40">
+// // // // // // //             <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
+// // // // // // //             <DropdownMenuSeparator />
+// // // // // // //             <DropdownMenuItem className="cursor-pointer gap-2"
+// // // // // // //               disabled={downloading === `${voucher.ID}-pdf`}
+// // // // // // //               onClick={() => handleDownload(voucher, "pdf")}>
+// // // // // // //               <FileText size={14} className="text-red-500" />
+// // // // // // //               {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+// // // // // // //             </DropdownMenuItem>
+// // // // // // //             <DropdownMenuItem className="cursor-pointer gap-2"
+// // // // // // //               disabled={downloading === `${voucher.ID}-excel`}
+// // // // // // //               onClick={() => handleDownload(voucher, "excel")}>
+// // // // // // //               <FileSpreadsheet size={14} className="text-green-600" />
+// // // // // // //               {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+// // // // // // //             </DropdownMenuItem>
+// // // // // // //           </DropdownMenuContent>
+// // // // // // //         </DropdownMenu>
+// // // // // // //       )}
+
+// // // // // // //       {/* Approved badge OR Delete */}
+// // // // // // //      {/* Approved badge */}
+// // // // // // // {isApproved && (
+// // // // // // //   <TooltipProvider>
+// // // // // // //     <Tooltip>
+// // // // // // //       <TooltipTrigger asChild>
+// // // // // // //         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+// // // // // // //           <BadgeCheck size={16} />
+// // // // // // //         </span>
+// // // // // // //       </TooltipTrigger>
+// // // // // // //       <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+// // // // // // //         Approved
+// // // // // // //       </TooltipContent>
+// // // // // // //     </Tooltip>
+// // // // // // //   </TooltipProvider>
+// // // // // // // )}
+// // // // // // //     </div>
+// // // // // // //   );
+// // // // // // // },
+// // // // // // //     },
+// // // // // // //   ];
+
+// // // // // // //   const table = useReactTable({
+// // // // // // //     data: sortedVouchers, columns,
+// // // // // // //     onSortingChange: setSorting, onColumnFiltersChange: setColumnFilters,
+// // // // // // //     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
+// // // // // // //     getSortedRowModel: getSortedRowModel(), getFilteredRowModel: getFilteredRowModel(),
+// // // // // // //     onColumnVisibilityChange: setColumnVisibility, onGlobalFilterChange: setGlobalFilter,
+// // // // // // //     state: { sorting, columnFilters, columnVisibility, globalFilter },
+// // // // // // //   });
+
+// // // // // // //   if (isLoading) return (
+// // // // // // //     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
+// // // // // // //       <div className="flex items-center justify-center py-12">
+// // // // // // //         <p className="text-muted-foreground">Loading vouchers...</p>
+// // // // // // //       </div>
+// // // // // // //     </div>
+// // // // // // //   );
+
+// // // // // // //   if (error) return (
+// // // // // // //     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
+// // // // // // //       <div className="flex items-center justify-center py-12">
+// // // // // // //         <p className="text-red-600">Error loading vouchers.</p>
+// // // // // // //       </div>
+// // // // // // //     </div>
+// // // // // // //   );
+
+// // // // // // //   return (
+// // // // // // //     <>
+// // // // // // //       <Helmet>
+// // // // // // //         <title>Dashboard | Payment Vouchers | HRMS</title>
+// // // // // // //       </Helmet>
+
+// // // // // // //       <div className="mt-6">
+// // // // // // //         <Card className="w-full shadow-lg">
+// // // // // // //           <CardHeader className="border-b">
+// // // // // // //             <CardTitle className="text-sm font-bold">Payment Voucher</CardTitle>
+// // // // // // //           </CardHeader>
+
+// // // // // // //           <div className="bg-card rounded-md p-4">
+// // // // // // //             <div className="space-y-4">
+
+// // // // // // //               {/* Search + Column visibility + Add New */}
+// // // // // // //               <div className="flex flex-col sm:flex-row gap-4">
+// // // // // // //                 <Input
+// // // // // // //                   placeholder="Search vouchers..."
+// // // // // // //                   value={globalFilter ?? ""}
+// // // // // // //                   onChange={(e) => setGlobalFilter(e.target.value)}
+// // // // // // //                   className="max-w-sm"
+// // // // // // //                 />
+// // // // // // //                 <DropdownMenu>
+// // // // // // //                   <DropdownMenuTrigger asChild>
+// // // // // // //                     <Button variant="outline" className="ml-auto">
+// // // // // // //                       Columns <ChevronDown className="ml-2 h-4 w-4" />
+// // // // // // //                     </Button>
+// // // // // // //                   </DropdownMenuTrigger>
+// // // // // // //                   <DropdownMenuContent align="end">
+// // // // // // //                     {table.getAllColumns().filter((col) => col.getCanHide()).map((col) => (
+// // // // // // //                       <DropdownMenuCheckboxItem
+// // // // // // //                         key={col.id}
+// // // // // // //                         className="capitalize"
+// // // // // // //                         checked={col.getIsVisible()}
+// // // // // // //                         onCheckedChange={(value) => col.toggleVisibility(!!value)}
+// // // // // // //                       >
+// // // // // // //                         {col.id.replace(/_/g, " ")}
+// // // // // // //                       </DropdownMenuCheckboxItem>
+// // // // // // //                     ))}
+// // // // // // //                   </DropdownMenuContent>
+// // // // // // //                 </DropdownMenu>
+
+// // // // // // //                 {/* ← Link to the new create page */}
+// // // // // // //                 {/* <Link to="/dashboard/payment-create">
+// // // // // // //                   <Button>
+// // // // // // //                     <PlusIcon size={16} className="mr-2" />
+// // // // // // //                     Add New Payment
+// // // // // // //                   </Button>
+// // // // // // //                 </Link> */}
+
+// // // // // // //                 {canCreate && (
+// // // // // // //   <Link to="/dashboard/payment-create">
+// // // // // // //     <Button>
+// // // // // // //       <PlusIcon size={16} className="mr-2" />
+// // // // // // //       Add New Payment
+// // // // // // //     </Button>
+// // // // // // //   </Link>
+// // // // // // // )}
+// // // // // // //               </div>
+
+// // // // // // //               {/* Table */}
+// // // // // // //               <div className="overflow-hidden rounded-md border">
+// // // // // // //                 <Table>
+// // // // // // //                   <TableHeader>
+// // // // // // //                     {table.getHeaderGroups().map((hg) => (
+// // // // // // //                       <TableRow key={hg.id}>
+// // // // // // //                         {hg.headers.map((h) => (
+// // // // // // //                           <TableHead key={h.id}>
+// // // // // // //                             {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+// // // // // // //                           </TableHead>
+// // // // // // //                         ))}
+// // // // // // //                       </TableRow>
+// // // // // // //                     ))}
+// // // // // // //                   </TableHeader>
+// // // // // // //                   <TableBody>
+// // // // // // //                     {table.getRowModel().rows?.length ? (
+// // // // // // //                       table.getRowModel().rows.map((row) => (
+// // // // // // //                         <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+// // // // // // //                           {row.getVisibleCells().map((cell) => (
+// // // // // // //                             <TableCell key={cell.id}>
+// // // // // // //                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// // // // // // //                             </TableCell>
+// // // // // // //                           ))}
+// // // // // // //                         </TableRow>
+// // // // // // //                       ))
+// // // // // // //                     ) : (
+// // // // // // //                       <TableRow>
+// // // // // // //                         <TableCell colSpan={columns.length} className="h-24 text-center">
+// // // // // // //                           <p className="text-muted-foreground">No payment vouchers found</p>
+// // // // // // //                         </TableCell>
+// // // // // // //                       </TableRow>
+// // // // // // //                     )}
+// // // // // // //                   </TableBody>
+// // // // // // //                 </Table>
+// // // // // // //               </div>
+
+// // // // // // //               <DataTablePagination table={table} />
+// // // // // // //             </div>
+// // // // // // //           </div>
+// // // // // // //         </Card>
+// // // // // // //       </div>
+
+// // // // // // //       {/* Delete Confirmation Modal */}
+// // // // // // //       {deleteModal.show && (
+// // // // // // //         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+// // // // // // //           <div className="bg-white rounded-lg p-6 w-11/12 md:w-96 shadow-xl">
+// // // // // // //             <h2 className="text-xl font-bold mb-4 text-gray-800">Confirm Delete</h2>
+// // // // // // //             <p className="text-gray-600 mb-6">
+// // // // // // //               Are you sure you want to delete voucher{" "}
+// // // // // // //               <span className="font-semibold">{deleteModal.voucherNo}</span>?
+// // // // // // //             </p>
+// // // // // // //             <div className="flex justify-end space-x-3">
+// // // // // // //               <button
+// // // // // // //                 onClick={() => setDeleteModal({ show: false, id: null, voucherNo: "" })}
+// // // // // // //                 disabled={deleteMutation.isPending}
+// // // // // // //                 className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors"
+// // // // // // //               >
+// // // // // // //                 Cancel
+// // // // // // //               </button>
+// // // // // // //               <button
+// // // // // // //                 onClick={confirmDelete}
+// // // // // // //                 disabled={deleteMutation.isPending}
+// // // // // // //                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+// // // // // // //               >
+// // // // // // //                 {deleteMutation.isPending ? "Deleting..." : "Delete"}
+// // // // // // //               </button>
+// // // // // // //             </div>
+// // // // // // //           </div>
+// // // // // // //         </div>
+// // // // // // //       )}
+// // // // // // //     </>
+// // // // // // //   );
+// // // // // // // }
+
 // // // // // // import { useState, useMemo } from "react";
 // // // // // // import {
 // // // // // //   flexRender,
@@ -17,6 +518,8 @@
 // // // // // //   FileText,
 // // // // // //   FileSpreadsheet,
 // // // // // //   BadgeCheck,
+// // // // // //   Search,
+// // // // // //   Wallet,
 // // // // // // } from "lucide-react";
 // // // // // // import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // // // // // // import { Link } from "react-router-dom";
@@ -47,7 +550,6 @@
 // // // // // //   TooltipProvider,
 // // // // // //   TooltipTrigger,
 // // // // // // } from "@/components/ui/tooltip";
-// // // // // // import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 // // // // // // import { DataTablePagination } from "@/components/DataTablePagination";
 // // // // // // import { PaymentService } from "@/api/AccontingApi";
@@ -55,20 +557,30 @@
 // // // // // // import axios from "axios";
 // // // // // // import { useHasPermission } from "@/hooks/use-permission";
 
-// // // // // // const BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+// // // // // // const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// // // // // // // Reusable sortable header — clean uppercase gray style
+// // // // // // const SortableHeader = ({ column, label }) => (
+// // // // // //   <Button
+// // // // // //     variant="ghost"
+// // // // // //     className="text-xs font-semibold text-gray-500 uppercase tracking-wide p-0 h-auto hover:bg-transparent"
+// // // // // //     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+// // // // // //   >
+// // // // // //     {label} <ArrowUpDown className="ml-1 h-3 w-3" />
+// // // // // //   </Button>
+// // // // // // );
 
 // // // // // // export default function PaymentTable() {
-// // // // // //   const [sorting, setSorting]               = useState([]);
-// // // // // //   const [columnFilters, setColumnFilters]   = useState([]);
+// // // // // //   const [sorting, setSorting] = useState([]);
+// // // // // //   const [columnFilters, setColumnFilters] = useState([]);
 // // // // // //   const [columnVisibility, setColumnVisibility] = useState({});
-// // // // // //   const [globalFilter, setGlobalFilter]     = useState("");
-// // // // // //   const [deleteModal, setDeleteModal]       = useState({ show: false, id: null, voucherNo: "" });
-// // // // // //   const [downloading, setDownloading]       = useState(null);
+// // // // // //   const [globalFilter, setGlobalFilter] = useState("");
+// // // // // //   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, voucherNo: "" });
+// // // // // //   const [downloading, setDownloading] = useState(null);
 
-// // // // // //   const canCreate   = useHasPermission("PAYMENT_VOUCHER_CREATE");
-// // // // // //   const canEdit     = useHasPermission("PAYMENT_VOUCHER_EDIT");
-
-// // // // // //   const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD")
+// // // // // //   const canCreate = useHasPermission("PAYMENT_VOUCHER_CREATE");
+// // // // // //   const canEdit = useHasPermission("PAYMENT_VOUCHER_EDIT");
+// // // // // //   const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD");
 
 // // // // // //   const queryClient = useQueryClient();
 
@@ -100,8 +612,6 @@
 // // // // // //     },
 // // // // // //   });
 
-  
-
 // // // // // //   const confirmDelete = () => {
 // // // // // //     if (deleteModal.id) deleteMutation.mutate(deleteModal.id);
 // // // // // //   };
@@ -122,10 +632,10 @@
 // // // // // //         toast.error(`Download failed: ${errMsg}`);
 // // // // // //         return;
 // // // // // //       }
-// // // // // //       const blob      = await response.blob();
+// // // // // //       const blob = await response.blob();
 // // // // // //       const objectUrl = URL.createObjectURL(blob);
-// // // // // //       const anchor    = document.createElement("a");
-// // // // // //       anchor.href     = objectUrl;
+// // // // // //       const anchor = document.createElement("a");
+// // // // // //       anchor.href = objectUrl;
 // // // // // //       anchor.download = `payment_voucher_${voucher.VOUCHERNO}.${type === "pdf" ? "pdf" : "xlsx"}`;
 // // // // // //       document.body.appendChild(anchor);
 // // // // // //       anchor.click();
@@ -142,224 +652,159 @@
 // // // // // //   const columns = [
 // // // // // //     {
 // // // // // //       accessorKey: "VOUCHERNO",
-// // // // // //       header: ({ column }) => (
-// // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
-// // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-// // // // // //           Voucher No <ArrowUpDown />
-// // // // // //         </Button>
+// // // // // //       header: ({ column }) => <SortableHeader column={column} label="Voucher No" />,
+// // // // // //       cell: ({ row }) => (
+// // // // // //         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>
 // // // // // //       ),
-// // // // // //       cell: ({ row }) => <div className="ml-3">{row.getValue("VOUCHERNO")}</div>,
 // // // // // //     },
 // // // // // //     {
 // // // // // //       accessorKey: "TRANS_DATE",
-// // // // // //       header: ({ column }) => (
-// // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
-// // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-// // // // // //           Transaction Date <ArrowUpDown />
-// // // // // //         </Button>
-// // // // // //       ),
-// // // // // //       cell: ({ row }) => <div className="ml-3">{row.getValue("TRANS_DATE")}</div>,
+// // // // // //       header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
+// // // // // //       cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("TRANS_DATE")}</div>,
 // // // // // //     },
 // // // // // //     {
 // // // // // //       accessorKey: "GL_ENTRY_DATE",
-// // // // // //       header: ({ column }) => (
-// // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
-// // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-// // // // // //           GL Date <ArrowUpDown />
-// // // // // //         </Button>
-// // // // // //       ),
-// // // // // //       cell: ({ row }) => <div className="ml-3">{row.getValue("GL_ENTRY_DATE")}</div>,
+// // // // // //       header: ({ column }) => <SortableHeader column={column} label="GL Date" />,
+// // // // // //       cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("GL_ENTRY_DATE")}</div>,
 // // // // // //     },
 // // // // // //     {
 // // // // // //       accessorKey: "DESCRIPTION",
-// // // // // //       header: () => <div className="text-left font-bold text-gray-800 text-sm font-sans">Description</div>,
+// // // // // //       header: () => (
+// // // // // //         <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+// // // // // //           Description
+// // // // // //         </div>
+// // // // // //       ),
 // // // // // //       cell: ({ row }) => (
-// // // // // //         <div className="max-w-[200px] truncate" title={row.getValue("DESCRIPTION")}>
+// // // // // //         <div className="max-w-[200px] truncate text-sm text-gray-600" title={row.getValue("DESCRIPTION")}>
 // // // // // //           {row.getValue("DESCRIPTION")}
 // // // // // //         </div>
 // // // // // //       ),
 // // // // // //     },
 // // // // // //     {
 // // // // // //       accessorKey: "CREDIT",
-// // // // // //       header: ({ column }) => (
-// // // // // //         <Button variant="ghost" className="font-bold text-gray-800 text-sm font-sans"
-// // // // // //           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-// // // // // //           Credit <ArrowUpDown />
-// // // // // //         </Button>
-// // // // // //       ),
+// // // // // //       header: ({ column }) => <SortableHeader column={column} label="Credit" />,
 // // // // // //       cell: ({ row }) => {
-// // // // // //         const amount    = parseFloat(row.getValue("CREDIT") || 0);
-// // // // // //         const formatted = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
-// // // // // //         return <div className="font-medium ml-3">{formatted}</div>;
+// // // // // //         const amount = parseFloat(row.getValue("CREDIT") || 0);
+// // // // // //         const formatted = new Intl.NumberFormat("en-US", {
+// // // // // //           minimumFractionDigits: 2,
+// // // // // //           maximumFractionDigits: 2,
+// // // // // //         }).format(amount);
+// // // // // //         return <div className="ml-3 text-sm font-semibold text-gray-800">{formatted}</div>;
 // // // // // //       },
 // // // // // //     },
 // // // // // //     {
 // // // // // //       id: "actions",
 // // // // // //       enableHiding: false,
-// // // // // //       header: () => <div className="text-center font-bold text-gray-800 text-sm font-sans">Actions</div>,
-// // // // // //       // cell: ({ row }) => {
-// // // // // //       //   const voucher    = row.original;
-// // // // // //       //   const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
-
-// // // // // //       //   return (
-// // // // // //       //     <div className="flex items-center justify-center gap-1">
-
-// // // // // //       //       {/* Edit */}
-// // // // // //       //       {isApproved ? (
-// // // // // //       //         <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-// // // // // //       //           <Pencil size={16} />
-// // // // // //       //         </Button>
-// // // // // //       //       ) : (
-// // // // // //       //         /* ← updated route to use the new PaymentEdit page */
-// // // // // //       //         <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
-// // // // // //       //           <Button variant="ghost" size="icon">
-// // // // // //       //             <Pencil size={16} />
-// // // // // //       //           </Button>
-// // // // // //       //         </Link>
-// // // // // //       //       )}
-
-// // // // // //       //       {/* Download */}
-// // // // // //       //       <DropdownMenu>
-// // // // // //       //         <DropdownMenuTrigger asChild>
-// // // // // //       //           <Button variant="ghost" size="icon" title="Download"
-// // // // // //       //             disabled={downloading?.startsWith(`${voucher.ID}-`)}>
-// // // // // //       //             <Download size={16} />
-// // // // // //       //           </Button>
-// // // // // //       //         </DropdownMenuTrigger>
-// // // // // //       //         <DropdownMenuContent align="end" className="w-40">
-// // // // // //       //           <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
-// // // // // //       //           <DropdownMenuSeparator />
-// // // // // //       //           <DropdownMenuItem className="cursor-pointer gap-2"
-// // // // // //       //             disabled={downloading === `${voucher.ID}-pdf`}
-// // // // // //       //             onClick={() => handleDownload(voucher, "pdf")}>
-// // // // // //       //             <FileText size={14} className="text-red-500" />
-// // // // // //       //             {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
-// // // // // //       //           </DropdownMenuItem>
-// // // // // //       //           <DropdownMenuItem className="cursor-pointer gap-2"
-// // // // // //       //             disabled={downloading === `${voucher.ID}-excel`}
-// // // // // //       //             onClick={() => handleDownload(voucher, "excel")}>
-// // // // // //       //             <FileSpreadsheet size={14} className="text-green-600" />
-// // // // // //       //             {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
-// // // // // //       //           </DropdownMenuItem>
-// // // // // //       //         </DropdownMenuContent>
-// // // // // //       //       </DropdownMenu>
-
-// // // // // //       //       {/* Approved badge OR Delete */}
-// // // // // //       //       {isApproved ? (
-// // // // // //       //         <TooltipProvider>
-// // // // // //       //           <Tooltip>
-// // // // // //       //             <TooltipTrigger asChild>
-// // // // // //       //               <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-// // // // // //       //                 <BadgeCheck size={16} />
-// // // // // //       //               </span>
-// // // // // //       //             </TooltipTrigger>
-// // // // // //       //             <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-// // // // // //       //               Approved
-// // // // // //       //             </TooltipContent>
-// // // // // //       //           </Tooltip>
-// // // // // //       //         </TooltipProvider>
-// // // // // //       //       ) : (
-// // // // // //       //         <Button size="icon" onClick={() => handleDeleteClick(voucher)} title="Delete Voucher">
-// // // // // //       //           <Trash2 size={16} />
-// // // // // //       //         </Button>
-// // // // // //       //       )}
-// // // // // //       //     </div>
-// // // // // //       //   );
-// // // // // //       // },
-
+// // // // // //       header: () => (
+// // // // // //         <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+// // // // // //           Actions
+// // // // // //         </div>
+// // // // // //       ),
 // // // // // //       cell: ({ row }) => {
-// // // // // //   const voucher    = row.original;
-// // // // // //   const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
+// // // // // //         const voucher = row.original;
+// // // // // //         const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
 
-// // // // // //   return (
-// // // // // //     <div className="flex items-center justify-center gap-1">
+// // // // // //         return (
+// // // // // //           <div className="flex items-center justify-center gap-1">
+// // // // // //             {/* Edit */}
+// // // // // //             {canEdit && (
+// // // // // //               isApproved ? (
+// // // // // //                 <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+// // // // // //                   <Pencil size={16} />
+// // // // // //                 </Button>
+// // // // // //               ) : (
+// // // // // //                 <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+// // // // // //                   <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
+// // // // // //                     <Pencil size={16} />
+// // // // // //                   </Button>
+// // // // // //                 </Link>
+// // // // // //               )
+// // // // // //             )}
 
-// // // // // //       {/* Edit */}
-// // // // // //       {canEdit && (
-// // // // // //         isApproved ? (
-// // // // // //           <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-// // // // // //             <Pencil size={16} />
-// // // // // //           </Button>
-// // // // // //         ) : (
-// // // // // //           <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
-// // // // // //             <Button variant="ghost" size="icon">
-// // // // // //               <Pencil size={16} />
-// // // // // //             </Button>
-// // // // // //           </Link>
-// // // // // //         )
-// // // // // //       )}
+// // // // // //             {/* Download */}
+// // // // // //             {canDownload && (
+// // // // // //               <DropdownMenu>
+// // // // // //                 <DropdownMenuTrigger asChild>
+// // // // // //                   <Button
+// // // // // //                     variant="ghost"
+// // // // // //                     size="icon"
+// // // // // //                     title="Download"
+// // // // // //                     className="hover:bg-gray-100"
+// // // // // //                     disabled={downloading?.startsWith(`${voucher.ID}-`)}
+// // // // // //                   >
+// // // // // //                     <Download size={16} />
+// // // // // //                   </Button>
+// // // // // //                 </DropdownMenuTrigger>
+// // // // // //                 <DropdownMenuContent align="end" className="w-40">
+// // // // // //                   <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
+// // // // // //                   <DropdownMenuSeparator />
+// // // // // //                   <DropdownMenuItem
+// // // // // //                     className="cursor-pointer gap-2"
+// // // // // //                     disabled={downloading === `${voucher.ID}-pdf`}
+// // // // // //                     onClick={() => handleDownload(voucher, "pdf")}
+// // // // // //                   >
+// // // // // //                     <FileText size={14} className="text-red-500" />
+// // // // // //                     {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+// // // // // //                   </DropdownMenuItem>
+// // // // // //                   <DropdownMenuItem
+// // // // // //                     className="cursor-pointer gap-2"
+// // // // // //                     disabled={downloading === `${voucher.ID}-excel`}
+// // // // // //                     onClick={() => handleDownload(voucher, "excel")}
+// // // // // //                   >
+// // // // // //                     <FileSpreadsheet size={14} className="text-green-600" />
+// // // // // //                     {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+// // // // // //                   </DropdownMenuItem>
+// // // // // //                 </DropdownMenuContent>
+// // // // // //               </DropdownMenu>
+// // // // // //             )}
 
-// // // // // //       {/* Download */}
-// // // // // //       {canDownload && (
-// // // // // //         <DropdownMenu>
-// // // // // //           <DropdownMenuTrigger asChild>
-// // // // // //             <Button variant="ghost" size="icon" title="Download"
-// // // // // //               disabled={downloading?.startsWith(`${voucher.ID}-`)}>
-// // // // // //               <Download size={16} />
-// // // // // //             </Button>
-// // // // // //           </DropdownMenuTrigger>
-// // // // // //           <DropdownMenuContent align="end" className="w-40">
-// // // // // //             <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
-// // // // // //             <DropdownMenuSeparator />
-// // // // // //             <DropdownMenuItem className="cursor-pointer gap-2"
-// // // // // //               disabled={downloading === `${voucher.ID}-pdf`}
-// // // // // //               onClick={() => handleDownload(voucher, "pdf")}>
-// // // // // //               <FileText size={14} className="text-red-500" />
-// // // // // //               {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
-// // // // // //             </DropdownMenuItem>
-// // // // // //             <DropdownMenuItem className="cursor-pointer gap-2"
-// // // // // //               disabled={downloading === `${voucher.ID}-excel`}
-// // // // // //               onClick={() => handleDownload(voucher, "excel")}>
-// // // // // //               <FileSpreadsheet size={14} className="text-green-600" />
-// // // // // //               {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
-// // // // // //             </DropdownMenuItem>
-// // // // // //           </DropdownMenuContent>
-// // // // // //         </DropdownMenu>
-// // // // // //       )}
-
-// // // // // //       {/* Approved badge OR Delete */}
-// // // // // //      {/* Approved badge */}
-// // // // // // {isApproved && (
-// // // // // //   <TooltipProvider>
-// // // // // //     <Tooltip>
-// // // // // //       <TooltipTrigger asChild>
-// // // // // //         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
-// // // // // //           <BadgeCheck size={16} />
-// // // // // //         </span>
-// // // // // //       </TooltipTrigger>
-// // // // // //       <TooltipContent side="top" className="bg-green-700 text-white text-xs">
-// // // // // //         Approved
-// // // // // //       </TooltipContent>
-// // // // // //     </Tooltip>
-// // // // // //   </TooltipProvider>
-// // // // // // )}
-// // // // // //     </div>
-// // // // // //   );
-// // // // // // },
+// // // // // //             {/* Approved badge */}
+// // // // // //             {isApproved && (
+// // // // // //               <TooltipProvider>
+// // // // // //                 <Tooltip>
+// // // // // //                   <TooltipTrigger asChild>
+// // // // // //                     <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+// // // // // //                       <BadgeCheck size={16} />
+// // // // // //                     </span>
+// // // // // //                   </TooltipTrigger>
+// // // // // //                   <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+// // // // // //                     Approved
+// // // // // //                   </TooltipContent>
+// // // // // //                 </Tooltip>
+// // // // // //               </TooltipProvider>
+// // // // // //             )}
+// // // // // //           </div>
+// // // // // //         );
+// // // // // //       },
 // // // // // //     },
 // // // // // //   ];
 
 // // // // // //   const table = useReactTable({
-// // // // // //     data: sortedVouchers, columns,
-// // // // // //     onSortingChange: setSorting, onColumnFiltersChange: setColumnFilters,
-// // // // // //     getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(),
-// // // // // //     getSortedRowModel: getSortedRowModel(), getFilteredRowModel: getFilteredRowModel(),
-// // // // // //     onColumnVisibilityChange: setColumnVisibility, onGlobalFilterChange: setGlobalFilter,
+// // // // // //     data: sortedVouchers,
+// // // // // //     columns,
+// // // // // //     onSortingChange: setSorting,
+// // // // // //     onColumnFiltersChange: setColumnFilters,
+// // // // // //     getCoreRowModel: getCoreRowModel(),
+// // // // // //     getPaginationRowModel: getPaginationRowModel(),
+// // // // // //     getSortedRowModel: getSortedRowModel(),
+// // // // // //     getFilteredRowModel: getFilteredRowModel(),
+// // // // // //     onColumnVisibilityChange: setColumnVisibility,
+// // // // // //     onGlobalFilterChange: setGlobalFilter,
 // // // // // //     state: { sorting, columnFilters, columnVisibility, globalFilter },
 // // // // // //   });
 
 // // // // // //   if (isLoading) return (
-// // // // // //     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
+// // // // // //     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
 // // // // // //       <div className="flex items-center justify-center py-12">
-// // // // // //         <p className="text-muted-foreground">Loading vouchers...</p>
+// // // // // //         <p className="text-sm text-gray-500">Loading vouchers...</p>
 // // // // // //       </div>
 // // // // // //     </div>
 // // // // // //   );
 
 // // // // // //   if (error) return (
-// // // // // //     <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8">
+// // // // // //     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
 // // // // // //       <div className="flex items-center justify-center py-12">
-// // // // // //         <p className="text-red-600">Error loading vouchers.</p>
+// // // // // //         <p className="text-sm text-red-600">Error loading vouchers.</p>
 // // // // // //       </div>
 // // // // // //     </div>
 // // // // // //   );
@@ -370,101 +815,109 @@
 // // // // // //         <title>Dashboard | Payment Vouchers | HRMS</title>
 // // // // // //       </Helmet>
 
-// // // // // //       <div className="mt-6">
-// // // // // //         <Card className="w-full shadow-lg">
-// // // // // //           <CardHeader className="border-b">
-// // // // // //             <CardTitle className="text-sm font-bold">Payment Voucher</CardTitle>
-// // // // // //           </CardHeader>
+// // // // // //       <div className="p-4 md:p-6">
+// // // // // //         <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+// // // // // //           {/* Header */}
+// // // // // //           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+// // // // // //             <div className="flex items-center gap-2">
+// // // // // //               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600">
+// // // // // //                 <Wallet size={16} />
+// // // // // //               </div>
+// // // // // //               <div>
+// // // // // //                 <h2 className="text-sm font-bold text-gray-900">Payment Voucher</h2>
+// // // // // //                 <p className="text-xs text-gray-400">
+// // // // // //                   {sortedVouchers.length} total — unposted payment vouchers
+// // // // // //                 </p>
+// // // // // //               </div>
+// // // // // //             </div>
 
-// // // // // //           <div className="bg-card rounded-md p-4">
-// // // // // //             <div className="space-y-4">
+// // // // // //             {canCreate && (
+// // // // // //               <Link to="/dashboard/payment-create">
+// // // // // //                 <Button >
+// // // // // //                   <PlusIcon size={16} className="mr-2" />
+// // // // // //                   Add New Payment
+// // // // // //                 </Button>
+// // // // // //               </Link>
+// // // // // //             )}
+// // // // // //           </div>
 
-// // // // // //               {/* Search + Column visibility + Add New */}
-// // // // // //               <div className="flex flex-col sm:flex-row gap-4">
+// // // // // //           <div className="p-5 space-y-4">
+// // // // // //             {/* Search + Column visibility */}
+// // // // // //             <div className="flex flex-col sm:flex-row gap-3">
+// // // // // //               <div className="relative max-w-sm w-full">
+// // // // // //                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 // // // // // //                 <Input
 // // // // // //                   placeholder="Search vouchers..."
 // // // // // //                   value={globalFilter ?? ""}
 // // // // // //                   onChange={(e) => setGlobalFilter(e.target.value)}
-// // // // // //                   className="max-w-sm"
+// // // // // //                   className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
 // // // // // //                 />
-// // // // // //                 <DropdownMenu>
-// // // // // //                   <DropdownMenuTrigger asChild>
-// // // // // //                     <Button variant="outline" className="ml-auto">
-// // // // // //                       Columns <ChevronDown className="ml-2 h-4 w-4" />
-// // // // // //                     </Button>
-// // // // // //                   </DropdownMenuTrigger>
-// // // // // //                   <DropdownMenuContent align="end">
-// // // // // //                     {table.getAllColumns().filter((col) => col.getCanHide()).map((col) => (
-// // // // // //                       <DropdownMenuCheckboxItem
-// // // // // //                         key={col.id}
-// // // // // //                         className="capitalize"
-// // // // // //                         checked={col.getIsVisible()}
-// // // // // //                         onCheckedChange={(value) => col.toggleVisibility(!!value)}
-// // // // // //                       >
-// // // // // //                         {col.id.replace(/_/g, " ")}
-// // // // // //                       </DropdownMenuCheckboxItem>
-// // // // // //                     ))}
-// // // // // //                   </DropdownMenuContent>
-// // // // // //                 </DropdownMenu>
-
-// // // // // //                 {/* ← Link to the new create page */}
-// // // // // //                 {/* <Link to="/dashboard/payment-create">
-// // // // // //                   <Button>
-// // // // // //                     <PlusIcon size={16} className="mr-2" />
-// // // // // //                     Add New Payment
-// // // // // //                   </Button>
-// // // // // //                 </Link> */}
-
-// // // // // //                 {canCreate && (
-// // // // // //   <Link to="/dashboard/payment-create">
-// // // // // //     <Button>
-// // // // // //       <PlusIcon size={16} className="mr-2" />
-// // // // // //       Add New Payment
-// // // // // //     </Button>
-// // // // // //   </Link>
-// // // // // // )}
 // // // // // //               </div>
 
-// // // // // //               {/* Table */}
-// // // // // //               <div className="overflow-hidden rounded-md border">
-// // // // // //                 <Table>
-// // // // // //                   <TableHeader>
-// // // // // //                     {table.getHeaderGroups().map((hg) => (
-// // // // // //                       <TableRow key={hg.id}>
-// // // // // //                         {hg.headers.map((h) => (
-// // // // // //                           <TableHead key={h.id}>
-// // // // // //                             {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
-// // // // // //                           </TableHead>
+// // // // // //               <DropdownMenu>
+// // // // // //                 <DropdownMenuTrigger asChild>
+// // // // // //                   <Button variant="outline" className="ml-auto bg-white border-gray-200">
+// // // // // //                     Columns <ChevronDown className="ml-2 h-4 w-4" />
+// // // // // //                   </Button>
+// // // // // //                 </DropdownMenuTrigger>
+// // // // // //                 <DropdownMenuContent align="end">
+// // // // // //                   {table.getAllColumns().filter((col) => col.getCanHide()).map((col) => (
+// // // // // //                     <DropdownMenuCheckboxItem
+// // // // // //                       key={col.id}
+// // // // // //                       className="capitalize"
+// // // // // //                       checked={col.getIsVisible()}
+// // // // // //                       onCheckedChange={(value) => col.toggleVisibility(!!value)}
+// // // // // //                     >
+// // // // // //                       {col.id.replace(/_/g, " ")}
+// // // // // //                     </DropdownMenuCheckboxItem>
+// // // // // //                   ))}
+// // // // // //                 </DropdownMenuContent>
+// // // // // //               </DropdownMenu>
+// // // // // //             </div>
+
+// // // // // //             {/* Table */}
+// // // // // //             <div className="overflow-hidden rounded-md border border-gray-200">
+// // // // // //               <Table>
+// // // // // //                 <TableHeader className="bg-gray-50">
+// // // // // //                   {table.getHeaderGroups().map((hg) => (
+// // // // // //                     <TableRow key={hg.id}>
+// // // // // //                       {hg.headers.map((h) => (
+// // // // // //                         <TableHead key={h.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+// // // // // //                           {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+// // // // // //                         </TableHead>
+// // // // // //                       ))}
+// // // // // //                     </TableRow>
+// // // // // //                   ))}
+// // // // // //                 </TableHeader>
+// // // // // //                 <TableBody>
+// // // // // //                   {table.getRowModel().rows?.length ? (
+// // // // // //                     table.getRowModel().rows.map((row) => (
+// // // // // //                       <TableRow
+// // // // // //                         key={row.id}
+// // // // // //                         data-state={row.getIsSelected() && "selected"}
+// // // // // //                         className="hover:bg-gray-50/70 transition-colors"
+// // // // // //                       >
+// // // // // //                         {row.getVisibleCells().map((cell) => (
+// // // // // //                           <TableCell key={cell.id} className="text-sm text-gray-700">
+// // // // // //                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// // // // // //                           </TableCell>
 // // // // // //                         ))}
 // // // // // //                       </TableRow>
-// // // // // //                     ))}
-// // // // // //                   </TableHeader>
-// // // // // //                   <TableBody>
-// // // // // //                     {table.getRowModel().rows?.length ? (
-// // // // // //                       table.getRowModel().rows.map((row) => (
-// // // // // //                         <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-// // // // // //                           {row.getVisibleCells().map((cell) => (
-// // // // // //                             <TableCell key={cell.id}>
-// // // // // //                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
-// // // // // //                             </TableCell>
-// // // // // //                           ))}
-// // // // // //                         </TableRow>
-// // // // // //                       ))
-// // // // // //                     ) : (
-// // // // // //                       <TableRow>
-// // // // // //                         <TableCell colSpan={columns.length} className="h-24 text-center">
-// // // // // //                           <p className="text-muted-foreground">No payment vouchers found</p>
-// // // // // //                         </TableCell>
-// // // // // //                       </TableRow>
-// // // // // //                     )}
-// // // // // //                   </TableBody>
-// // // // // //                 </Table>
-// // // // // //               </div>
-
-// // // // // //               <DataTablePagination table={table} />
+// // // // // //                     ))
+// // // // // //                   ) : (
+// // // // // //                     <TableRow>
+// // // // // //                       <TableCell colSpan={columns.length} className="h-24 text-center">
+// // // // // //                         <p className="text-sm text-gray-400">No payment vouchers found</p>
+// // // // // //                       </TableCell>
+// // // // // //                     </TableRow>
+// // // // // //                   )}
+// // // // // //                 </TableBody>
+// // // // // //               </Table>
 // // // // // //             </div>
+
+// // // // // //             <DataTablePagination table={table} />
 // // // // // //           </div>
-// // // // // //         </Card>
+// // // // // //         </div>
 // // // // // //       </div>
 
 // // // // // //       {/* Delete Confirmation Modal */}
@@ -577,6 +1030,7 @@
 // // // // //   const [globalFilter, setGlobalFilter] = useState("");
 // // // // //   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, voucherNo: "" });
 // // // // //   const [downloading, setDownloading] = useState(null);
+// // // // //   const [glDateFilter, setGlDateFilter] = useState("");
 
 // // // // //   const canCreate = useHasPermission("PAYMENT_VOUCHER_CREATE");
 // // // // //   const canEdit = useHasPermission("PAYMENT_VOUCHER_EDIT");
@@ -620,6 +1074,18 @@
 // // // // //     const vouchers = Array.isArray(data?.data) ? data.data : [];
 // // // // //     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
 // // // // //   }, [data]);
+
+// // // // //   // ── GL Date filter ──────────────────────────────────────────────────────────
+// // // // //   const filteredVouchers = useMemo(() => {
+// // // // //     if (!glDateFilter) return sortedVouchers;
+// // // // //     return sortedVouchers.filter((v) => {
+// // // // //       if (!v.GL_ENTRY_DATE) return false;
+// // // // //       const d = new Date(v.GL_ENTRY_DATE);
+// // // // //       if (isNaN(d.getTime())) return false;
+// // // // //       const formatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// // // // //       return formatted === glDateFilter;
+// // // // //     });
+// // // // //   }, [sortedVouchers, glDateFilter]);
 
 // // // // //   const handleDownload = async (voucher, type) => {
 // // // // //     const key = `${voucher.ID}-${type}`;
@@ -780,7 +1246,7 @@
 // // // // //   ];
 
 // // // // //   const table = useReactTable({
-// // // // //     data: sortedVouchers,
+// // // // //     data: filteredVouchers,
 // // // // //     columns,
 // // // // //     onSortingChange: setSorting,
 // // // // //     onColumnFiltersChange: setColumnFilters,
@@ -826,7 +1292,7 @@
 // // // // //               <div>
 // // // // //                 <h2 className="text-sm font-bold text-gray-900">Payment Voucher</h2>
 // // // // //                 <p className="text-xs text-gray-400">
-// // // // //                   {sortedVouchers.length} total — unposted payment vouchers
+// // // // //                   {filteredVouchers.length} total — unposted payment vouchers
 // // // // //                 </p>
 // // // // //               </div>
 // // // // //             </div>
@@ -842,7 +1308,7 @@
 // // // // //           </div>
 
 // // // // //           <div className="p-5 space-y-4">
-// // // // //             {/* Search + Column visibility */}
+// // // // //             {/* Search + GL Date filter + Column visibility */}
 // // // // //             <div className="flex flex-col sm:flex-row gap-3">
 // // // // //               <div className="relative max-w-sm w-full">
 // // // // //                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -852,6 +1318,30 @@
 // // // // //                   onChange={(e) => setGlobalFilter(e.target.value)}
 // // // // //                   className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
 // // // // //                 />
+// // // // //               </div>
+
+// // // // //               <div className="flex items-center gap-2 w-full sm:w-auto">
+// // // // //                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+// // // // //                   GL Date
+// // // // //                 </label>
+// // // // //                 <div className="relative w-full sm:w-44">
+// // // // //                   <Input
+// // // // //                     type="date"
+// // // // //                     value={glDateFilter}
+// // // // //                     onChange={(e) => setGlDateFilter(e.target.value)}
+// // // // //                     className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
+// // // // //                   />
+// // // // //                   {glDateFilter && (
+// // // // //                     <button
+// // // // //                       type="button"
+// // // // //                       onClick={() => setGlDateFilter("")}
+// // // // //                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+// // // // //                       title="Clear GL date filter"
+// // // // //                     >
+// // // // //                       ✕
+// // // // //                     </button>
+// // // // //                   )}
+// // // // //                 </div>
 // // // // //               </div>
 
 // // // // //               <DropdownMenu>
@@ -907,7 +1397,11 @@
 // // // // //                   ) : (
 // // // // //                     <TableRow>
 // // // // //                       <TableCell colSpan={columns.length} className="h-24 text-center">
-// // // // //                         <p className="text-sm text-gray-400">No payment vouchers found</p>
+// // // // //                         <p className="text-sm text-gray-400">
+// // // // //                           {glDateFilter
+// // // // //                             ? "No vouchers found for the selected GL date"
+// // // // //                             : "No payment vouchers found"}
+// // // // //                         </p>
 // // // // //                       </TableCell>
 // // // // //                     </TableRow>
 // // // // //                   )}
@@ -965,19 +1459,31 @@
 // // // //   ArrowUpDown,
 // // // //   ChevronDown,
 // // // //   Pencil,
-// // // //   Trash2,
-// // // //   PlusIcon,
 // // // //   Download,
 // // // //   FileText,
 // // // //   FileSpreadsheet,
 // // // //   BadgeCheck,
 // // // //   Search,
 // // // //   Wallet,
+// // // //   PlusIcon ,
+// // // //    RotateCcw, 
+// // // //    CheckCircle,
+ 
 // // // // } from "lucide-react";
 // // // // import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // // // // import { Link } from "react-router-dom";
 // // // // import { Helmet } from "react-helmet";
 
+// // // // import {
+// // // //   AlertDialog,
+// // // //   AlertDialogAction,
+// // // //   AlertDialogCancel,
+// // // //   AlertDialogContent,
+// // // //   AlertDialogDescription,
+// // // //   AlertDialogFooter,
+// // // //   AlertDialogHeader,
+// // // //   AlertDialogTitle,
+// // // // } from "@/components/ui/alert-dialog";
 // // // // import { Button } from "@/components/ui/button";
 // // // // import {
 // // // //   DropdownMenu,
@@ -1009,6 +1515,10 @@
 // // // // import { toast } from "react-toastify";
 // // // // import axios from "axios";
 // // // // import { useHasPermission } from "@/hooks/use-permission";
+// // // // import { Eye } from "lucide-react";
+// // // // import { EntryTypeBadge } from "./entry-type-badge";
+// // // // import { AttachmentIndicator } from "./attachment-indicator";
+
 
 // // // // const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -1023,14 +1533,26 @@
 // // // //   </Button>
 // // // // );
 
+// // // // // ── Helper: normalize a date value to YYYY-MM-DD for comparison ─────────────
+// // // // const toISODateString = (val) => {
+// // // //   if (!val) return null;
+// // // //   const d = new Date(val);
+// // // //   if (isNaN(d.getTime())) return null;
+// // // //   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// // // // };
+
 // // // // export default function PaymentTable() {
+// // // // const [reviewVoucher, setReviewVoucher] = useState(null); // full voucher object for review modal
+// // // //   const [reverseId, setReverseId] = useState(null);
+// // // // const [isReversing, setIsReversing] = useState(false);
 // // // //   const [sorting, setSorting] = useState([]);
 // // // //   const [columnFilters, setColumnFilters] = useState([]);
 // // // //   const [columnVisibility, setColumnVisibility] = useState({});
 // // // //   const [globalFilter, setGlobalFilter] = useState("");
 // // // //   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, voucherNo: "" });
 // // // //   const [downloading, setDownloading] = useState(null);
-// // // //   const [glDateFilter, setGlDateFilter] = useState("");
+// // // //   const [glDateFrom, setGlDateFrom] = useState("");
+// // // //   const [glDateTo, setGlDateTo] = useState("");
 
 // // // //   const canCreate = useHasPermission("PAYMENT_VOUCHER_CREATE");
 // // // //   const canEdit = useHasPermission("PAYMENT_VOUCHER_EDIT");
@@ -1070,22 +1592,41 @@
 // // // //     if (deleteModal.id) deleteMutation.mutate(deleteModal.id);
 // // // //   };
 
+// // // //   const handleReverseVoucher = async () => {
+// // // //   if (!reverseId) return;
+// // // //   setIsReversing(true);
+// // // //   try {
+// // // //     const res = await axios.post(`${BASE_URL}/api/reverse-voucher`, { id: reverseId });
+// // // //     if (res.data.status === "success") {
+// // // //       toast.success(res.data.message || "Voucher reversed successfully!");
+// // // //       queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+// // // //     } else {
+// // // //       toast.error(res.data.message || "Failed to reverse voucher");
+// // // //     }
+// // // //   } catch (error) {
+// // // //     toast.error("Error reversing voucher: " + (error.response?.data?.message || error.message));
+// // // //   } finally {
+// // // //     setIsReversing(false);
+// // // //     setReverseId(null);
+// // // //   }
+// // // // };
+
 // // // //   const sortedVouchers = useMemo(() => {
 // // // //     const vouchers = Array.isArray(data?.data) ? data.data : [];
 // // // //     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
 // // // //   }, [data]);
 
-// // // //   // ── GL Date filter ──────────────────────────────────────────────────────────
+// // // //   // ── GL Date range filter ─────────────────────────────────────────────────
 // // // //   const filteredVouchers = useMemo(() => {
-// // // //     if (!glDateFilter) return sortedVouchers;
+// // // //     if (!glDateFrom && !glDateTo) return sortedVouchers;
 // // // //     return sortedVouchers.filter((v) => {
-// // // //       if (!v.GL_ENTRY_DATE) return false;
-// // // //       const d = new Date(v.GL_ENTRY_DATE);
-// // // //       if (isNaN(d.getTime())) return false;
-// // // //       const formatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-// // // //       return formatted === glDateFilter;
+// // // //       const formatted = toISODateString(v.GL_ENTRY_DATE);
+// // // //       if (!formatted) return false;
+// // // //       if (glDateFrom && formatted < glDateFrom) return false;
+// // // //       if (glDateTo && formatted > glDateTo) return false;
+// // // //       return true;
 // // // //     });
-// // // //   }, [sortedVouchers, glDateFilter]);
+// // // //   }, [sortedVouchers, glDateFrom, glDateTo]);
 
 // // // //   const handleDownload = async (voucher, type) => {
 // // // //     const key = `${voucher.ID}-${type}`;
@@ -1159,6 +1700,24 @@
 // // // //       },
 // // // //     },
 // // // //     {
+// // // //   id: "type",
+// // // //   header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</div>,
+// // // //   cell: ({ row }) => (
+// // // //     <div className="flex justify-center">
+// // // //       <EntryTypeBadge type={row.original.TYPE} />
+// // // //     </div>
+// // // //   ),
+// // // // },
+// // // // {
+// // // //   id: "attachment",
+// // // //   header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Files</div>,
+// // // //   cell: ({ row }) => (
+// // // //     <div className="flex justify-center">
+// // // //       <AttachmentIndicator count={row.original.DOC_COUNT} />
+// // // //     </div>
+// // // //   ),
+// // // // },
+// // // //     {
 // // // //       id: "actions",
 // // // //       enableHiding: false,
 // // // //       header: () => (
@@ -1168,26 +1727,44 @@
 // // // //       ),
 // // // //       cell: ({ row }) => {
 // // // //         const voucher = row.original;
+
+// // // //          console.log("REVERSE CHECK:", {
+// // // //     ID: voucher.ID,
+// // // //     POSTED: voucher.POSTED,
+// // // //     TYPE: voucher.TYPE,
+// // // //     REF_REVERSE_ENTRY: voucher.REF_REVERSE_ENTRY,
+// // // //   });
+
 // // // //         const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
 
 // // // //         return (
 // // // //           <div className="flex items-center justify-center gap-1">
-// // // //             {/* Edit */}
-// // // //             {canEdit && (
-// // // //               isApproved ? (
-// // // //                 <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
-// // // //                   <Pencil size={16} />
-// // // //                 </Button>
-// // // //               ) : (
-// // // //                 <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
-// // // //                   <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
-// // // //                     <Pencil size={16} />
-// // // //                   </Button>
-// // // //                 </Link>
-// // // //               )
-// // // //             )}
+// // // //            {canEdit && (
+// // // //   isApproved ? (
+// // // //     <TooltipProvider>
+// // // //       <Tooltip>
+// // // //         <TooltipTrigger asChild>
+// // // //           <Button
+// // // //             variant="ghost"
+// // // //             size="icon"
+// // // //             className="text-indigo-500 hover:bg-indigo-50 hover:text-indigo-700"
+// // // //             onClick={() => setReviewVoucher(voucher)}
+// // // //           >
+// // // //             <Eye size={16} />
+// // // //           </Button>
+// // // //         </TooltipTrigger>
+// // // //         <TooltipContent side="top">Review Voucher</TooltipContent>
+// // // //       </Tooltip>
+// // // //     </TooltipProvider>
+// // // //   ) : (
+// // // //     <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+// // // //       <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
+// // // //         <Pencil size={16} />
+// // // //       </Button>
+// // // //     </Link>
+// // // //   )
+// // // // )}
 
-// // // //             {/* Download */}
 // // // //             {canDownload && (
 // // // //               <DropdownMenu>
 // // // //                 <DropdownMenuTrigger asChild>
@@ -1224,7 +1801,6 @@
 // // // //               </DropdownMenu>
 // // // //             )}
 
-// // // //             {/* Approved badge */}
 // // // //             {isApproved && (
 // // // //               <TooltipProvider>
 // // // //                 <Tooltip>
@@ -1239,6 +1815,39 @@
 // // // //                 </Tooltip>
 // // // //               </TooltipProvider>
 // // // //             )}
+
+// // // //           {isApproved && String(voucher.TYPE).toUpperCase() !== "REVERSE" && !voucher.REF_REVERSE_ENTRY && (
+// // // //   <TooltipProvider>
+// // // //     <Tooltip>
+// // // //       <TooltipTrigger asChild>
+// // // //         <Button
+// // // //           variant="ghost"
+// // // //           size="icon"
+// // // //           className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+// // // //           onClick={() => setReverseId(voucher.ID)}
+// // // //         >
+// // // //           <RotateCcw size={16} />
+// // // //         </Button>
+// // // //       </TooltipTrigger>
+// // // //       <TooltipContent side="top">Reverse Entry</TooltipContent>
+// // // //     </Tooltip>
+// // // //   </TooltipProvider>
+// // // // )}
+
+// // // // {isApproved && voucher.REF_REVERSE_ENTRY && (
+// // // //   <TooltipProvider>
+// // // //     <Tooltip>
+// // // //       <TooltipTrigger asChild>
+// // // //         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
+// // // //           <RotateCcw size={16} />
+// // // //         </span>
+// // // //       </TooltipTrigger>
+// // // //       <TooltipContent side="top" className="bg-red-700 text-white text-xs">
+// // // //         Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
+// // // //       </TooltipContent>
+// // // //     </Tooltip>
+// // // //   </TooltipProvider>
+// // // // )}
 // // // //           </div>
 // // // //         );
 // // // //       },
@@ -1275,6 +1884,8 @@
 // // // //     </div>
 // // // //   );
 
+// // // //   const hasDateFilter = glDateFrom || glDateTo;
+
 // // // //   return (
 // // // //     <>
 // // // //       <Helmet>
@@ -1299,7 +1910,7 @@
 
 // // // //             {canCreate && (
 // // // //               <Link to="/dashboard/payment-create">
-// // // //                 <Button >
+// // // //                 <Button>
 // // // //                   <PlusIcon size={16} className="mr-2" />
 // // // //                   Add New Payment
 // // // //                 </Button>
@@ -1308,8 +1919,8 @@
 // // // //           </div>
 
 // // // //           <div className="p-5 space-y-4">
-// // // //             {/* Search + GL Date filter + Column visibility */}
-// // // //             <div className="flex flex-col sm:flex-row gap-3">
+// // // //             {/* Search + GL Date range filter + Column visibility */}
+// // // //             <div className="flex flex-col sm:flex-row sm:items-end gap-3">
 // // // //               <div className="relative max-w-sm w-full">
 // // // //                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 // // // //                 <Input
@@ -1321,32 +1932,69 @@
 // // // //               </div>
 
 // // // //               <div className="flex items-center gap-2 w-full sm:w-auto">
-// // // //                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-// // // //                   GL Date
-// // // //                 </label>
-// // // //                 <div className="relative w-full sm:w-44">
-// // // //                   <Input
-// // // //                     type="date"
-// // // //                     value={glDateFilter}
-// // // //                     onChange={(e) => setGlDateFilter(e.target.value)}
-// // // //                     className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
-// // // //                   />
-// // // //                   {glDateFilter && (
-// // // //                     <button
-// // // //                       type="button"
-// // // //                       onClick={() => setGlDateFilter("")}
-// // // //                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-// // // //                       title="Clear GL date filter"
-// // // //                     >
-// // // //                       ✕
-// // // //                     </button>
-// // // //                   )}
-// // // //                 </div>
-// // // //               </div>
+// // // //   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+// // // //     Gl From Date
+// // // //   </label>
+// // // //   <div className="relative w-full sm:w-40">
+// // // //     <Input
+// // // //       type="date"
+// // // //       value={glDateFrom}
+// // // //       max={glDateTo || undefined}
+// // // //       onChange={(e) => setGlDateFrom(e.target.value)}
+// // // //       className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+// // // //     />
+// // // //     {glDateFrom && (
+// // // //       <button
+// // // //         type="button"
+// // // //         onClick={() => setGlDateFrom("")}
+// // // //         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+// // // //         title="Clear from date"
+// // // //       >
+// // // //         ✕
+// // // //       </button>
+// // // //     )}
+// // // //   </div>
+// // // // </div>
+
+// // // // <div className="flex items-center gap-2 w-full sm:w-auto">
+// // // //   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+// // // //     To Date
+// // // //   </label>
+// // // //   <div className="relative w-full sm:w-40">
+// // // //     <Input
+// // // //       type="date"
+// // // //       value={glDateTo}
+// // // //       min={glDateFrom || undefined}
+// // // //       onChange={(e) => setGlDateTo(e.target.value)}
+// // // //       className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+// // // //     />
+// // // //     {glDateTo && (
+// // // //       <button
+// // // //         type="button"
+// // // //         onClick={() => setGlDateTo("")}
+// // // //         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+// // // //         title="Clear to date"
+// // // //       >
+// // // //         ✕
+// // // //       </button>
+// // // //     )}
+// // // //   </div>
+// // // // </div>
+
+// // // //               {/* {hasDateFilter && (
+// // // //                 <Button
+// // // //                   variant="ghost"
+// // // //                   size="sm"
+// // // //                   className="h-9 border border-dashed border-gray-200 text-gray-500 hover:text-gray-700"
+// // // //                   onClick={() => { setGlDateFrom(""); setGlDateTo(""); }}
+// // // //                 >
+// // // //                   Clear dates
+// // // //                 </Button>
+// // // //               )} */}
 
 // // // //               <DropdownMenu>
 // // // //                 <DropdownMenuTrigger asChild>
-// // // //                   <Button variant="outline" className="ml-auto bg-white border-gray-200">
+// // // //                   <Button variant="outline" className="sm:ml-auto bg-white border-gray-200">
 // // // //                     Columns <ChevronDown className="ml-2 h-4 w-4" />
 // // // //                   </Button>
 // // // //                 </DropdownMenuTrigger>
@@ -1398,8 +2046,8 @@
 // // // //                     <TableRow>
 // // // //                       <TableCell colSpan={columns.length} className="h-24 text-center">
 // // // //                         <p className="text-sm text-gray-400">
-// // // //                           {glDateFilter
-// // // //                             ? "No vouchers found for the selected GL date"
+// // // //                           {hasDateFilter
+// // // //                             ? "No vouchers found for the selected date range"
 // // // //                             : "No payment vouchers found"}
 // // // //                         </p>
 // // // //                       </TableCell>
@@ -1442,9 +2090,36 @@
 // // // //           </div>
 // // // //         </div>
 // // // //       )}
+
+// // // //       {/* Reverse Confirmation Dialog */}
+// // // // <AlertDialog open={!!reverseId} onOpenChange={() => !isReversing && setReverseId(null)}>
+// // // //   <AlertDialogContent>
+// // // //     <AlertDialogHeader>
+// // // //       <AlertDialogTitle className="flex items-center gap-2">
+// // // //         <RotateCcw className="text-orange-600" size={20} />
+// // // //         Reverse Voucher?
+// // // //       </AlertDialogTitle>
+// // // //       <AlertDialogDescription>
+// // // //         A new reversal entry will be created with debit/credit swapped.{" "}
+// // // //         <span className="text-red-500 font-medium">This action cannot be undone.</span>
+// // // //       </AlertDialogDescription>
+// // // //     </AlertDialogHeader>
+// // // //     <AlertDialogFooter>
+// // // //       <AlertDialogCancel disabled={isReversing}>Cancel</AlertDialogCancel>
+// // // //       <AlertDialogAction
+// // // //         onClick={handleReverseVoucher}
+// // // //         disabled={isReversing}
+// // // //         className="bg-orange-600 hover:bg-orange-700"
+// // // //       >
+// // // //         {isReversing ? "Reversing..." : "Yes, Reverse"}
+// // // //       </AlertDialogAction>
+// // // //     </AlertDialogFooter>
+// // // //   </AlertDialogContent>
+// // // // </AlertDialog>
 // // // //     </>
 // // // //   );
 // // // // }
+
 
 // // // import { useState, useMemo } from "react";
 // // // import {
@@ -1465,10 +2140,10 @@
 // // //   BadgeCheck,
 // // //   Search,
 // // //   Wallet,
-// // //   PlusIcon ,
-// // //    RotateCcw, 
-// // //    CheckCircle,
- 
+// // //   PlusIcon,
+// // //   RotateCcw,
+// // //   Eye,
+// // //   X,
 // // // } from "lucide-react";
 // // // import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // // // import { Link } from "react-router-dom";
@@ -1515,14 +2190,11 @@
 // // // import { toast } from "react-toastify";
 // // // import axios from "axios";
 // // // import { useHasPermission } from "@/hooks/use-permission";
-// // // import { Eye } from "lucide-react";
 // // // import { EntryTypeBadge } from "./entry-type-badge";
 // // // import { AttachmentIndicator } from "./attachment-indicator";
 
-
 // // // const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// // // // Reusable sortable header — clean uppercase gray style
 // // // const SortableHeader = ({ column, label }) => (
 // // //   <Button
 // // //     variant="ghost"
@@ -1533,7 +2205,6 @@
 // // //   </Button>
 // // // );
 
-// // // // ── Helper: normalize a date value to YYYY-MM-DD for comparison ─────────────
 // // // const toISODateString = (val) => {
 // // //   if (!val) return null;
 // // //   const d = new Date(val);
@@ -1542,9 +2213,9 @@
 // // // };
 
 // // // export default function PaymentTable() {
-// // // const [reviewVoucher, setReviewVoucher] = useState(null); // full voucher object for review modal
+// // //   const [reviewVoucher, setReviewVoucher] = useState(null);
 // // //   const [reverseId, setReverseId] = useState(null);
-// // // const [isReversing, setIsReversing] = useState(false);
+// // //   const [isReversing, setIsReversing] = useState(false);
 // // //   const [sorting, setSorting] = useState([]);
 // // //   const [columnFilters, setColumnFilters] = useState([]);
 // // //   const [columnVisibility, setColumnVisibility] = useState({});
@@ -1567,6 +2238,60 @@
 // // //       return res.data;
 // // //     },
 // // //   });
+
+// // //   // ── Review modal — fetch full master+details for the selected voucher ──
+// // //   const { data: reviewData, isLoading: reviewLoading } = useQuery({
+// // //     queryKey: ["voucherReview", "payment", reviewVoucher?.ID],
+// // //     queryFn: async () => (await PaymentService.search(reviewVoucher.ID)).data,
+// // //     enabled: !!reviewVoucher,
+// // //   });
+
+// // //   // ── Distribution rows only — payment/cash code row excluded, single
+// // //   //     "amount" per row regardless of debit/credit direction. ───────────
+// // //   // const distributionRows = useMemo(() => {
+// // //   //   const details = reviewData?.details || [];
+// // //   //   const paymentCode = reviewData?.master?.CASHACCOUNT || "";
+// // //   //   return details
+// // //   //     .filter((d) => {
+// // //   //       const code = d.code ?? "";
+// // //   //       const debit = Number(d.debit || 0);
+// // //   //       const credit = Number(d.credit || 0);
+// // //   //       return code !== paymentCode && (debit > 0 || credit > 0);
+// // //   //     })
+// // //   //     .map((d) => {
+// // //   //       const debit = Number(d.debit || 0);
+// // //   //       const credit = Number(d.credit || 0);
+// // //   //       return {
+// // //   //         ...d,
+// // //   //         amount: debit > 0 ? debit : credit,
+// // //   //       };
+// // //   //     });
+// // //   // }, [reviewData]);
+
+// // //   // ── Distribution rows only — payment/cash code row excluded, single
+// // // //     "amount" per row regardless of debit/credit direction.
+// // // //     Case-agnostic: backend sometimes returns UPPERCASE (raw GLDETAILS)
+// // // //     and sometimes lowercase (mapped) keys — read both. ─────────────
+// // // const distributionRows = useMemo(() => {
+// // //   const details = reviewData?.details || [];
+// // //   const master = reviewData?.master || {};
+// // //   const paymentCode = master.CASHACCOUNT ?? master.cashaccount ?? "";
+
+// // //   return details
+// // //     .map((d) => ({
+// // //       id: d.ID ?? d.id,
+// // //       code: d.CODE ?? d.code ?? "",
+// // //       debit: Number(d.DEBIT ?? d.debit ?? 0),
+// // //       credit: Number(d.CREDIT ?? d.credit ?? 0),
+// // //       codedescription: d.CODEDESCRIPTION ?? d.codedescription ?? "",
+// // //       description: d.DESCRIPTION ?? d.description ?? "",
+// // //     }))
+// // //     .filter((d) => d.code !== paymentCode && (d.debit > 0 || d.credit > 0))
+// // //     .map((d) => ({
+// // //       ...d,
+// // //       amount: d.debit > 0 ? d.debit : d.credit,
+// // //     }));
+// // // }, [reviewData]);
 
 // // //   const deleteMutation = useMutation({
 // // //     mutationFn: async (voucherId) => {
@@ -1593,30 +2318,29 @@
 // // //   };
 
 // // //   const handleReverseVoucher = async () => {
-// // //   if (!reverseId) return;
-// // //   setIsReversing(true);
-// // //   try {
-// // //     const res = await axios.post(`${BASE_URL}/api/reverse-voucher`, { id: reverseId });
-// // //     if (res.data.status === "success") {
-// // //       toast.success(res.data.message || "Voucher reversed successfully!");
-// // //       queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
-// // //     } else {
-// // //       toast.error(res.data.message || "Failed to reverse voucher");
+// // //     if (!reverseId) return;
+// // //     setIsReversing(true);
+// // //     try {
+// // //       const res = await axios.post(`${BASE_URL}/api/reverse-voucher`, { id: reverseId });
+// // //       if (res.data.status === "success") {
+// // //         toast.success(res.data.message || "Voucher reversed successfully!");
+// // //         queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+// // //       } else {
+// // //         toast.error(res.data.message || "Failed to reverse voucher");
+// // //       }
+// // //     } catch (error) {
+// // //       toast.error("Error reversing voucher: " + (error.response?.data?.message || error.message));
+// // //     } finally {
+// // //       setIsReversing(false);
+// // //       setReverseId(null);
 // // //     }
-// // //   } catch (error) {
-// // //     toast.error("Error reversing voucher: " + (error.response?.data?.message || error.message));
-// // //   } finally {
-// // //     setIsReversing(false);
-// // //     setReverseId(null);
-// // //   }
-// // // };
+// // //   };
 
 // // //   const sortedVouchers = useMemo(() => {
 // // //     const vouchers = Array.isArray(data?.data) ? data.data : [];
 // // //     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
 // // //   }, [data]);
 
-// // //   // ── GL Date range filter ─────────────────────────────────────────────────
 // // //   const filteredVouchers = useMemo(() => {
 // // //     if (!glDateFrom && !glDateTo) return sortedVouchers;
 // // //     return sortedVouchers.filter((v) => {
@@ -1664,16 +2388,27 @@
 // // //         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>
 // // //       ),
 // // //     },
-// // //     {
-// // //       accessorKey: "TRANS_DATE",
-// // //       header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
-// // //       cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("TRANS_DATE")}</div>,
-// // //     },
+// // //     // {
+// // //     //   accessorKey: "TRANS_DATE",
+// // //     //   header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
+// // //     //   cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("TRANS_DATE")}</div>,
+// // //     // },
 // // //     {
 // // //       accessorKey: "GL_ENTRY_DATE",
 // // //       header: ({ column }) => <SortableHeader column={column} label="GL Date" />,
 // // //       cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("GL_ENTRY_DATE")}</div>,
 // // //     },
+// // //     {
+// // //   accessorKey: "SUPPLIER",
+// // //   header: ({ column }) => (
+// // //     <SortableHeader column={column} label="Supplier" />
+// // //   ),
+// // //   cell: ({ row }) => (
+// // //     <div className="text-sm text-gray-700">
+// // //       {row.getValue("SUPPLIER") || "-"}
+// // //     </div>
+// // //   ),
+// // // },
 // // //     {
 // // //       accessorKey: "DESCRIPTION",
 // // //       header: () => (
@@ -1682,7 +2417,7 @@
 // // //         </div>
 // // //       ),
 // // //       cell: ({ row }) => (
-// // //         <div className="max-w-[200px] truncate text-sm text-gray-600" title={row.getValue("DESCRIPTION")}>
+// // //         <div className=" text-sm text-gray-600" title={row.getValue("DESCRIPTION")}>
 // // //           {row.getValue("DESCRIPTION")}
 // // //         </div>
 // // //       ),
@@ -1700,23 +2435,23 @@
 // // //       },
 // // //     },
 // // //     {
-// // //   id: "type",
-// // //   header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</div>,
-// // //   cell: ({ row }) => (
-// // //     <div className="flex justify-center">
-// // //       <EntryTypeBadge type={row.original.TYPE} />
-// // //     </div>
-// // //   ),
-// // // },
-// // // {
-// // //   id: "attachment",
-// // //   header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Files</div>,
-// // //   cell: ({ row }) => (
-// // //     <div className="flex justify-center">
-// // //       <AttachmentIndicator count={row.original.DOC_COUNT} />
-// // //     </div>
-// // //   ),
-// // // },
+// // //       id: "type",
+// // //       header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</div>,
+// // //       cell: ({ row }) => (
+// // //         <div className="flex justify-center">
+// // //           <EntryTypeBadge type={row.original.TYPE} />
+// // //         </div>
+// // //       ),
+// // //     },
+// // //     {
+// // //       id: "attachment",
+// // //       header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Files</div>,
+// // //       cell: ({ row }) => (
+// // //         <div className="flex justify-center">
+// // //           <AttachmentIndicator count={row.original.DOC_COUNT} />
+// // //         </div>
+// // //       ),
+// // //     },
 // // //     {
 // // //       id: "actions",
 // // //       enableHiding: false,
@@ -1727,43 +2462,35 @@
 // // //       ),
 // // //       cell: ({ row }) => {
 // // //         const voucher = row.original;
-
-// // //          console.log("REVERSE CHECK:", {
-// // //     ID: voucher.ID,
-// // //     POSTED: voucher.POSTED,
-// // //     TYPE: voucher.TYPE,
-// // //     REF_REVERSE_ENTRY: voucher.REF_REVERSE_ENTRY,
-// // //   });
-
 // // //         const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
 
 // // //         return (
 // // //           <div className="flex items-center justify-center gap-1">
-// // //            {canEdit && (
-// // //   isApproved ? (
-// // //     <TooltipProvider>
-// // //       <Tooltip>
-// // //         <TooltipTrigger asChild>
-// // //           <Button
-// // //             variant="ghost"
-// // //             size="icon"
-// // //             className="text-indigo-500 hover:bg-indigo-50 hover:text-indigo-700"
-// // //             onClick={() => setReviewVoucher(voucher)}
-// // //           >
-// // //             <Eye size={16} />
-// // //           </Button>
-// // //         </TooltipTrigger>
-// // //         <TooltipContent side="top">Review Voucher</TooltipContent>
-// // //       </Tooltip>
-// // //     </TooltipProvider>
-// // //   ) : (
-// // //     <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
-// // //       <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
-// // //         <Pencil size={16} />
-// // //       </Button>
-// // //     </Link>
-// // //   )
-// // // )}
+// // //             {canEdit && (
+// // //               isApproved ? (
+// // //                 <TooltipProvider>
+// // //                   <Tooltip>
+// // //                     <TooltipTrigger asChild>
+// // //                       <Button
+// // //                         variant="ghost"
+// // //                         size="icon"
+// // //                         className="text-indigo-500 hover:bg-indigo-50 hover:text-indigo-700"
+// // //                         onClick={() => setReviewVoucher(voucher)}
+// // //                       >
+// // //                         <Eye size={16} />
+// // //                       </Button>
+// // //                     </TooltipTrigger>
+// // //                     <TooltipContent side="top">Review Voucher</TooltipContent>
+// // //                   </Tooltip>
+// // //                 </TooltipProvider>
+// // //               ) : (
+// // //                 <Link to={`/dashboard/payment-edit/${voucher.ID}`} title="Edit Voucher">
+// // //                   <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
+// // //                     <Pencil size={16} />
+// // //                   </Button>
+// // //                 </Link>
+// // //               )
+// // //             )}
 
 // // //             {canDownload && (
 // // //               <DropdownMenu>
@@ -1816,38 +2543,38 @@
 // // //               </TooltipProvider>
 // // //             )}
 
-// // //           {isApproved && String(voucher.TYPE).toUpperCase() !== "REVERSE" && !voucher.REF_REVERSE_ENTRY && (
-// // //   <TooltipProvider>
-// // //     <Tooltip>
-// // //       <TooltipTrigger asChild>
-// // //         <Button
-// // //           variant="ghost"
-// // //           size="icon"
-// // //           className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
-// // //           onClick={() => setReverseId(voucher.ID)}
-// // //         >
-// // //           <RotateCcw size={16} />
-// // //         </Button>
-// // //       </TooltipTrigger>
-// // //       <TooltipContent side="top">Reverse Entry</TooltipContent>
-// // //     </Tooltip>
-// // //   </TooltipProvider>
-// // // )}
+// // //             {isApproved && String(voucher.TYPE).toUpperCase() !== "REVERSE" && !voucher.REF_REVERSE_ENTRY && (
+// // //               <TooltipProvider>
+// // //                 <Tooltip>
+// // //                   <TooltipTrigger asChild>
+// // //                     <Button
+// // //                       variant="ghost"
+// // //                       size="icon"
+// // //                       className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+// // //                       onClick={() => setReverseId(voucher.ID)}
+// // //                     >
+// // //                       <RotateCcw size={16} />
+// // //                     </Button>
+// // //                   </TooltipTrigger>
+// // //                   <TooltipContent side="top">Reverse Entry</TooltipContent>
+// // //                 </Tooltip>
+// // //               </TooltipProvider>
+// // //             )}
 
-// // // {isApproved && voucher.REF_REVERSE_ENTRY && (
-// // //   <TooltipProvider>
-// // //     <Tooltip>
-// // //       <TooltipTrigger asChild>
-// // //         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
-// // //           <RotateCcw size={16} />
-// // //         </span>
-// // //       </TooltipTrigger>
-// // //       <TooltipContent side="top" className="bg-red-700 text-white text-xs">
-// // //         Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
-// // //       </TooltipContent>
-// // //     </Tooltip>
-// // //   </TooltipProvider>
-// // // )}
+// // //             {isApproved && voucher.REF_REVERSE_ENTRY && (
+// // //               <TooltipProvider>
+// // //                 <Tooltip>
+// // //                   <TooltipTrigger asChild>
+// // //                     <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
+// // //                       <RotateCcw size={16} />
+// // //                     </span>
+// // //                   </TooltipTrigger>
+// // //                   <TooltipContent side="top" className="bg-red-700 text-white text-xs">
+// // //                     Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
+// // //                   </TooltipContent>
+// // //                 </Tooltip>
+// // //               </TooltipProvider>
+// // //             )}
 // // //           </div>
 // // //         );
 // // //       },
@@ -1865,6 +2592,11 @@
 // // //     getFilteredRowModel: getFilteredRowModel(),
 // // //     onColumnVisibilityChange: setColumnVisibility,
 // // //     onGlobalFilterChange: setGlobalFilter,
+// // //     initialState: {
+// // //       pagination: {
+// // //         pageSize: 50,
+// // //       },
+// // //     },
 // // //     state: { sorting, columnFilters, columnVisibility, globalFilter },
 // // //   });
 
@@ -1894,7 +2626,6 @@
 
 // // //       <div className="p-4 md:p-6">
 // // //         <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
-// // //           {/* Header */}
 // // //           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
 // // //             <div className="flex items-center gap-2">
 // // //               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600">
@@ -1919,7 +2650,6 @@
 // // //           </div>
 
 // // //           <div className="p-5 space-y-4">
-// // //             {/* Search + GL Date range filter + Column visibility */}
 // // //             <div className="flex flex-col sm:flex-row sm:items-end gap-3">
 // // //               <div className="relative max-w-sm w-full">
 // // //                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -1932,65 +2662,54 @@
 // // //               </div>
 
 // // //               <div className="flex items-center gap-2 w-full sm:w-auto">
-// // //   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-// // //     Gl From Date
-// // //   </label>
-// // //   <div className="relative w-full sm:w-40">
-// // //     <Input
-// // //       type="date"
-// // //       value={glDateFrom}
-// // //       max={glDateTo || undefined}
-// // //       onChange={(e) => setGlDateFrom(e.target.value)}
-// // //       className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
-// // //     />
-// // //     {glDateFrom && (
-// // //       <button
-// // //         type="button"
-// // //         onClick={() => setGlDateFrom("")}
-// // //         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-// // //         title="Clear from date"
-// // //       >
-// // //         ✕
-// // //       </button>
-// // //     )}
-// // //   </div>
-// // // </div>
+// // //                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+// // //                   Gl From Date
+// // //                 </label>
+// // //                 <div className="relative w-full sm:w-40">
+// // //                   <Input
+// // //                     type="date"
+// // //                     value={glDateFrom}
+// // //                     max={glDateTo || undefined}
+// // //                     onChange={(e) => setGlDateFrom(e.target.value)}
+// // //                     className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+// // //                   />
+// // //                   {glDateFrom && (
+// // //                     <button
+// // //                       type="button"
+// // //                       onClick={() => setGlDateFrom("")}
+// // //                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+// // //                       title="Clear from date"
+// // //                     >
+// // //                       ✕
+// // //                     </button>
+// // //                   )}
+// // //                 </div>
+// // //               </div>
 
-// // // <div className="flex items-center gap-2 w-full sm:w-auto">
-// // //   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-// // //     To Date
-// // //   </label>
-// // //   <div className="relative w-full sm:w-40">
-// // //     <Input
-// // //       type="date"
-// // //       value={glDateTo}
-// // //       min={glDateFrom || undefined}
-// // //       onChange={(e) => setGlDateTo(e.target.value)}
-// // //       className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
-// // //     />
-// // //     {glDateTo && (
-// // //       <button
-// // //         type="button"
-// // //         onClick={() => setGlDateTo("")}
-// // //         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-// // //         title="Clear to date"
-// // //       >
-// // //         ✕
-// // //       </button>
-// // //     )}
-// // //   </div>
-// // // </div>
-
-// // //               {/* {hasDateFilter && (
-// // //                 <Button
-// // //                   variant="ghost"
-// // //                   size="sm"
-// // //                   className="h-9 border border-dashed border-gray-200 text-gray-500 hover:text-gray-700"
-// // //                   onClick={() => { setGlDateFrom(""); setGlDateTo(""); }}
-// // //                 >
-// // //                   Clear dates
-// // //                 </Button>
-// // //               )} */}
+// // //               <div className="flex items-center gap-2 w-full sm:w-auto">
+// // //                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+// // //                   To Date
+// // //                 </label>
+// // //                 <div className="relative w-full sm:w-40">
+// // //                   <Input
+// // //                     type="date"
+// // //                     value={glDateTo}
+// // //                     min={glDateFrom || undefined}
+// // //                     onChange={(e) => setGlDateTo(e.target.value)}
+// // //                     className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+// // //                   />
+// // //                   {glDateTo && (
+// // //                     <button
+// // //                       type="button"
+// // //                       onClick={() => setGlDateTo("")}
+// // //                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+// // //                       title="Clear to date"
+// // //                     >
+// // //                       ✕
+// // //                     </button>
+// // //                   )}
+// // //                 </div>
+// // //               </div>
 
 // // //               <DropdownMenu>
 // // //                 <DropdownMenuTrigger asChild>
@@ -2013,7 +2732,6 @@
 // // //               </DropdownMenu>
 // // //             </div>
 
-// // //             {/* Table */}
 // // //             <div className="overflow-hidden rounded-md border border-gray-200">
 // // //               <Table>
 // // //                 <TableHeader className="bg-gray-50">
@@ -2092,34 +2810,199 @@
 // // //       )}
 
 // // //       {/* Reverse Confirmation Dialog */}
-// // // <AlertDialog open={!!reverseId} onOpenChange={() => !isReversing && setReverseId(null)}>
-// // //   <AlertDialogContent>
-// // //     <AlertDialogHeader>
-// // //       <AlertDialogTitle className="flex items-center gap-2">
-// // //         <RotateCcw className="text-orange-600" size={20} />
-// // //         Reverse Voucher?
-// // //       </AlertDialogTitle>
-// // //       <AlertDialogDescription>
-// // //         A new reversal entry will be created with debit/credit swapped.{" "}
-// // //         <span className="text-red-500 font-medium">This action cannot be undone.</span>
-// // //       </AlertDialogDescription>
-// // //     </AlertDialogHeader>
-// // //     <AlertDialogFooter>
-// // //       <AlertDialogCancel disabled={isReversing}>Cancel</AlertDialogCancel>
-// // //       <AlertDialogAction
-// // //         onClick={handleReverseVoucher}
-// // //         disabled={isReversing}
-// // //         className="bg-orange-600 hover:bg-orange-700"
-// // //       >
-// // //         {isReversing ? "Reversing..." : "Yes, Reverse"}
-// // //       </AlertDialogAction>
-// // //     </AlertDialogFooter>
-// // //   </AlertDialogContent>
-// // // </AlertDialog>
+// // //       <AlertDialog open={!!reverseId} onOpenChange={() => !isReversing && setReverseId(null)}>
+// // //         <AlertDialogContent>
+// // //           <AlertDialogHeader>
+// // //             <AlertDialogTitle className="flex items-center gap-2">
+// // //               <RotateCcw className="text-orange-600" size={20} />
+// // //               Reverse Voucher?
+// // //             </AlertDialogTitle>
+// // //             <AlertDialogDescription>
+// // //               A new reversal entry will be created with debit/credit swapped.{" "}
+// // //               <span className="text-red-500 font-medium">This action cannot be undone.</span>
+// // //             </AlertDialogDescription>
+// // //           </AlertDialogHeader>
+// // //           <AlertDialogFooter>
+// // //             <AlertDialogCancel disabled={isReversing}>Cancel</AlertDialogCancel>
+// // //             <AlertDialogAction
+// // //               onClick={handleReverseVoucher}
+// // //               disabled={isReversing}
+// // //               className="bg-orange-600 hover:bg-orange-700"
+// // //             >
+// // //               {isReversing ? "Reversing..." : "Yes, Reverse"}
+// // //             </AlertDialogAction>
+// // //           </AlertDialogFooter>
+// // //         </AlertDialogContent>
+// // //       </AlertDialog>
+
+// // //       {/* ── Review Voucher Modal (approved, read-only) ─────────────────── */}
+// // //       {reviewVoucher && (
+// // //         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-120 p-4">
+// // //           <div className="bg-white rounded-2xl shadow-xl w-full md:w-2/3 max-h-[90vh] overflow-y-auto">
+// // //             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+// // //               <div className="flex items-center gap-2">
+// // //                 <Eye size={18} className="text-indigo-600" />
+// // //                 <h2 className="text-base font-bold text-gray-900">
+// // //                   Review Voucher #{reviewVoucher.VOUCHERNO}
+// // //                 </h2>
+// // //               </div>
+// // //               <div className="flex items-center gap-2">
+// // //                 <EntryTypeBadge type={reviewVoucher.TYPE} />
+// // //                 <button
+// // //                   onClick={() => setReviewVoucher(null)}
+// // //                   className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+// // //                 >
+// // //                   <X size={18} className="text-gray-500" />
+// // //                 </button>
+// // //               </div>
+// // //             </div>
+
+// // //             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+// // //               <div>
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   Transaction Date
+// // //                 </label>
+// // //                 <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
+// // //                   {reviewVoucher.TRANS_DATE || "—"}
+// // //                 </div>
+// // //               </div>
+// // //               <div>
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   GL Date
+// // //                 </label>
+// // //                 <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
+// // //                   {reviewVoucher.GL_ENTRY_DATE || "—"}
+// // //                 </div>
+// // //               </div>
+// // //               <div>
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   Voucher No
+// // //                 </label>
+// // //                 <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
+// // //                   {reviewVoucher.VOUCHERNO}
+// // //                 </div>
+// // //               </div>
+// // //               <div className="md:col-span-3">
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   Description
+// // //                 </label>
+// // //                 <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 min-h-[42px]">
+// // //                   {reviewVoucher.DESCRIPTION || "—"}
+// // //                 </div>
+// // //               </div>
+// // //               <div>
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   Total Amount
+// // //                 </label>
+// // //                 <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800">
+// // //                   {new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(
+// // //                     parseFloat(reviewVoucher.CREDIT || 0)
+// // //                   )}
+// // //                 </div>
+// // //               </div>
+// // //               <div>
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   Status
+// // //                 </label>
+// // //                 <div className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+// // //                   Approved
+// // //                 </div>
+// // //               </div>
+// // //               <div>
+// // //                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+// // //                   Attachments
+// // //                 </label>
+// // //                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+// // //                   <AttachmentIndicator count={reviewVoucher.DOC_COUNT} />
+// // //                   <span className="text-xs text-slate-500">
+// // //                     {Number(reviewVoucher.DOC_COUNT) || 0} file(s)
+// // //                   </span>
+// // //                 </div>
+// // //               </div>
+// // //             </div>
+
+// // //             <div className="px-6 pb-6">
+// // //               <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">
+// // //                 Account Distribution
+// // //               </h3>
+// // //               <div className="overflow-hidden rounded-lg border border-slate-200">
+// // //                 <table className="w-full text-sm">
+// // //                   <thead>
+// // //                     <tr className="bg-slate-50">
+// // //                       <th className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+// // //                         Code
+// // //                       </th>
+// // //                       <th className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+// // //                         Particulars
+// // //                       </th>
+// // //                       <th className="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+// // //                         Amount
+// // //                       </th>
+// // //                     </tr>
+// // //                   </thead>
+// // //                   <tbody>
+// // //                     {reviewLoading && (
+// // //                       <tr>
+// // //                         <td colSpan={3} className="text-center py-6 text-sm text-slate-400">
+// // //                           Loading account details…
+// // //                         </td>
+// // //                       </tr>
+// // //                     )}
+// // //                     {!reviewLoading && distributionRows.length === 0 && (
+// // //                       <tr>
+// // //                         <td colSpan={3} className="text-center py-6 text-sm text-slate-400">
+// // //                           No account rows found.
+// // //                         </td>
+// // //                       </tr>
+// // //                     )}
+// // //                     {!reviewLoading &&
+// // //                       distributionRows.map((d, i) => (
+// // //                         <tr key={d.id ?? i} className="border-t border-slate-100">
+// // //                           <td className="px-4 py-2 text-slate-700 font-medium">{d.code}</td>
+// // //                           <td className="px-4 py-2 text-slate-600">
+// // //                             {d.codedescription || d.description || "—"}
+// // //                           </td>
+// // //                           <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+// // //                             {new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(
+// // //                               d.amount
+// // //                             )}
+// // //                           </td>
+// // //                         </tr>
+// // //                       ))}
+// // //                   </tbody>
+// // //                   {!reviewLoading && distributionRows.length > 0 && (
+// // //                     <tfoot>
+// // //                       <tr className="border-t border-slate-200 bg-slate-50 font-semibold">
+// // //                         <td colSpan={2} className="px-4 py-2 text-right text-slate-800">
+// // //                           Total
+// // //                         </td>
+// // //                         <td className="px-4 py-2 text-right tabular-nums text-slate-900">
+// // //                           {new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(
+// // //                             distributionRows.reduce((s, d) => s + Number(d.amount || 0), 0)
+// // //                           )}
+// // //                         </td>
+// // //                       </tr>
+// // //                     </tfoot>
+// // //                   )}
+// // //                 </table>
+// // //               </div>
+// // //             </div>
+
+// // //             <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+// // //               <Button
+// // //                 variant="outline"
+// // //                 onClick={() => setReviewVoucher(null)}
+// // //                 className="border-slate-200 text-slate-700"
+// // //               >
+// // //                 Close
+// // //               </Button>
+// // //             </div>
+// // //           </div>
+// // //         </div>
+// // //       )}
 // // //     </>
 // // //   );
 // // // }
-
 
 // // import { useState, useMemo } from "react";
 // // import {
@@ -2247,51 +3130,29 @@
 // //   });
 
 // //   // ── Distribution rows only — payment/cash code row excluded, single
-// //   //     "amount" per row regardless of debit/credit direction. ───────────
-// //   // const distributionRows = useMemo(() => {
-// //   //   const details = reviewData?.details || [];
-// //   //   const paymentCode = reviewData?.master?.CASHACCOUNT || "";
-// //   //   return details
-// //   //     .filter((d) => {
-// //   //       const code = d.code ?? "";
-// //   //       const debit = Number(d.debit || 0);
-// //   //       const credit = Number(d.credit || 0);
-// //   //       return code !== paymentCode && (debit > 0 || credit > 0);
-// //   //     })
-// //   //     .map((d) => {
-// //   //       const debit = Number(d.debit || 0);
-// //   //       const credit = Number(d.credit || 0);
-// //   //       return {
-// //   //         ...d,
-// //   //         amount: debit > 0 ? debit : credit,
-// //   //       };
-// //   //     });
-// //   // }, [reviewData]);
+// //   //     "amount" per row regardless of debit/credit direction.
+// //   //     Case-agnostic: backend sometimes returns UPPERCASE (raw GLDETAILS)
+// //   //     and sometimes lowercase (mapped) keys — read both. ─────────────
+// //   const distributionRows = useMemo(() => {
+// //     const details = reviewData?.details || [];
+// //     const master = reviewData?.master || {};
+// //     const paymentCode = master.CASHACCOUNT ?? master.cashaccount ?? "";
 
-// //   // ── Distribution rows only — payment/cash code row excluded, single
-// // //     "amount" per row regardless of debit/credit direction.
-// // //     Case-agnostic: backend sometimes returns UPPERCASE (raw GLDETAILS)
-// // //     and sometimes lowercase (mapped) keys — read both. ─────────────
-// // const distributionRows = useMemo(() => {
-// //   const details = reviewData?.details || [];
-// //   const master = reviewData?.master || {};
-// //   const paymentCode = master.CASHACCOUNT ?? master.cashaccount ?? "";
-
-// //   return details
-// //     .map((d) => ({
-// //       id: d.ID ?? d.id,
-// //       code: d.CODE ?? d.code ?? "",
-// //       debit: Number(d.DEBIT ?? d.debit ?? 0),
-// //       credit: Number(d.CREDIT ?? d.credit ?? 0),
-// //       codedescription: d.CODEDESCRIPTION ?? d.codedescription ?? "",
-// //       description: d.DESCRIPTION ?? d.description ?? "",
-// //     }))
-// //     .filter((d) => d.code !== paymentCode && (d.debit > 0 || d.credit > 0))
-// //     .map((d) => ({
-// //       ...d,
-// //       amount: d.debit > 0 ? d.debit : d.credit,
-// //     }));
-// // }, [reviewData]);
+// //     return details
+// //       .map((d) => ({
+// //         id: d.ID ?? d.id,
+// //         code: d.CODE ?? d.code ?? "",
+// //         debit: Number(d.DEBIT ?? d.debit ?? 0),
+// //         credit: Number(d.CREDIT ?? d.credit ?? 0),
+// //         codedescription: d.CODEDESCRIPTION ?? d.codedescription ?? "",
+// //         description: d.DESCRIPTION ?? d.description ?? "",
+// //       }))
+// //       .filter((d) => d.code !== paymentCode && (d.debit > 0 || d.credit > 0))
+// //       .map((d) => ({
+// //         ...d,
+// //         amount: d.debit > 0 ? d.debit : d.credit,
+// //       }));
+// //   }, [reviewData]);
 
 // //   const deleteMutation = useMutation({
 // //     mutationFn: async (voucherId) => {
@@ -2352,6 +3213,13 @@
 // //     });
 // //   }, [sortedVouchers, glDateFrom, glDateTo]);
 
+// //   // ── Total calculation for filtered data ─────────────────────────────────
+// //   const totalCredit = useMemo(() => {
+// //     return filteredVouchers.reduce((sum, v) => sum + parseFloat(v.CREDIT || 0), 0);
+// //   }, [filteredVouchers]);
+
+// //   const totalCount = filteredVouchers.length;
+
 // //   const handleDownload = async (voucher, type) => {
 // //     const key = `${voucher.ID}-${type}`;
 // //     setDownloading(key);
@@ -2388,27 +3256,22 @@
 // //         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>
 // //       ),
 // //     },
-// //     // {
-// //     //   accessorKey: "TRANS_DATE",
-// //     //   header: ({ column }) => <SortableHeader column={column} label="Transaction Date" />,
-// //     //   cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("TRANS_DATE")}</div>,
-// //     // },
 // //     {
 // //       accessorKey: "GL_ENTRY_DATE",
 // //       header: ({ column }) => <SortableHeader column={column} label="GL Date" />,
 // //       cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("GL_ENTRY_DATE")}</div>,
 // //     },
 // //     {
-// //   accessorKey: "SUPPLIER",
-// //   header: ({ column }) => (
-// //     <SortableHeader column={column} label="Supplier" />
-// //   ),
-// //   cell: ({ row }) => (
-// //     <div className="text-sm text-gray-700">
-// //       {row.getValue("SUPPLIER") || "-"}
-// //     </div>
-// //   ),
-// // },
+// //       accessorKey: "SUPPLIER",
+// //       header: ({ column }) => (
+// //         <SortableHeader column={column} label="Supplier" />
+// //       ),
+// //       cell: ({ row }) => (
+// //         <div className="text-sm text-gray-700">
+// //           {row.getValue("SUPPLIER") || "-"}
+// //         </div>
+// //       ),
+// //     },
 // //     {
 // //       accessorKey: "DESCRIPTION",
 // //       header: () => (
@@ -2417,7 +3280,7 @@
 // //         </div>
 // //       ),
 // //       cell: ({ row }) => (
-// //         <div className=" text-sm text-gray-600" title={row.getValue("DESCRIPTION")}>
+// //         <div className="text-sm text-gray-600" title={row.getValue("DESCRIPTION")}>
 // //           {row.getValue("DESCRIPTION")}
 // //         </div>
 // //       ),
@@ -2747,19 +3610,37 @@
 // //                 </TableHeader>
 // //                 <TableBody>
 // //                   {table.getRowModel().rows?.length ? (
-// //                     table.getRowModel().rows.map((row) => (
-// //                       <TableRow
-// //                         key={row.id}
-// //                         data-state={row.getIsSelected() && "selected"}
-// //                         className="hover:bg-gray-50/70 transition-colors"
-// //                       >
-// //                         {row.getVisibleCells().map((cell) => (
-// //                           <TableCell key={cell.id} className="text-sm text-gray-700">
-// //                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// //                     <>
+// //                       {table.getRowModel().rows.map((row) => (
+// //                         <TableRow
+// //                           key={row.id}
+// //                           data-state={row.getIsSelected() && "selected"}
+// //                           className="hover:bg-gray-50/70 transition-colors"
+// //                         >
+// //                           {row.getVisibleCells().map((cell) => (
+// //                             <TableCell key={cell.id} className="text-sm text-gray-700">
+// //                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
+// //                             </TableCell>
+// //                           ))}
+// //                         </TableRow>
+// //                       ))}
+                      
+// //                       {/* ── Total Row ── */}
+// //                       {filteredVouchers.length > 0 && (
+// //                         <TableRow className="bg-gray-100 font-semibold border-t-2 border-gray-300">
+// //                           <TableCell colSpan={4} className="text-right text-sm font-bold text-gray-800">
+// //                             Total ({totalCount} entries)
 // //                           </TableCell>
-// //                         ))}
-// //                       </TableRow>
-// //                     ))
+// //                           <TableCell className="text-right text-sm font-bold text-gray-800">
+// //                             {new Intl.NumberFormat("en-US", {
+// //                               minimumFractionDigits: 2,
+// //                               maximumFractionDigits: 2,
+// //                             }).format(totalCredit)}
+// //                           </TableCell>
+// //                           <TableCell colSpan={3} />
+// //                         </TableRow>
+// //                       )}
+// //                     </>
 // //                   ) : (
 // //                     <TableRow>
 // //                       <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -3027,6 +3908,7 @@
 //   RotateCcw,
 //   Eye,
 //   X,
+//   Upload,
 // } from "lucide-react";
 // import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // import { Link } from "react-router-dom";
@@ -3067,6 +3949,14 @@
 //   TooltipProvider,
 //   TooltipTrigger,
 // } from "@/components/ui/tooltip";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+// } from "@/components/ui/dialog";
 
 // import { DataTablePagination } from "@/components/DataTablePagination";
 // import { PaymentService } from "@/api/AccontingApi";
@@ -3108,6 +3998,13 @@
 //   const [glDateFrom, setGlDateFrom] = useState("");
 //   const [glDateTo, setGlDateTo] = useState("");
 
+//   // ── Upload State ──
+//   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+//   const [selectedVoucher, setSelectedVoucher] = useState(null);
+//   const [selectedFiles, setSelectedFiles] = useState([]);
+//   const [uploading, setUploading] = useState(false);
+//   const [existingDocs, setExistingDocs] = useState([]);
+
 //   const canCreate = useHasPermission("PAYMENT_VOUCHER_CREATE");
 //   const canEdit = useHasPermission("PAYMENT_VOUCHER_EDIT");
 //   const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD");
@@ -3122,17 +4019,68 @@
 //     },
 //   });
 
-//   // ── Review modal — fetch full master+details for the selected voucher ──
+//   // ── Fetch existing docs for the selected voucher ──
+//   const { refetch: refetchDocs } = useQuery({
+//     queryKey: ["gldocs", selectedVoucher?.ID],
+//     queryFn: async () => {
+//       if (!selectedVoucher) return [];
+//       const res = await axios.get(`${BASE_URL}/api/gldoc`, {
+//         params: { glmaster_id: selectedVoucher.ID },
+//       });
+//       const docs = res.data.data || [];
+//       setExistingDocs(docs);
+//       return docs;
+//     },
+//     enabled: !!selectedVoucher,
+//   });
+
+//   // ── Upload Invoice Mutation ──
+//   const uploadMutation = useMutation({
+//     mutationFn: async ({ voucherId, files }) => {
+//       const uploads = files.map((file) => {
+//         const fd = new FormData();
+//         fd.append("doc_file", file);
+//         fd.append("GLMASTERID", voucherId);
+//         return axios.post(`${BASE_URL}/api/gldoc`, fd);
+//       });
+//       return await Promise.all(uploads);
+//     },
+//     onSuccess: async () => {
+//       toast.success("Invoice uploaded successfully!");
+//       setSelectedFiles([]);
+//       await refetchDocs();
+//       queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+//     },
+//     onError: (error) => {
+//       toast.error("Failed to upload invoice: " + (error.response?.data?.message || error.message));
+//     },
+//     onSettled: () => {
+//       setUploading(false);
+//     },
+//   });
+
+//   // ── Delete Document Mutation ──
+//   const deleteDocMutation = useMutation({
+//     mutationFn: async (docId) => {
+//       await axios.delete(`${BASE_URL}/api/gldoc/${docId}`);
+//     },
+//     onSuccess: async () => {
+//       toast.success("Document deleted successfully!");
+//       await refetchDocs();
+//       queryClient.invalidateQueries(["unpostedPaymentVouchers"]);
+//     },
+//     onError: (error) => {
+//       toast.error("Failed to delete document: " + (error.response?.data?.message || error.message));
+//     },
+//   });
+
+//   // ── Review modal ──
 //   const { data: reviewData, isLoading: reviewLoading } = useQuery({
 //     queryKey: ["voucherReview", "payment", reviewVoucher?.ID],
 //     queryFn: async () => (await PaymentService.search(reviewVoucher.ID)).data,
 //     enabled: !!reviewVoucher,
 //   });
 
-//   // ── Distribution rows only — payment/cash code row excluded, single
-//   //     "amount" per row regardless of debit/credit direction.
-//   //     Case-agnostic: backend sometimes returns UPPERCASE (raw GLDETAILS)
-//   //     and sometimes lowercase (mapped) keys — read both. ─────────────
 //   const distributionRows = useMemo(() => {
 //     const details = reviewData?.details || [];
 //     const master = reviewData?.master || {};
@@ -3199,7 +4147,8 @@
 
 //   const sortedVouchers = useMemo(() => {
 //     const vouchers = Array.isArray(data?.data) ? data.data : [];
-//     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+//     // return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+//     return vouchers;
 //   }, [data]);
 
 //   const filteredVouchers = useMemo(() => {
@@ -3213,7 +4162,6 @@
 //     });
 //   }, [sortedVouchers, glDateFrom, glDateTo]);
 
-//   // ── Total calculation for filtered data ─────────────────────────────────
 //   const totalCredit = useMemo(() => {
 //     return filteredVouchers.reduce((sum, v) => sum + parseFloat(v.CREDIT || 0), 0);
 //   }, [filteredVouchers]);
@@ -3246,6 +4194,35 @@
 //     } finally {
 //       setDownloading(null);
 //     }
+//   };
+
+//   // ── Upload Handlers ──
+//   const handleUploadClick = (voucher) => {
+//     setSelectedVoucher(voucher);
+//     setExistingDocs([]);
+//     setUploadDialogOpen(true);
+//     setSelectedFiles([]);
+//   };
+
+//   const handleFileSelect = (e) => {
+//     const files = Array.from(e.target.files);
+//     setSelectedFiles((prev) => [...prev, ...files]);
+//   };
+
+//   const handleRemoveFile = (index) => {
+//     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+//   };
+
+//   const handleUploadSubmit = () => {
+//     if (selectedFiles.length === 0) {
+//       toast.error("Please select at least one file.");
+//       return;
+//     }
+//     setUploading(true);
+//     uploadMutation.mutate({
+//       voucherId: selectedVoucher.ID,
+//       files: selectedFiles,
+//     });
 //   };
 
 //   const columns = [
@@ -3308,12 +4285,48 @@
 //     },
 //     {
 //       id: "attachment",
-//       header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Files</div>,
+//       header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice Count</div>,
 //       cell: ({ row }) => (
 //         <div className="flex justify-center">
 //           <AttachmentIndicator count={row.original.DOC_COUNT} />
 //         </div>
 //       ),
+//     },
+//     // ── Upload Invoice Column ──
+//     {
+//       id: "uploadInvoice",
+//       header: () => (
+//         <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Upload Invoice
+//         </div>
+//       ),
+//       cell: ({ row }) => {
+//         const voucher = row.original;
+//         const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
+        
+//         return (
+//           <div className="flex justify-center">
+//             <TooltipProvider>
+//               <Tooltip>
+//                 <TooltipTrigger asChild>
+//                   <Button
+//                     variant="ghost"
+//                     size="icon"
+//                     className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+//                     onClick={() => handleUploadClick(voucher)}
+//                     disabled={isApproved}
+//                   >
+//                     <Upload size={16} />
+//                   </Button>
+//                 </TooltipTrigger>
+//                 <TooltipContent side="top">
+//                   {isApproved ? "Cannot upload (approved)" : "Upload Invoice"}
+//                 </TooltipContent>
+//               </Tooltip>
+//             </TooltipProvider>
+//           </div>
+//         );
+//       },
 //     },
 //     {
 //       id: "actions",
@@ -3625,7 +4638,7 @@
 //                         </TableRow>
 //                       ))}
                       
-//                       {/* ── Total Row ── */}
+//                       {/* Total Row */}
 //                       {filteredVouchers.length > 0 && (
 //                         <TableRow className="bg-gray-100 font-semibold border-t-2 border-gray-300">
 //                           <TableCell colSpan={4} className="text-right text-sm font-bold text-gray-800">
@@ -3637,7 +4650,7 @@
 //                               maximumFractionDigits: 2,
 //                             }).format(totalCredit)}
 //                           </TableCell>
-//                           <TableCell colSpan={3} />
+//                           <TableCell colSpan={4} />
 //                         </TableRow>
 //                       )}
 //                     </>
@@ -3660,6 +4673,151 @@
 //           </div>
 //         </div>
 //       </div>
+
+//       {/* ── Upload Invoice Dialog ── */}
+//       <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
+//         if (!uploading) {
+//           setUploadDialogOpen(open);
+//           if (!open) {
+//             setSelectedVoucher(null);
+//             setSelectedFiles([]);
+//             setExistingDocs([]);
+//           }
+//         }
+//       }}>
+//         <DialogContent className="max-w-lg">
+//           <DialogHeader>
+//             <DialogTitle className="flex items-center gap-2">
+//               <Upload size={18} className="text-blue-600" />
+//               Upload Invoice
+//             </DialogTitle>
+//             <DialogDescription>
+//               Upload invoice for voucher #{selectedVoucher?.VOUCHERNO}
+//             </DialogDescription>
+//           </DialogHeader>
+
+//           <div className="space-y-4 py-2">
+//             {/* File Input */}
+//             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+//               <Input
+//                 type="file"
+//                 multiple
+//                 onChange={handleFileSelect}
+//                 disabled={uploading}
+//                 className="cursor-pointer"
+//                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+//               />
+//               <p className="text-xs text-gray-400 mt-2">
+//                 Supported: PDF, JPG, PNG, DOC (Max 5MB each)
+//               </p>
+//             </div>
+
+//             {/* Selected Files List */}
+//             {selectedFiles.length > 0 && (
+//               <div className="space-y-2">
+//                 <label className="text-sm font-medium text-gray-700">
+//                   Selected Files ({selectedFiles.length})
+//                 </label>
+//                 <div className="max-h-40 overflow-y-auto space-y-1">
+//                   {selectedFiles.map((file, index) => (
+//                     <div
+//                       key={index}
+//                       className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-sm"
+//                     >
+//                       <div className="flex items-center gap-2">
+//                         <FileText size={14} className="text-gray-400" />
+//                         <span className="text-gray-700 truncate max-w-[200px]">
+//                           {file.name}
+//                         </span>
+//                         <span className="text-xs text-gray-400">
+//                           ({(file.size / 1024).toFixed(1)} KB)
+//                         </span>
+//                       </div>
+//                       <Button
+//                         type="button"
+//                         variant="ghost"
+//                         size="sm"
+//                         className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+//                         onClick={() => handleRemoveFile(index)}
+//                         disabled={uploading}
+//                       >
+//                         <X size={14} />
+//                       </Button>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* Existing Documents */}
+//             {existingDocs && existingDocs.length > 0 && (
+//               <div className="space-y-2">
+//                 <label className="text-sm font-medium text-gray-700">
+//                   Existing Documents ({existingDocs.length})
+//                 </label>
+//                 <div className="max-h-32 overflow-y-auto space-y-1">
+//                   {existingDocs.map((doc) => (
+//                     <div
+//                       key={doc.ID}
+//                       className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2 text-sm"
+//                     >
+//                       <div className="flex items-center gap-2">
+//                         <FileText size={14} className="text-blue-500" />
+//                         <span className="text-gray-700 truncate max-w-[200px]">
+//                           {doc.FILENAME || `Document #${doc.ID}`}
+//                         </span>
+//                       </div>
+//                       <Button
+//                         type="button"
+//                         variant="ghost"
+//                         size="sm"
+//                         className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+//                         onClick={() => deleteDocMutation.mutate(doc.ID)}
+//                         disabled={uploading || deleteDocMutation.isPending}
+//                       >
+//                         <X size={14} />
+//                       </Button>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+
+//           <DialogFooter>
+//             <Button
+//               type="button"
+//               variant="outline"
+//               onClick={() => {
+//                 setUploadDialogOpen(false);
+//                 setSelectedVoucher(null);
+//                 setSelectedFiles([]);
+//                 setExistingDocs([]);
+//               }}
+//               disabled={uploading}
+//             >
+//               Cancel
+//             </Button>
+//             <Button
+//               type="button"
+//               onClick={handleUploadSubmit}
+//               disabled={selectedFiles.length === 0 || uploading}
+//             >
+//               {uploading ? (
+//                 <>
+//                   <span className="mr-2 h-4 w-4 animate-spin">⟳</span>
+//                   Uploading...
+//                 </>
+//               ) : (
+//                 <>
+//                   <Upload size={16} className="mr-2" />
+//                   Upload {selectedFiles.length} file(s)
+//                 </>
+//               )}
+//             </Button>
+//           </DialogFooter>
+//         </DialogContent>
+//       </Dialog>
 
 //       {/* Delete Confirmation Modal */}
 //       {deleteModal.show && (
@@ -3716,7 +4874,7 @@
 //         </AlertDialogContent>
 //       </AlertDialog>
 
-//       {/* ── Review Voucher Modal (approved, read-only) ─────────────────── */}
+//       {/* ── Review Voucher Modal ── */}
 //       {reviewVoucher && (
 //         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-120 p-4">
 //           <div className="bg-white rounded-2xl shadow-xl w-full md:w-2/3 max-h-[90vh] overflow-y-auto">
@@ -3909,6 +5067,7 @@ import {
   Eye,
   X,
   Upload,
+  Paperclip as PaperclipIcon,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -4019,7 +5178,7 @@ export default function PaymentTable() {
     },
   });
 
-  // ── Fetch existing docs for the selected voucher ──
+  // ── Fetch existing docs for the selected voucher (Upload dialog) ──
   const { refetch: refetchDocs } = useQuery({
     queryKey: ["gldocs", selectedVoucher?.ID],
     queryFn: async () => {
@@ -4078,6 +5237,18 @@ export default function PaymentTable() {
   const { data: reviewData, isLoading: reviewLoading } = useQuery({
     queryKey: ["voucherReview", "payment", reviewVoucher?.ID],
     queryFn: async () => (await PaymentService.search(reviewVoucher.ID)).data,
+    enabled: !!reviewVoucher,
+  });
+
+  // ── Review modal — attachment list ──
+  const { data: reviewDocs = [] } = useQuery({
+    queryKey: ["gldocs", "review", reviewVoucher?.ID],
+    queryFn: async () => {
+      const res = await axios.get(`${BASE_URL}/api/gldoc`, {
+        params: { glmaster_id: reviewVoucher.ID },
+      });
+      return res.data.data || [];
+    },
     enabled: !!reviewVoucher,
   });
 
@@ -4147,7 +5318,6 @@ export default function PaymentTable() {
 
   const sortedVouchers = useMemo(() => {
     const vouchers = Array.isArray(data?.data) ? data.data : [];
-    // return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
     return vouchers;
   }, [data]);
 
@@ -4303,7 +5473,7 @@ export default function PaymentTable() {
       cell: ({ row }) => {
         const voucher = row.original;
         const isApproved = voucher.POSTED === 1 || voucher.POSTED === "1";
-        
+
         return (
           <div className="flex justify-center">
             <TooltipProvider>
@@ -4637,7 +5807,7 @@ export default function PaymentTable() {
                           ))}
                         </TableRow>
                       ))}
-                      
+
                       {/* Total Row */}
                       {filteredVouchers.length > 0 && (
                         <TableRow className="bg-gray-100 font-semibold border-t-2 border-gray-300">
@@ -4761,17 +5931,22 @@ export default function PaymentTable() {
                       key={doc.ID}
                       className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2 text-sm"
                     >
-                      <div className="flex items-center gap-2">
-                        <FileText size={14} className="text-blue-500" />
-                        <span className="text-gray-700 truncate max-w-[200px]">
-                          {doc.FILENAME || `Document #${doc.ID}`}
+                      
+                       <a href={`${BASE_URL}/api/gldoc?id=${doc.ID}&file=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-700 hover:underline min-w-0"
+                      >
+                        <FileText size={14} className="text-blue-500 shrink-0" />
+                        <span className="truncate max-w-[200px]">
+                          {doc.FILE_NAME || `Document #${doc.ID}`}
                         </span>
-                      </div>
+                      </a>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 shrink-0"
                         onClick={() => deleteDocMutation.mutate(doc.ID)}
                         disabled={uploading || deleteDocMutation.isPending}
                       >
@@ -4882,7 +6057,7 @@ export default function PaymentTable() {
               <div className="flex items-center gap-2">
                 <Eye size={18} className="text-indigo-600" />
                 <h2 className="text-base font-bold text-gray-900">
-                  Review Voucher #{reviewVoucher.VOUCHERNO}
+                  Payment Voucher #{reviewVoucher.VOUCHERNO}
                 </h2>
               </div>
               <div className="flex items-center gap-2">
@@ -4947,15 +6122,31 @@ export default function PaymentTable() {
                   Approved
                 </div>
               </div>
-              <div>
+
+              {/* ── Attachments — now clickable file links ── */}
+              <div className="md:col-span-3">
                 <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
                   Attachments
                 </label>
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                  <AttachmentIndicator count={reviewVoucher.DOC_COUNT} />
-                  <span className="text-xs text-slate-500">
-                    {Number(reviewVoucher.DOC_COUNT) || 0} file(s)
-                  </span>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 space-y-1.5">
+                  {reviewDocs.length === 0 ? (
+                    <span className="text-xs text-slate-500">
+                      {Number(reviewVoucher.DOC_COUNT) || 0} file(s)
+                    </span>
+                  ) : (
+                    reviewDocs.map((doc) => (
+                      
+                        <a key={doc.ID}
+                        href={`${BASE_URL}/api/gldoc?id=${doc.ID}&file=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 hover:underline"
+                      >
+                        <PaperclipIcon size={13} />
+                        {doc.FILE_NAME || `Document #${doc.ID}`}
+                      </a>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

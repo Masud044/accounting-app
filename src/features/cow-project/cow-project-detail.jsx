@@ -257,13 +257,20 @@ export default function CowProjectDetail() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="vaccine" className="mt-4">
+            {/* <TabsContent value="vaccine" className="mt-4">
               <VaccineTab cowNo={id} cowLabel={project.COW_NUMBER} />
             </TabsContent>
 
             <TabsContent value="weight" className="mt-4">
               <WeightTab cowNo={id} cowLabel={project.COW_NUMBER} />
-            </TabsContent>
+            </TabsContent> */}
+            <TabsContent value="vaccine" className="mt-4">
+  <VaccineTab cowNo={id} cowLabel={project.COW_NUMBER} isActive={isActive} />
+</TabsContent>
+
+<TabsContent value="weight" className="mt-4">
+  <WeightTab cowNo={id} cowLabel={project.COW_NUMBER} isActive={isActive} />
+</TabsContent>
           </Tabs>
         </div>
       </div>
