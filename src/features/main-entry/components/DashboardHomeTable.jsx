@@ -1,4 +1,519 @@
 
+// "use client";
+
+// import * as React from "react";
+// import {
+//   flexRender,
+//   getCoreRowModel,
+//   getFilteredRowModel,
+//   getPaginationRowModel,
+//   getSortedRowModel,
+//   useReactTable,
+// } from "@tanstack/react-table";
+
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "@/components/ui/tooltip";
+// import { useQuery, useQueryClient } from "@tanstack/react-query";
+// import { Link } from "react-router-dom";
+// import {
+//   Pencil,
+//   ArrowUpDown,
+//   ChevronDown,
+//   FileUser,
+//   CheckCircle,
+//   BadgeCheck,
+//   Search,
+//   ReceiptText,
+// } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import { Checkbox } from "@/components/ui/checkbox";
+// import {
+//   DropdownMenu,
+//   DropdownMenuCheckboxItem,
+//   DropdownMenuContent,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+// } from "@/components/ui/alert-dialog";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import { DataTablePagination } from "@/components/DataTablePagination";
+// import axios from "axios";
+// import { useHasPermission } from "@/hooks/use-permission";
+
+// const getVoucherTypeLabel = (type) => {
+//   switch (String(type)) {
+//     case "1": return "Receive";
+//     case "2": return "Payment";
+//     case "3": return "Journal";
+//     case "4": return "Bank Transfer";
+//     default: return "Unknown";
+//   }
+// };
+
+// const getEditRoute = (type, id) => {
+//   switch (String(type)) {
+//     case "1": return `/dashboard/receive-edit/${id}`;
+//     case "2": return `/dashboard/payment-edit/${id}`;
+//     case "3": return `/dashboard/journal-edit/${id}`;
+//     default: return `/dashboard/cash-transfer`;
+//   }
+// };
+
+// // const formatDate = (value) => {
+// //   if (!value) return "—";
+// //   const date = new Date(value);
+// //   if (isNaN(date.getTime())) return value;
+// //   return date.toLocaleDateString("en-US", {
+// //     month: "short",
+// //     day: "2-digit",
+// //     year: "numeric",
+// //   });
+// // };
+
+// const formatDate = (value) => {
+//   if (!value) return "—";
+//   const date = new Date(value);
+//   if (isNaN(date.getTime())) return value;
+//   const yyyy = date.getFullYear();
+//   const mm = String(date.getMonth() + 1).padStart(2, "0");
+//   const dd = String(date.getDate()).padStart(2, "0");
+//   return `${yyyy}-${mm}-${dd}`;
+// };
+
+// // Voucher type options for the filter dropdown
+// const VOUCHER_TYPE_OPTIONS = [
+//   { value: "1", label: "Receive" },
+//   { value: "2", label: "Payment" },
+//   { value: "3", label: "Journal" },
+//   { value: "4", label: "Bank Transfer" },
+// ];
+
+// // Reusable sortable header — clean uppercase gray style
+// const SortableHeader = ({ column, label }) => (
+//   <Button
+//     variant="ghost"
+//     className="text-xs font-semibold text-gray-500 uppercase tracking-wide p-0 h-auto hover:bg-transparent"
+//     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//   >
+//     {label} <ArrowUpDown className="ml-1 h-3 w-3" />
+//   </Button>
+// );
+
+// // approvedIds: locally tracked approved IDs Set
+// const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
+//   {
+//     id: "select",
+//     header: ({ table }) => (
+//       <Checkbox
+//         checked={
+//           table.getIsAllPageRowsSelected() ||
+//           (table.getIsSomePageRowsSelected() && "indeterminate")
+//         }
+//         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+//         aria-label="Select all"
+//       />
+//     ),
+//     cell: ({ row }) => (
+//       <Checkbox
+//         checked={row.getIsSelected()}
+//         onCheckedChange={(value) => row.toggleSelected(!!value)}
+//         aria-label="Select row"
+//       />
+//     ),
+//     enableSorting: false,
+//     enableHiding: false,
+//   },
+//   {
+//     accessorKey: "VOUCHER_TYPE",
+//     header: ({ column }) => <SortableHeader column={column} label="Voucher Type" />,
+//     cell: ({ row }) => {
+//       const type = row.getValue("VOUCHER_TYPE");
+//       const colorMap = {
+//         1: "text-green-800 bg-green-100",
+//         2: "text-red-800 bg-red-100",
+//         3: "text-blue-800 bg-blue-100",
+//         4: "text-purple-800 bg-purple-100",
+//       };
+//       return (
+//         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${colorMap[type] || "text-gray-800 bg-gray-100"}`}>
+//           {getVoucherTypeLabel(type)}
+//         </span>
+//       );
+//     },
+//   },
+//   {
+//     accessorKey: "VOUCHERNO",
+//     header: ({ column }) => <SortableHeader column={column} label="Voucher No" />,
+//     cell: ({ row }) => <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>,
+//   },
+//   {
+//     accessorKey: "GL_ENTRY_DATE",
+//     header: ({ column }) => <SortableHeader column={column} label="Gl Date" />,
+//     cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{formatDate(row.getValue("GL_ENTRY_DATE"))}</div>,
+//   },
+//   {
+//     accessorKey: "DESCRIPTION",
+//     header: ({ column }) => <SortableHeader column={column} label="Description" />,
+//     cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("DESCRIPTION")}</div>,
+//   },
+//   {
+//     id: "AMOUNT",
+//     header: () => (
+//       <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Debit/Credit</div>
+//     ),
+//     cell: ({ row }) => {
+//       const item = row.original;
+//       const debit = parseFloat(item.TOTAL_DEBIT || 0);
+//       const credit = parseFloat(item.TOTAL_CREDIT || 0);
+//       const amount = debit !== 0 ? debit : credit;
+//       const formatted = new Intl.NumberFormat("en-US", {
+//         minimumFractionDigits: 2,
+//         maximumFractionDigits: 2,
+//       }).format(amount);
+//       return <div className="ml-3 text-sm font-semibold text-gray-800">{formatted}</div>;
+//     },
+//   },
+//   {
+//     id: "actions",
+//     enableHiding: false,
+//     header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</div>,
+//     cell: ({ row }) => {
+//       const item = row.original;
+//       const editRoute = getEditRoute(item.VOUCHER_TYPE, item.ID);
+
+//       const isApproved =
+//         item.POSTED === 1 ||
+//         item.POSTED === "1" ||
+//         approvedIds.has(item.ID);
+
+//       if (isApproved) {
+//         return (
+//           <div className="flex items-center justify-center gap-3">
+//             <Button variant="ghost" size="icon" disabled className="opacity-30 cursor-not-allowed">
+//               <Pencil size={16} />
+//             </Button>
+
+//             <TooltipProvider>
+//               <Tooltip>
+//                 <TooltipTrigger asChild>
+//                   <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+//                     <BadgeCheck size={16} />
+//                   </span>
+//                 </TooltipTrigger>
+//                 <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+//                   Approved
+//                 </TooltipContent>
+//               </Tooltip>
+//             </TooltipProvider>
+//           </div>
+//         );
+//       }
+
+//       return (
+//         <div className="flex items-center justify-center gap-3">
+//           {canEdit && (
+//             <Link to={editRoute}>
+//               <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
+//                 <Pencil size={16} />
+//               </Button>
+//             </Link>
+//           )}
+
+//           {canApprove && (
+//             <Button
+//               variant="ghost"
+//               size="icon"
+//               className="text-green-600 hover:text-green-800 hover:bg-green-50"
+//               onClick={() => setConfirmId(item.ID)}
+//             >
+//               <FileUser size={16} />
+//             </Button>
+//           )}
+//         </div>
+//       );
+//     },
+//   },
+// ];
+
+// const url = import.meta.env.VITE_API_BASE_URL;
+
+// export function DashboardHomeTable() {
+//   const queryClient = useQueryClient();
+
+//   const [confirmId, setConfirmId] = React.useState(null);
+//   const [isApproving, setIsApproving] = React.useState(false);
+
+//   const canEdit    = useHasPermission("HOME_VOUCHER_EDIT");
+//   const canApprove = useHasPermission("HOME_VOUCHER_APPROVE");
+//   const canDelete  = useHasPermission("HOME_VOUCHER_DELETE");
+
+//   const [approvedIds, setApprovedIds] = React.useState(new Set());
+//   const [voucherTypeFilter, setVoucherTypeFilter] = React.useState("all"); // ← notun
+
+//   const { data, isLoading, error } = useQuery({
+//     queryKey: ["unpostedVouchers"],
+//     queryFn: async () => {
+//       const res = await axios.get(`${url}/api/info-list`);
+//       return res.data;
+//     },
+//   });
+
+//   const apiData = Array.isArray(data?.vouchers) ? data.vouchers : [];
+
+//   // ── Apply voucher type filter before passing data to the table ───────────
+//   const filteredData = React.useMemo(() => {
+//     if (voucherTypeFilter === "all") return apiData;
+//     return apiData.filter((v) => String(v.VOUCHER_TYPE) === voucherTypeFilter);
+//   }, [apiData, voucherTypeFilter]);
+
+//   const [sorting, setSorting] = React.useState([]);
+//   const [columnFilters, setColumnFilters] = React.useState([]);
+//   const [columnVisibility, setColumnVisibility] = React.useState({});
+//   const [rowSelection, setRowSelection] = React.useState({});
+
+//   const handleActivateVoucher = async () => {
+//     if (!confirmId) return;
+//     setIsApproving(true);
+//     try {
+//       const res = await axios.get(`${url}/api/active-voucher?id=${confirmId}`);
+//       if (res.data.success) {
+//         setApprovedIds((prev) => new Set([...prev, confirmId]));
+//         queryClient.invalidateQueries(["unpostedVouchers"]);
+//       } else {
+//         alert(res.data.message || "Failed to approve voucher");
+//       }
+//     } catch (error) {
+//       alert("Something went wrong: " + error.message);
+//     } finally {
+//       setIsApproving(false);
+//       setConfirmId(null);
+//     }
+//   };
+
+//   const columns = React.useMemo(
+//     () => createColumns(setConfirmId, approvedIds, canEdit, canApprove, canDelete),
+//     [approvedIds, canEdit, canApprove, canDelete]
+//   );
+
+//   const table = useReactTable({
+//     data: filteredData,
+//     columns,
+//     onSortingChange: setSorting,
+//     onColumnFiltersChange: setColumnFilters,
+//     getCoreRowModel: getCoreRowModel(),
+//     getPaginationRowModel: getPaginationRowModel(),
+//     getSortedRowModel: getSortedRowModel(),
+//     getFilteredRowModel: getFilteredRowModel(),
+//     onColumnVisibilityChange: setColumnVisibility,
+//     onRowSelectionChange: setRowSelection,
+//     initialState: {
+//       pagination: {
+//         pageSize: 50,
+//       },
+//     },
+//     state: { sorting, columnFilters, columnVisibility, rowSelection },
+//   });
+
+//   return (
+//     <div className="p-4 md:p-6">
+//     <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+//       {/* Approve Confirmation Dialog */}
+//       <AlertDialog
+//         open={!!confirmId}
+//         onOpenChange={() => !isApproving && setConfirmId(null)}
+//       >
+//         <AlertDialogContent>
+//           <AlertDialogHeader>
+//             <AlertDialogTitle className="flex items-center gap-2">
+//               <CheckCircle className="text-green-600" size={20} />
+//               Approve Voucher?
+//             </AlertDialogTitle>
+//             <AlertDialogDescription>
+//               Voucher ID <strong>{confirmId}</strong> will be permanently approved.{" "}
+//               <span className="text-red-500 font-medium">This action cannot be undone.</span>{" "}
+//               Please confirm before proceeding.
+//             </AlertDialogDescription>
+//           </AlertDialogHeader>
+//           <AlertDialogFooter>
+//             <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+//             <AlertDialogAction
+//               onClick={handleActivateVoucher}
+//               disabled={isApproving}
+//               className="bg-green-600 hover:bg-green-700"
+//             >
+//               {isApproving ? "Approving..." : "Yes, Approve"}
+//             </AlertDialogAction>
+//           </AlertDialogFooter>
+//         </AlertDialogContent>
+//       </AlertDialog>
+
+//       {/* Header */}
+//       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+//         <div className="flex items-center gap-2">
+//           <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600">
+//             <ReceiptText size={16} />
+//           </div>
+//           <div>
+//             <h2 className="text-sm font-bold text-gray-900">Home Voucher</h2>
+//             <p className="text-xs text-gray-400">{filteredData.length} of {apiData.length} — unposted vouchers</p>
+//           </div>
+//         </div>
+//       </div>
+
+//       <div className="p-5 space-y-4">
+//         {/* Search + Voucher Type filter + Column Toggle */}
+//         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+//           <div className="relative max-w-sm w-full">
+//             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+//             {/* <Input
+//               placeholder="Filter descriptions..."
+//               value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
+//               onChange={(e) =>
+//                 table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
+//               }
+//               className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
+//             /> */}
+//             <Input
+//   placeholder="Filter voucher no..."
+//   value={table.getColumn("VOUCHERNO")?.getFilterValue() ?? ""}
+//   onChange={(e) =>
+//     table.getColumn("VOUCHERNO")?.setFilterValue(e.target.value)
+//   }
+//   className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
+// />
+//           </div>
+
+//           <div className="flex flex-col gap-1.5 w-full sm:w-48">
+          
+//             <Select value={voucherTypeFilter} onValueChange={setVoucherTypeFilter}>
+//               <SelectTrigger className="bg-white border-gray-200 focus:ring-1 focus:ring-blue-300">
+//                 <SelectValue placeholder="All types" />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 <SelectItem value="all">All Types</SelectItem>
+//                 {VOUCHER_TYPE_OPTIONS.map((opt) => (
+//                   <SelectItem key={opt.value} value={opt.value}>
+//                     {opt.label}
+//                   </SelectItem>
+//                 ))}
+//               </SelectContent>
+//             </Select>
+//           </div>
+
+//           <DropdownMenu>
+//             <DropdownMenuTrigger asChild>
+//               <Button variant="outline" className="sm:ml-auto bg-white border-gray-200">
+//                 Columns <ChevronDown className="ml-2 h-4 w-4" />
+//               </Button>
+//             </DropdownMenuTrigger>
+//             <DropdownMenuContent align="end">
+//               {table
+//                 .getAllColumns()
+//                 .filter((col) => col.getCanHide())
+//                 .map((column) => (
+//                   <DropdownMenuCheckboxItem
+//                     key={column.id}
+//                     className="capitalize"
+//                     checked={column.getIsVisible()}
+//                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
+//                   >
+//                     {column.id}
+//                   </DropdownMenuCheckboxItem>
+//                 ))}
+//             </DropdownMenuContent>
+//           </DropdownMenu>
+//         </div>
+
+//         {/* Table */}
+//         <div className="overflow-hidden rounded-md border border-gray-200">
+//           <Table>
+//             <TableHeader className="bg-gray-50">
+//               {table.getHeaderGroups().map((group) => (
+//                 <TableRow key={group.id}>
+//                   {group.headers.map((header) => (
+//                     <TableHead key={header.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//                       {header.isPlaceholder
+//                         ? null
+//                         : flexRender(header.column.columnDef.header, header.getContext())}
+//                     </TableHead>
+//                   ))}
+//                 </TableRow>
+//               ))}
+//             </TableHeader>
+//             <TableBody>
+//               {isLoading && (
+//                 <TableRow>
+//                   <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
+//                     Loading...
+//                   </TableCell>
+//                 </TableRow>
+//               )}
+//               {error && (
+//                 <TableRow>
+//                   <TableCell colSpan={columns.length} className="text-center h-24 text-red-600 text-sm">
+//                     Error: {error.message}
+//                   </TableCell>
+//                 </TableRow>
+//               )}
+//               {!isLoading && !error &&
+//                 table.getRowModel().rows.map((row) => (
+//                   <TableRow
+//                     key={row.id}
+//                     data-state={row.getIsSelected() && "selected"}
+//                     className="hover:bg-gray-50/70 transition-colors"
+//                   >
+//                     {row.getVisibleCells().map((cell) => (
+//                       <TableCell key={cell.id} className="text-sm text-gray-700">
+//                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
+//                       </TableCell>
+//                     ))}
+//                   </TableRow>
+//                 ))}
+//               {!isLoading && !error && table.getRowModel().rows.length === 0 && (
+//                 <TableRow>
+//                   <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
+//                     No results.
+//                   </TableCell>
+//                 </TableRow>
+//               )}
+//             </TableBody>
+//           </Table>
+//         </div>
+
+//         <DataTablePagination table={table} />
+//       </div>
+//     </div>
+//     </div>
+//   );
+// }
+
 "use client";
 
 import * as React from "react";
@@ -86,17 +601,6 @@ const getEditRoute = (type, id) => {
   }
 };
 
-// const formatDate = (value) => {
-//   if (!value) return "—";
-//   const date = new Date(value);
-//   if (isNaN(date.getTime())) return value;
-//   return date.toLocaleDateString("en-US", {
-//     month: "short",
-//     day: "2-digit",
-//     year: "numeric",
-//   });
-// };
-
 const formatDate = (value) => {
   if (!value) return "—";
   const date = new Date(value);
@@ -105,6 +609,14 @@ const formatDate = (value) => {
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+};
+
+// ── Helper: normalize a date value to YYYY-MM-DD for comparison ─────────────
+const toISODateString = (val) => {
+  if (!val) return null;
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
 // Voucher type options for the filter dropdown
@@ -238,24 +750,38 @@ const createColumns = (setConfirmId, approvedIds, canEdit, canApprove) => [
 
       return (
         <div className="flex items-center justify-center gap-3">
-          {canEdit && (
-            <Link to={editRoute}>
-              <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
-                <Pencil size={16} />
-              </Button>
-            </Link>
-          )}
+          <TooltipProvider>
+            {canEdit && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link to={editRoute}>
+                    <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600">
+                      <Pencil size={16} />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="top">Edit Voucher</TooltipContent>
+              </Tooltip>
+            )}
 
-          {canApprove && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-green-600 hover:text-green-800 hover:bg-green-50"
-              onClick={() => setConfirmId(item.ID)}
-            >
-              <FileUser size={16} />
-            </Button>
-          )}
+            {canApprove && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-green-600 hover:text-green-800 hover:bg-green-50"
+                    onClick={() => setConfirmId(item.ID)}
+                  >
+                    <FileUser size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+                  Approve Voucher
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </TooltipProvider>
         </div>
       );
     },
@@ -275,7 +801,9 @@ export function DashboardHomeTable() {
   const canDelete  = useHasPermission("HOME_VOUCHER_DELETE");
 
   const [approvedIds, setApprovedIds] = React.useState(new Set());
-  const [voucherTypeFilter, setVoucherTypeFilter] = React.useState("all"); // ← notun
+  const [voucherTypeFilter, setVoucherTypeFilter] = React.useState("all");
+  const [glDateFrom, setGlDateFrom] = React.useState("");
+  const [glDateTo, setGlDateTo] = React.useState("");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["unpostedVouchers"],
@@ -287,11 +815,22 @@ export function DashboardHomeTable() {
 
   const apiData = Array.isArray(data?.vouchers) ? data.vouchers : [];
 
-  // ── Apply voucher type filter before passing data to the table ───────────
+  // ── Apply voucher type + GL date range filter before passing data to the table ──
   const filteredData = React.useMemo(() => {
-    if (voucherTypeFilter === "all") return apiData;
-    return apiData.filter((v) => String(v.VOUCHER_TYPE) === voucherTypeFilter);
-  }, [apiData, voucherTypeFilter]);
+    return apiData.filter((v) => {
+      if (voucherTypeFilter !== "all" && String(v.VOUCHER_TYPE) !== voucherTypeFilter) {
+        return false;
+      }
+
+      if (glDateFrom || glDateTo) {
+        const d = toISODateString(v.GL_ENTRY_DATE);
+        if (!d) return false;
+        if (glDateFrom && d < glDateFrom) return false;
+        if (glDateTo && d > glDateTo) return false;
+      }
+      return true;
+    });
+  }, [apiData, voucherTypeFilter, glDateFrom, glDateTo]);
 
   const [sorting, setSorting] = React.useState([]);
   const [columnFilters, setColumnFilters] = React.useState([]);
@@ -343,173 +882,218 @@ export function DashboardHomeTable() {
 
   return (
     <div className="p-4 md:p-6">
-    <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
-      {/* Approve Confirmation Dialog */}
-      <AlertDialog
-        open={!!confirmId}
-        onOpenChange={() => !isApproving && setConfirmId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <CheckCircle className="text-green-600" size={20} />
-              Approve Voucher?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Voucher ID <strong>{confirmId}</strong> will be permanently approved.{" "}
-              <span className="text-red-500 font-medium">This action cannot be undone.</span>{" "}
-              Please confirm before proceeding.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleActivateVoucher}
-              disabled={isApproving}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isApproving ? "Approving..." : "Yes, Approve"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+        {/* Approve Confirmation Dialog */}
+        <AlertDialog
+          open={!!confirmId}
+          onOpenChange={() => !isApproving && setConfirmId(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <CheckCircle className="text-green-600" size={20} />
+                Approve Voucher?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Voucher ID <strong>{confirmId}</strong> will be permanently approved.{" "}
+                <span className="text-red-500 font-medium">This action cannot be undone.</span>{" "}
+                Please confirm before proceeding.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleActivateVoucher}
+                disabled={isApproving}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isApproving ? "Approving..." : "Yes, Approve"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600">
-            <ReceiptText size={16} />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-gray-900">Home Voucher</h2>
-            <p className="text-xs text-gray-400">{filteredData.length} of {apiData.length} — unposted vouchers</p>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600">
+              <ReceiptText size={16} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Home Voucher</h2>
+              <p className="text-xs text-gray-400">
+                {filteredData.length} of {apiData.length} — unposted vouchers
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-5 space-y-4">
-        {/* Search + Voucher Type filter + Column Toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-          <div className="relative max-w-sm w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            {/* <Input
-              placeholder="Filter descriptions..."
-              value={table.getColumn("DESCRIPTION")?.getFilterValue() ?? ""}
-              onChange={(e) =>
-                table.getColumn("DESCRIPTION")?.setFilterValue(e.target.value)
-              }
-              className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
-            /> */}
-            <Input
-  placeholder="Filter voucher no..."
-  value={table.getColumn("VOUCHERNO")?.getFilterValue() ?? ""}
-  onChange={(e) =>
-    table.getColumn("VOUCHERNO")?.setFilterValue(e.target.value)
-  }
-  className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
-/>
-          </div>
+        <div className="p-5 space-y-4">
+          {/* Search + Voucher Type filter + GL Date range + Column Toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Filter voucher no..."
+                value={table.getColumn("VOUCHERNO")?.getFilterValue() ?? ""}
+                onChange={(e) =>
+                  table.getColumn("VOUCHERNO")?.setFilterValue(e.target.value)
+                }
+                className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-blue-300"
+              />
+            </div>
 
-          <div className="flex flex-col gap-1.5 w-full sm:w-48">
-          
-            <Select value={voucherTypeFilter} onValueChange={setVoucherTypeFilter}>
-              <SelectTrigger className="bg-white border-gray-200 focus:ring-1 focus:ring-blue-300">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {VOUCHER_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="sm:ml-auto bg-white border-gray-200">
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((col) => col.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-hidden rounded-md border border-gray-200">
-          <Table>
-            <TableHeader className="bg-gray-50">
-              {table.getHeaderGroups().map((group) => (
-                <TableRow key={group.id}>
-                  {group.headers.map((header) => (
-                    <TableHead key={header.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
+            <div className="flex flex-col gap-1.5 w-full sm:w-48">
+              <Select value={voucherTypeFilter} onValueChange={setVoucherTypeFilter}>
+                <SelectTrigger className="bg-white border-gray-200 focus:ring-1 focus:ring-blue-300">
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {VOUCHER_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              )}
-              {error && (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-red-600 text-sm">
-                    Error: {error.message}
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading && !error &&
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-gray-50/70 transition-colors"
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* GL From Date */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                Gl From Date
+              </label>
+              <div className="relative w-full sm:w-40">
+                <Input
+                  type="date"
+                  value={glDateFrom}
+                  max={glDateTo || undefined}
+                  onChange={(e) => setGlDateFrom(e.target.value)}
+                  className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+                />
+                {glDateFrom && (
+                  <button
+                    type="button"
+                    onClick={() => setGlDateFrom("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                    title="Clear from date"
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="text-sm text-gray-700">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* GL To Date */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                To Date
+              </label>
+              <div className="relative w-full sm:w-40">
+                <Input
+                  type="date"
+                  value={glDateTo}
+                  min={glDateFrom || undefined}
+                  onChange={(e) => setGlDateTo(e.target.value)}
+                  className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+                />
+                {glDateTo && (
+                  <button
+                    type="button"
+                    onClick={() => setGlDateTo("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                    title="Clear to date"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="sm:ml-auto bg-white border-gray-200">
+                  Columns <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((col) => col.getCanHide())
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-hidden rounded-md border border-gray-200">
+            <Table>
+              <TableHeader className="bg-gray-50">
+                {table.getHeaderGroups().map((group) => (
+                  <TableRow key={group.id}>
+                    {group.headers.map((header) => (
+                      <TableHead key={header.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
                     ))}
                   </TableRow>
                 ))}
-              {!isLoading && !error && table.getRowModel().rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                )}
+                {error && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center h-24 text-red-600 text-sm">
+                      Error: {error.message}
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isLoading && !error &&
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className="hover:bg-gray-50/70 transition-colors"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="text-sm text-gray-700">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                {!isLoading && !error && table.getRowModel().rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center h-24 text-sm text-gray-500">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
-        <DataTablePagination table={table} />
+          <DataTablePagination table={table} />
+        </div>
       </div>
-    </div>
     </div>
   );
 }

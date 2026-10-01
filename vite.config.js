@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: Number(env.VITE_PORT) || 5173,
+      port: Number(env.VITE_PORT),
       strictPort: true,
       host: true,
     }
