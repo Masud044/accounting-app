@@ -801,6 +801,7 @@ import ChartOfAccounts from "./features/ap-ar/pages/ChartOfAccounts";
 import GeneralLedger from "./features/ap-ar/pages/GeneralLedger";
 import Reports from "./features/ap-ar/pages/Reports";
 import JournalS from "./features/ap-ar/pages/JournalAp";
+import ChickenShedPage from "./features/chicken-shed";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -908,6 +909,15 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              <Route
+  path="chicken-shed"
+  element={
+    <ProtectedRoute anyPermission="CHICKEN_SHED_VIEW">
+      <ChickenShedPage />
+    </ProtectedRoute>
+  }
+/>
               <Route
                 path="cow-project"
                 element={

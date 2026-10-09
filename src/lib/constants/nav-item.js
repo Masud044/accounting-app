@@ -405,7 +405,7 @@
 
 import {
   Home, FileText, Plus, Wrench, ClipboardList,
-  LayoutDashboard, Receipt, Factory, Package, BarChart3, Settings, Wallet, ListTree, BookOpen
+  LayoutDashboard, Receipt,Warehouse , Factory, Package, BarChart3, Settings, Wallet, ListTree, BookOpen
 } from "lucide-react";
 import { IconUsers, IconDoorEnter, IconBuilding,IconReceipt2 } from "@tabler/icons-react";
 
@@ -455,6 +455,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/project-profile", label: "Project Management", Icon: FileText, requiredPermission: "PROJECT_PROFILE_VIEW" },
       { to: "/dashboard/agenda", label: "Agenda Management", Icon: FileText, requiredPermission: "AGENDA_MANAGEMENT_VIEW" },
       { to: "/dashboard/ledger-period", label: "Ledger Period Calendar", Icon: FileText, requiredPermission: "LEDGER_PERIOD_CALENDAR_VIEW" },
+      { to: "/dashboard/chicken-shed", label: "Chicken Shed", Icon: Warehouse, requiredPermission: "CHICKEN_SHED_VIEW" },
     ],
   },
   {
