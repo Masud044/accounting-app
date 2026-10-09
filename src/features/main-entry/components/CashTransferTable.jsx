@@ -994,6 +994,475 @@
 //   );
 // }
 
+// import { useState, useMemo } from "react";
+// import {
+//   flexRender,
+//   getCoreRowModel,
+//   getFilteredRowModel,
+//   getPaginationRowModel,
+//   getSortedRowModel,
+//   useReactTable,
+// } from "@tanstack/react-table";
+// import {
+//   ArrowUpDown,
+//   ChevronDown,
+//   Download,
+//   FileText,
+//   FileSpreadsheet,
+//   PlusIcon,
+//   Search,
+//   ArrowLeftRight,
+// } from "lucide-react";
+// import { useQuery } from "@tanstack/react-query";
+// import { Link } from "react-router-dom";
+
+// import { Button } from "@/components/ui/button";
+// import {
+//   DropdownMenu,
+//   DropdownMenuCheckboxItem,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "@/components/ui/tooltip";
+
+// import { DataTablePagination } from "@/components/DataTablePagination";
+// import { toast } from "react-toastify";
+// import axios from "axios";
+// import { useHasPermission } from "@/hooks/use-permission";
+
+// const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// // Reusable sortable header — clean uppercase gray style
+// const SortableHeader = ({ column, label }) => (
+//   <Button
+//     variant="ghost"
+//     className="text-xs font-semibold text-gray-500 uppercase tracking-wide p-0 h-auto hover:bg-transparent"
+//     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+//   >
+//     {label} <ArrowUpDown className="ml-1 h-3 w-3" />
+//   </Button>
+// );
+
+// // ── Helper: normalize a date value to YYYY-MM-DD for comparison ─────────────
+// const toISODateString = (val) => {
+//   if (!val) return null;
+//   const d = new Date(val);
+//   if (isNaN(d.getTime())) return null;
+//   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// };
+
+// const formatAmount = (value) =>
+//   new Intl.NumberFormat("en-US", {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   }).format(value);
+
+// export default function CashTransferTable() {
+//   const [sorting, setSorting] = useState([]);
+//   const [columnFilters, setColumnFilters] = useState([]);
+//   const [columnVisibility, setColumnVisibility] = useState({});
+//   const [globalFilter, setGlobalFilter] = useState("");
+//   const [downloading, setDownloading] = useState(null);
+//   const [glDateFrom, setGlDateFrom] = useState("");
+//   const [glDateTo, setGlDateTo] = useState("");
+
+//   const canCreate = useHasPermission("CASH_TRANSFER_CREATE");
+//   const canDownload = useHasPermission("CASH_TRANSFER_DOWNLOAD");
+
+//   const { data, isLoading, error } = useQuery({
+//     queryKey: ["unpostedCashTransfers"],
+//     queryFn: async () => {
+//       const res = await axios.get(`${BASE_URL}/api/cash-all-unposted`);
+//       return res.data;
+//     },
+//   });
+
+//   const sortedVouchers = useMemo(() => {
+//     const vouchers = data?.status === "success" ? data.data : [];
+//     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
+//   }, [data]);
+
+//   // ── GL Date range filter ─────────────────────────────────────────────────
+//   const filteredVouchers = useMemo(() => {
+//     if (!glDateFrom && !glDateTo) return sortedVouchers;
+//     return sortedVouchers.filter((v) => {
+//       const formatted = toISODateString(v.GL_ENTRY_DATE);
+//       if (!formatted) return false;
+//       if (glDateFrom && formatted < glDateFrom) return false;
+//       if (glDateTo && formatted > glDateTo) return false;
+//       return true;
+//     });
+//   }, [sortedVouchers, glDateFrom, glDateTo]);
+
+//   // ── Totals for filtered data ─────────────────────────────────────────────
+//   const totalDebit = useMemo(
+//     () => filteredVouchers.reduce((sum, v) => sum + parseFloat(v.DEBIT || 0), 0),
+//     [filteredVouchers]
+//   );
+//   const totalCredit = useMemo(
+//     () => filteredVouchers.reduce((sum, v) => sum + parseFloat(v.CREDIT || 0), 0),
+//     [filteredVouchers]
+//   );
+//   const totalCount = filteredVouchers.length;
+
+//   const handleDownload = async (voucher, type) => {
+//     const key = `${voucher.ID}-${type}`;
+//     setDownloading(key);
+//     try {
+//       const response = await fetch(
+//         `${BASE_URL}/api/cash-transfer/download/${voucher.ID}?type=${type}`
+//       );
+//       if (!response.ok) {
+//         let errMsg = `Server error ${response.status}`;
+//         try { const b = await response.json(); errMsg = b.detail || b.message || errMsg; } catch { /* ignore */ }
+//         toast.error(`Download failed: ${errMsg}`);
+//         return;
+//       }
+//       const blob = await response.blob();
+//       const objectUrl = URL.createObjectURL(blob);
+//       const anchor = document.createElement("a");
+//       anchor.href = objectUrl;
+//       anchor.download = `cash_transfer_${voucher.VOUCHERNO}.${type === "pdf" ? "pdf" : "xlsx"}`;
+//       document.body.appendChild(anchor);
+//       anchor.click();
+//       anchor.remove();
+//       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+//       toast.success(`${type.toUpperCase()} downloaded successfully!`);
+//     } catch (err) {
+//       toast.error(`Error downloading ${type.toUpperCase()}: ${err.message}`);
+//     } finally {
+//       setDownloading(null);
+//     }
+//   };
+
+//   const columns = [
+//     {
+//       accessorKey: "VOUCHERNO",
+//       header: ({ column }) => <SortableHeader column={column} label="Voucher No" />,
+//       cell: ({ row }) => (
+//         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("VOUCHERNO")}</div>
+//       ),
+//     },
+//     {
+//       accessorKey: "GL_ENTRY_DATE",
+//       header: ({ column }) => <SortableHeader column={column} label="GL Date" />,
+//       cell: ({ row }) => <div className="ml-3 text-sm text-gray-600">{row.getValue("GL_ENTRY_DATE")}</div>,
+//     },
+//     {
+//       accessorKey: "DESCRIPTION",
+//       header: () => (
+//         <div className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Description
+//         </div>
+//       ),
+//       cell: ({ row }) => (
+//         <div className="max-w-[200px] truncate text-sm text-gray-600" title={row.getValue("DESCRIPTION")}>
+//           {row.getValue("DESCRIPTION")}
+//         </div>
+//       ),
+//     },
+//     {
+//       accessorKey: "DEBIT",
+//       header: ({ column }) => <SortableHeader column={column} label="Debit" />,
+//       cell: ({ row }) => {
+//         const amount = parseFloat(row.getValue("DEBIT") || 0);
+//         return <div className="ml-3 text-sm font-semibold text-gray-800">{formatAmount(amount)}</div>;
+//       },
+//     },
+//     {
+//       accessorKey: "CREDIT",
+//       header: ({ column }) => <SortableHeader column={column} label="Credit" />,
+//       cell: ({ row }) => {
+//         const amount = parseFloat(row.getValue("CREDIT") || 0);
+//         return <div className="ml-3 text-sm font-semibold text-gray-800">{formatAmount(amount)}</div>;
+//       },
+//     },
+//     {
+//       id: "actions",
+//       enableHiding: false,
+//       header: () => (
+//         <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//           Actions
+//         </div>
+//       ),
+//       cell: ({ row }) => {
+//         const voucher = row.original;
+//         return (
+//           <div className="flex items-center justify-center">
+//             {canDownload && (
+//               <DropdownMenu>
+//                 <TooltipProvider>
+//                   <Tooltip>
+//                     <TooltipTrigger asChild>
+//                       <DropdownMenuTrigger asChild>
+//                         <Button
+//                           variant="ghost"
+//                           size="icon"
+//                           className="hover:bg-amber-50 hover:text-amber-700"
+//                           disabled={downloading?.startsWith(`${voucher.ID}-`)}
+//                         >
+//                           <Download size={16} />
+//                         </Button>
+//                       </DropdownMenuTrigger>
+//                     </TooltipTrigger>
+//                     <TooltipContent side="top">Download</TooltipContent>
+//                   </Tooltip>
+//                 </TooltipProvider>
+//                 <DropdownMenuContent align="end" className="w-40">
+//                   <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
+//                   <DropdownMenuSeparator />
+//                   <DropdownMenuItem className="cursor-pointer gap-2"
+//                     disabled={downloading === `${voucher.ID}-pdf`}
+//                     onClick={() => handleDownload(voucher, "pdf")}>
+//                     <FileText size={14} className="text-red-500" />
+//                     {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
+//                   </DropdownMenuItem>
+//                   <DropdownMenuItem className="cursor-pointer gap-2"
+//                     disabled={downloading === `${voucher.ID}-excel`}
+//                     onClick={() => handleDownload(voucher, "excel")}>
+//                     <FileSpreadsheet size={14} className="text-green-600" />
+//                     {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
+//                   </DropdownMenuItem>
+//                 </DropdownMenuContent>
+//               </DropdownMenu>
+//             )}
+//           </div>
+//         );
+//       },
+//     },
+//   ];
+
+//   const table = useReactTable({
+//     data: filteredVouchers,
+//     columns,
+//     onSortingChange: setSorting,
+//     onColumnFiltersChange: setColumnFilters,
+//     getCoreRowModel: getCoreRowModel(),
+//     getPaginationRowModel: getPaginationRowModel(),
+//     getSortedRowModel: getSortedRowModel(),
+//     getFilteredRowModel: getFilteredRowModel(),
+//     onColumnVisibilityChange: setColumnVisibility,
+//     onGlobalFilterChange: setGlobalFilter,
+//     state: { sorting, columnFilters, columnVisibility, globalFilter },
+//   });
+
+//   if (isLoading) return (
+//     <div className="p-4 md:p-6">
+//       <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+//         <div className="flex items-center justify-center py-12">
+//           <p className="text-sm text-gray-500">Loading...</p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+//   if (error) return (
+//     <div className="p-4 md:p-6">
+//       <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+//         <div className="flex items-center justify-center py-12">
+//           <p className="text-sm text-red-600">Error loading records.</p>
+//         </div>
+//       </div>
+//     </div>
+//   );
+
+//   const hasDateFilter = glDateFrom || glDateTo;
+
+//   return (
+//     <div className="p-4 md:p-6">
+//       <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
+//         {/* Header */}
+//         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+//           <div className="flex items-center gap-2">
+//             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-amber-50 text-amber-600">
+//               <ArrowLeftRight size={16} />
+//             </div>
+//             <div>
+//               <h2 className="text-sm font-bold text-gray-900">Cash Transfer</h2>
+//               <p className="text-xs text-gray-400">
+//                 {filteredVouchers.length} total — unposted cash transfer records
+//               </p>
+//             </div>
+//           </div>
+
+//           {canCreate && (
+//             <Link to="/dashboard/cash-transfer-create">
+//               <Button>
+//                 <PlusIcon size={16} className="mr-2" />
+//                 Add New Transfer
+//               </Button>
+//             </Link>
+//           )}
+//         </div>
+
+//         <div className="p-5 space-y-4">
+//           {/* Search + GL Date range filter + Column visibility */}
+//           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+//             <div className="relative max-w-sm w-full">
+//               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <Input
+//                 placeholder="Search records..."
+//                 value={globalFilter ?? ""}
+//                 onChange={(e) => setGlobalFilter(e.target.value)}
+//                 className="pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-amber-300"
+//               />
+//             </div>
+
+//             {/* GL From Date */}
+//             <div className="flex items-center gap-2 w-full sm:w-auto">
+//               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+//                 Gl From Date
+//               </label>
+//               <div className="relative w-full sm:w-40">
+//                 <Input
+//                   type="date"
+//                   value={glDateFrom}
+//                   max={glDateTo || undefined}
+//                   onChange={(e) => setGlDateFrom(e.target.value)}
+//                   className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+//                 />
+//                 {glDateFrom && (
+//                   <button
+//                     type="button"
+//                     onClick={() => setGlDateFrom("")}
+//                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+//                     title="Clear from date"
+//                   >
+//                     ✕
+//                   </button>
+//                 )}
+//               </div>
+//             </div>
+
+//             {/* GL To Date */}
+//             <div className="flex items-center gap-2 w-full sm:w-auto">
+//               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+//                 To Date
+//               </label>
+//               <div className="relative w-full sm:w-40">
+//                 <Input
+//                   type="date"
+//                   value={glDateTo}
+//                   min={glDateFrom || undefined}
+//                   onChange={(e) => setGlDateTo(e.target.value)}
+//                   className="pr-8 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-violet-300"
+//                 />
+//                 {glDateTo && (
+//                   <button
+//                     type="button"
+//                     onClick={() => setGlDateTo("")}
+//                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+//                     title="Clear to date"
+//                   >
+//                     ✕
+//                   </button>
+//                 )}
+//               </div>
+//             </div>
+
+//             <DropdownMenu>
+//               <DropdownMenuTrigger asChild>
+//                 <Button variant="outline" className="sm:ml-auto bg-white border-gray-200">
+//                   Columns <ChevronDown className="ml-2 h-4 w-4" />
+//                 </Button>
+//               </DropdownMenuTrigger>
+//               <DropdownMenuContent align="end">
+//                 {table.getAllColumns().filter((col) => col.getCanHide()).map((col) => (
+//                   <DropdownMenuCheckboxItem
+//                     key={col.id}
+//                     className="capitalize"
+//                     checked={col.getIsVisible()}
+//                     onCheckedChange={(value) => col.toggleVisibility(!!value)}
+//                   >
+//                     {col.id.replace(/_/g, " ")}
+//                   </DropdownMenuCheckboxItem>
+//                 ))}
+//               </DropdownMenuContent>
+//             </DropdownMenu>
+//           </div>
+
+//           {/* Table */}
+//           <div className="overflow-hidden rounded-md border border-gray-200">
+//             <Table>
+//               <TableHeader className="bg-gray-50">
+//                 {table.getHeaderGroups().map((hg) => (
+//                   <TableRow key={hg.id}>
+//                     {hg.headers.map((h) => (
+//                       <TableHead key={h.id} className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+//                         {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+//                       </TableHead>
+//                     ))}
+//                   </TableRow>
+//                 ))}
+//               </TableHeader>
+//               <TableBody>
+//                 {table.getRowModel().rows?.length ? (
+//                   <>
+//                     {table.getRowModel().rows.map((row) => (
+//                       <TableRow key={row.id} className="hover:bg-gray-50/70 transition-colors">
+//                         {row.getVisibleCells().map((cell) => (
+//                           <TableCell key={cell.id} className="text-sm text-gray-700">
+//                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
+//                           </TableCell>
+//                         ))}
+//                       </TableRow>
+//                     ))}
+
+//                     {/* ── Total Row ── */}
+//                     {filteredVouchers.length > 0 && (
+//                       <TableRow className="bg-gray-100 font-semibold border-t-2 border-gray-300">
+//                         <TableCell colSpan={3} className="text-right text-sm font-bold text-gray-800">
+//                           Total ({totalCount} entries)
+//                         </TableCell>
+//                         <TableCell className="text-sm font-bold text-gray-800">
+//                           <span className="ml-3">{formatAmount(totalDebit)}</span>
+//                         </TableCell>
+//                         <TableCell className="text-sm font-bold text-gray-800">
+//                           <span className="ml-3">{formatAmount(totalCredit)}</span>
+//                         </TableCell>
+//                         <TableCell />
+//                       </TableRow>
+//                     )}
+//                   </>
+//                 ) : (
+//                   <TableRow>
+//                     <TableCell colSpan={columns.length} className="h-24 text-center">
+//                       <p className="text-sm text-gray-400">
+//                         {hasDateFilter
+//                           ? "No records found for the selected date range"
+//                           : "No cash transfer records found"}
+//                       </p>
+//                     </TableCell>
+//                   </TableRow>
+//                 )}
+//               </TableBody>
+//             </Table>
+//           </div>
+
+//           <DataTablePagination table={table} />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
 import { useState, useMemo } from "react";
 import {
   flexRender,
@@ -1012,11 +1481,35 @@ import {
   PlusIcon,
   Search,
   ArrowLeftRight,
+  BadgeCheck,
+  RotateCcw,
+  Eye,
+  X,
+  Upload,
+  Paperclip as PaperclipIcon,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -1046,8 +1539,18 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useHasPermission } from "@/hooks/use-permission";
+import { EntryTypeBadge } from "./entry-type-badge";
+import { AttachmentIndicator } from "./attachment-indicator";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Backend e DELETE route style confirm hole ekhane-i change koro.
+// Param style:  DELETE /api/gldoc/:id
+// Query style:  DELETE /api/gldoc?id=123
+const gldocDeleteRequest = (docId) =>
+  axios.delete(`${BASE_URL}/api/gldoc/${docId}`);
+// const gldocDeleteRequest = (docId) =>
+//   axios.delete(`${BASE_URL}/api/gldoc`, { params: { id: docId } });
 
 // Reusable sortable header — clean uppercase gray style
 const SortableHeader = ({ column, label }) => (
@@ -1060,7 +1563,7 @@ const SortableHeader = ({ column, label }) => (
   </Button>
 );
 
-// ── Helper: normalize a date value to YYYY-MM-DD for comparison ─────────────
+// Normalize a date value to YYYY-MM-DD for comparison
 const toISODateString = (val) => {
   if (!val) return null;
   const d = new Date(val);
@@ -1072,9 +1575,13 @@ const formatAmount = (value) =>
   new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(Number(value || 0));
+
+const isRowApproved = (v) => v.POSTED === 1 || v.POSTED === "1";
 
 export default function CashTransferTable() {
+  const queryClient = useQueryClient();
+
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -1082,6 +1589,19 @@ export default function CashTransferTable() {
   const [downloading, setDownloading] = useState(null);
   const [glDateFrom, setGlDateFrom] = useState("");
   const [glDateTo, setGlDateTo] = useState("");
+
+  // ── Reverse state ──
+  const [reverseId, setReverseId] = useState(null);
+  const [isReversing, setIsReversing] = useState(false);
+
+  // ── Review state ──
+  const [reviewVoucher, setReviewVoucher] = useState(null);
+
+  // ── Upload state ──
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const canCreate = useHasPermission("CASH_TRANSFER_CREATE");
   const canDownload = useHasPermission("CASH_TRANSFER_DOWNLOAD");
@@ -1094,12 +1614,100 @@ export default function CashTransferTable() {
     },
   });
 
+  // ── Existing docs for the Upload dialog ──
+  const { data: existingDocs = [], refetch: refetchDocs } = useQuery({
+    queryKey: ["gldocs", selectedVoucher?.ID],
+    queryFn: async () => {
+      const res = await axios.get(`${BASE_URL}/api/gldoc`, {
+        params: { glmaster_id: selectedVoucher.ID },
+      });
+      return res.data.data || [];
+    },
+    enabled: !!selectedVoucher,
+  });
+
+  // ── Upload mutation ──
+  const uploadMutation = useMutation({
+    mutationFn: async ({ voucherId, files }) => {
+      const uploads = files.map((file) => {
+        const fd = new FormData();
+        fd.append("doc_file", file);
+        fd.append("GLMASTERID", voucherId);
+        return axios.post(`${BASE_URL}/api/gldoc`, fd);
+      });
+      return await Promise.all(uploads);
+    },
+    onSuccess: async () => {
+      toast.success("Invoice uploaded successfully!");
+      setSelectedFiles([]);
+      await refetchDocs();
+      queryClient.invalidateQueries({ queryKey: ["unpostedCashTransfers"] });
+    },
+    onError: (err) => {
+      toast.error("Failed to upload invoice: " + (err.response?.data?.message || err.message));
+    },
+    onSettled: () => setUploading(false),
+  });
+
+  // ── Delete document mutation ──
+  const deleteDocMutation = useMutation({
+    mutationFn: (docId) => gldocDeleteRequest(docId),
+    onSuccess: async () => {
+      toast.success("Document deleted successfully!");
+      await refetchDocs();
+      queryClient.invalidateQueries({ queryKey: ["unpostedCashTransfers"] });
+    },
+    onError: (err) => {
+      toast.error("Failed to delete document: " + (err.response?.data?.message || err.message));
+    },
+  });
+
+  // ── Review modal: master + details ──
+  const { data: reviewData, isLoading: reviewLoading } = useQuery({
+    queryKey: ["voucherReview", reviewVoucher?.ID],
+    queryFn: async () => {
+      const res = await axios.get(`${BASE_URL}/api/voucher-review/${reviewVoucher.ID}`);
+      return res.data;
+    },
+    enabled: !!reviewVoucher,
+  });
+
+  // ── Review modal: attachments ──
+  const { data: reviewDocs = [] } = useQuery({
+    queryKey: ["gldocs", "review", reviewVoucher?.ID],
+    queryFn: async () => {
+      const res = await axios.get(`${BASE_URL}/api/gldoc`, {
+        params: { glmaster_id: reviewVoucher.ID },
+      });
+      return res.data.data || [];
+    },
+    enabled: !!reviewVoucher,
+  });
+
+  const distributionRows = useMemo(() => {
+    const details = reviewData?.details || [];
+    return details
+      .map((d) => ({
+        id: d.ID ?? d.id,
+        code: d.CODE ?? d.code ?? "",
+        codedescription: d.CODEDESCRIPTION ?? d.codedescription ?? "",
+        description: d.DESCRIPTION ?? d.description ?? "",
+        debit: Number(d.DEBIT ?? d.debit ?? 0),
+        credit: Number(d.CREDIT ?? d.credit ?? 0),
+      }))
+      .filter((d) => d.debit > 0 || d.credit > 0);
+  }, [reviewData]);
+
+  const reviewTotalDebit = distributionRows.reduce((s, d) => s + d.debit, 0);
+  const reviewTotalCredit = distributionRows.reduce((s, d) => s + d.credit, 0);
+  const reviewMaster = reviewData?.master || {};
+
   const sortedVouchers = useMemo(() => {
     const vouchers = data?.status === "success" ? data.data : [];
     return [...vouchers].sort((a, b) => Number(b.ID) - Number(a.ID));
   }, [data]);
 
-  // ── GL Date range filter ─────────────────────────────────────────────────
+  // ── GL Date range filter ──
   const filteredVouchers = useMemo(() => {
     if (!glDateFrom && !glDateTo) return sortedVouchers;
     return sortedVouchers.filter((v) => {
@@ -1111,7 +1719,7 @@ export default function CashTransferTable() {
     });
   }, [sortedVouchers, glDateFrom, glDateTo]);
 
-  // ── Totals for filtered data ─────────────────────────────────────────────
+  // ── Totals for filtered data ──
   const totalDebit = useMemo(
     () => filteredVouchers.reduce((sum, v) => sum + parseFloat(v.DEBIT || 0), 0),
     [filteredVouchers]
@@ -1150,6 +1758,57 @@ export default function CashTransferTable() {
     } finally {
       setDownloading(null);
     }
+  };
+
+  const handleReverseVoucher = async () => {
+    if (!reverseId) return;
+    setIsReversing(true);
+    try {
+      const res = await axios.post(`${BASE_URL}/api/reverse-voucher`, { id: reverseId });
+      if (res.data.status === "success") {
+        toast.success(res.data.message || "Voucher reversed successfully!");
+        queryClient.invalidateQueries({ queryKey: ["unpostedCashTransfers"] });
+      } else {
+        toast.error(res.data.message || "Failed to reverse voucher");
+      }
+    } catch (err) {
+      toast.error("Error reversing voucher: " + (err.response?.data?.message || err.message));
+    } finally {
+      setIsReversing(false);
+      setReverseId(null);
+    }
+  };
+
+  // ── Upload handlers ──
+  const closeUploadDialog = () => {
+    setUploadDialogOpen(false);
+    setSelectedVoucher(null);
+    setSelectedFiles([]);
+  };
+
+  const handleUploadClick = (voucher) => {
+    setSelectedVoucher(voucher);
+    setSelectedFiles([]);
+    setUploadDialogOpen(true);
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles((prev) => [...prev, ...files]);
+    e.target.value = "";
+  };
+
+  const handleRemoveFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUploadSubmit = () => {
+    if (selectedFiles.length === 0) {
+      toast.error("Please select at least one file.");
+      return;
+    }
+    setUploading(true);
+    uploadMutation.mutate({ voucherId: selectedVoucher.ID, files: selectedFiles });
   };
 
   const columns = [
@@ -1194,6 +1853,59 @@ export default function CashTransferTable() {
         return <div className="ml-3 text-sm font-semibold text-gray-800">{formatAmount(amount)}</div>;
       },
     },
+    // ── Entry Type ──
+    {
+      id: "type",
+      header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</div>,
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <EntryTypeBadge type={row.original.TYPE} />
+        </div>
+      ),
+    },
+    // ── Invoice Count ──
+    {
+      id: "attachment",
+      header: () => <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Invoice Count</div>,
+      cell: ({ row }) => (
+        <div className="flex justify-center">
+          <AttachmentIndicator count={row.original.DOC_COUNT} />
+        </div>
+      ),
+    },
+    // ── Upload Invoice ──
+    {
+      id: "uploadInvoice",
+      header: () => (
+        <div className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Upload Invoice</div>
+      ),
+      cell: ({ row }) => {
+        const voucher = row.original;
+        const approved = isRowApproved(voucher);
+        return (
+          <div className="flex justify-center">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                    onClick={() => handleUploadClick(voucher)}
+                    disabled={approved}
+                  >
+                    <Upload size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {approved ? "Cannot upload (approved)" : "Upload Invoice"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        );
+      },
+    },
     {
       id: "actions",
       enableHiding: false,
@@ -1204,8 +1916,29 @@ export default function CashTransferTable() {
       ),
       cell: ({ row }) => {
         const voucher = row.original;
+        const approved = isRowApproved(voucher);
+
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-1">
+            {/* Approved → Review (read-only modal) */}
+            {approved && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-indigo-500 hover:bg-indigo-50 hover:text-indigo-700"
+                      onClick={() => setReviewVoucher(voucher)}
+                    >
+                      <Eye size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Review Voucher</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
             {canDownload && (
               <DropdownMenu>
                 <TooltipProvider>
@@ -1228,20 +1961,72 @@ export default function CashTransferTable() {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Download as</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer gap-2"
+                  <DropdownMenuItem
+                    className="cursor-pointer gap-2"
                     disabled={downloading === `${voucher.ID}-pdf`}
-                    onClick={() => handleDownload(voucher, "pdf")}>
+                    onClick={() => handleDownload(voucher, "pdf")}
+                  >
                     <FileText size={14} className="text-red-500" />
                     {downloading === `${voucher.ID}-pdf` ? "Generating…" : "PDF"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer gap-2"
+                  <DropdownMenuItem
+                    className="cursor-pointer gap-2"
                     disabled={downloading === `${voucher.ID}-excel`}
-                    onClick={() => handleDownload(voucher, "excel")}>
+                    onClick={() => handleDownload(voucher, "excel")}
+                  >
                     <FileSpreadsheet size={14} className="text-green-600" />
                     {downloading === `${voucher.ID}-excel` ? "Generating…" : "Excel"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            )}
+
+            {approved && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-green-600 bg-green-100 border border-green-200 cursor-default">
+                      <BadgeCheck size={16} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-green-700 text-white text-xs">
+                    Approved
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {approved && String(voucher.TYPE).toUpperCase() !== "REVERSE" && !voucher.REF_REVERSE_ENTRY && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+                      onClick={() => setReverseId(voucher.ID)}
+                    >
+                      <RotateCcw size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Reverse Entry</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {approved && voucher.REF_REVERSE_ENTRY && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-red-600 bg-red-100 border border-red-200 cursor-default">
+                      <RotateCcw size={16} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-red-700 text-white text-xs">
+                    Reversed (Voucher #{voucher.REF_REVERSE_ENTRY})
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         );
@@ -1297,7 +2082,7 @@ export default function CashTransferTable() {
             <div>
               <h2 className="text-sm font-bold text-gray-900">Cash Transfer</h2>
               <p className="text-xs text-gray-400">
-                {filteredVouchers.length} total — unposted cash transfer records
+                {filteredVouchers.length} total — cash transfer records
               </p>
             </div>
           </div>
@@ -1425,7 +2210,7 @@ export default function CashTransferTable() {
                       </TableRow>
                     ))}
 
-                    {/* ── Total Row ── */}
+                    {/* Total Row */}
                     {filteredVouchers.length > 0 && (
                       <TableRow className="bg-gray-100 font-semibold border-t-2 border-gray-300">
                         <TableCell colSpan={3} className="text-right text-sm font-bold text-gray-800">
@@ -1437,7 +2222,7 @@ export default function CashTransferTable() {
                         <TableCell className="text-sm font-bold text-gray-800">
                           <span className="ml-3">{formatAmount(totalCredit)}</span>
                         </TableCell>
-                        <TableCell />
+                        <TableCell colSpan={4} />
                       </TableRow>
                     )}
                   </>
@@ -1459,6 +2244,341 @@ export default function CashTransferTable() {
           <DataTablePagination table={table} />
         </div>
       </div>
+
+      {/* ── Upload Invoice Dialog ── */}
+      <Dialog
+        open={uploadDialogOpen}
+        onOpenChange={(open) => {
+          if (uploading) return;
+          if (!open) closeUploadDialog();
+          else setUploadDialogOpen(true);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload size={18} className="text-blue-600" />
+              Upload Invoice
+            </DialogTitle>
+            <DialogDescription>
+              Upload invoice for voucher #{selectedVoucher?.VOUCHERNO}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+              <Input
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                disabled={uploading}
+                className="cursor-pointer"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                Supported: PDF, JPG, PNG, DOC (Max 5MB each)
+              </p>
+            </div>
+
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Selected Files ({selectedFiles.length})
+                </label>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText size={14} className="text-gray-400" />
+                        <span className="text-gray-700 truncate max-w-[200px]">{file.name}</span>
+                        <span className="text-xs text-gray-400">
+                          ({(file.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        onClick={() => handleRemoveFile(index)}
+                        disabled={uploading}
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {existingDocs.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Existing Documents ({existingDocs.length})
+                </label>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {existingDocs.map((doc) => (
+                    <div
+                      key={doc.ID}
+                      className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2 text-sm"
+                    >
+                      <a
+                        href={`${BASE_URL}/api/gldoc?id=${doc.ID}&file=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-700 hover:underline min-w-0"
+                      >
+                        <FileText size={14} className="text-blue-500 shrink-0" />
+                        <span className="truncate max-w-[200px]">
+                          {doc.FILE_NAME || `Document #${doc.ID}`}
+                        </span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 shrink-0"
+                        onClick={() => deleteDocMutation.mutate(doc.ID)}
+                        disabled={uploading || deleteDocMutation.isPending}
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeUploadDialog} disabled={uploading}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleUploadSubmit}
+              disabled={selectedFiles.length === 0 || uploading}
+            >
+              {uploading ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin">⟳</span>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload size={16} className="mr-2" />
+                  Upload {selectedFiles.length} file(s)
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Reverse Confirmation Dialog ── */}
+      <AlertDialog open={!!reverseId} onOpenChange={() => !isReversing && setReverseId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <RotateCcw className="text-orange-600" size={20} />
+              Reverse Voucher?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              A new reversal entry will be created with debit/credit swapped.{" "}
+              <span className="text-red-500 font-medium">This action cannot be undone.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isReversing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReverseVoucher}
+              disabled={isReversing}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isReversing ? "Reversing..." : "Yes, Reverse"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Review Voucher Modal (read-only) ── */}
+      {reviewVoucher && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-120 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full md:w-2/3 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Eye size={18} className="text-indigo-600" />
+                <h2 className="text-base font-bold text-gray-900">
+                  Cash Transfer #{reviewVoucher.VOUCHERNO}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <EntryTypeBadge type={reviewVoucher.TYPE} />
+                <button
+                  onClick={() => setReviewVoucher(null)}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X size={18} className="text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  Transaction Date
+                </label>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
+                  {reviewMaster.TRANS_DATE || reviewVoucher.TRANS_DATE || "—"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  GL Date
+                </label>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
+                  {reviewVoucher.GL_ENTRY_DATE || "—"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  Voucher No
+                </label>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700">
+                  {reviewVoucher.VOUCHERNO}
+                </div>
+              </div>
+              <div className="md:col-span-3">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  Description
+                </label>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 min-h-[42px]">
+                  {reviewVoucher.DESCRIPTION || "—"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  Total Amount
+                </label>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800">
+                  {formatAmount(
+                    parseFloat(reviewVoucher.DEBIT || 0) !== 0
+                      ? reviewVoucher.DEBIT
+                      : reviewVoucher.CREDIT
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  Status
+                </label>
+                <div className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  Approved
+                </div>
+              </div>
+
+              {/* Attachments */}
+              <div className="md:col-span-3">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  Attachments
+                </label>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 space-y-1.5">
+                  {reviewDocs.length === 0 ? (
+                    <span className="text-xs text-slate-500">
+                      {Number(reviewVoucher.DOC_COUNT) || 0} file(s)
+                    </span>
+                  ) : (
+                    reviewDocs.map((doc) => (
+                      <a
+                        key={doc.ID}
+                        href={`${BASE_URL}/api/gldoc?id=${doc.ID}&file=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 hover:underline"
+                      >
+                        <PaperclipIcon size={13} />
+                        {doc.FILE_NAME || `Document #${doc.ID}`}
+                      </a>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Account Distribution */}
+            <div className="px-6 pb-6">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                Account Distribution
+              </h3>
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50">
+                      <th className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">Code</th>
+                      <th className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">Particulars</th>
+                      <th className="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">Debit</th>
+                      <th className="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">Credit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reviewLoading && (
+                      <tr>
+                        <td colSpan={4} className="text-center py-6 text-sm text-slate-400">
+                          Loading account details…
+                        </td>
+                      </tr>
+                    )}
+                    {!reviewLoading && distributionRows.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="text-center py-6 text-sm text-slate-400">
+                          No account rows found.
+                        </td>
+                      </tr>
+                    )}
+                    {!reviewLoading &&
+                      distributionRows.map((d, i) => (
+                        <tr key={d.id ?? i} className="border-t border-slate-100">
+                          <td className="px-4 py-2 text-slate-700 font-medium">{d.code}</td>
+                          <td className="px-4 py-2 text-slate-600">
+                            {d.codedescription || d.description || "—"}
+                          </td>
+                          <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+                            {d.debit > 0 ? formatAmount(d.debit) : ""}
+                          </td>
+                          <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+                            {d.credit > 0 ? formatAmount(d.credit) : ""}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                  {!reviewLoading && distributionRows.length > 0 && (
+                    <tfoot>
+                      <tr className="border-t border-slate-200 bg-slate-50 font-semibold">
+                        <td colSpan={2} className="px-4 py-2 text-right text-slate-800">Total</td>
+                        <td className="px-4 py-2 text-right tabular-nums text-slate-900">{formatAmount(reviewTotalDebit)}</td>
+                        <td className="px-4 py-2 text-right tabular-nums text-slate-900">{formatAmount(reviewTotalCredit)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+              <Button
+                variant="outline"
+                onClick={() => setReviewVoucher(null)}
+                className="border-slate-200 text-slate-700"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

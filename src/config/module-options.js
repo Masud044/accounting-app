@@ -30,6 +30,7 @@ export const MODULE_OPTIONS = [
   { value: "Sale Invoice", label: "Sale Invoice" },
   { value: "Purchase Recognition", label: "Purchase Recognition" },
   { value: "Chicken", label: "Chicken" },
+  { value: "Chicken Shed", label: "Chicken Shed" },
   { value: "Cow", label: "Cow" },
   { value: "Fish", label: "Fish" },
   { value: "Farm calendar", label: "Farm calendar" },
