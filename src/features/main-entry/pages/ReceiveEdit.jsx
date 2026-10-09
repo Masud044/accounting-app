@@ -1705,7 +1705,7 @@ const creditId = firstDebitEntry?.id || null;
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className={fieldLabel}>Type</label>
              
                 <select
@@ -1721,7 +1721,7 @@ const creditId = firstDebitEntry?.id || null;
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
 
               <div>
   <label className={fieldLabel}>Entry Type</label>

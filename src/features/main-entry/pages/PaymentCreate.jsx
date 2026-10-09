@@ -6224,7 +6224,7 @@ const PaymentCreate = () => {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className={fieldLabel}>Type</label>
               <select
                 value={form.inv_type}
@@ -6239,7 +6239,7 @@ const PaymentCreate = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             {/* ── Entry Type (Reversal) — Manual (default) or Reverse ─────── */}
             <div>

@@ -4791,7 +4791,7 @@ const mappedRows = details
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className={fieldLabel}>Type</label>
               <select
                 value={form.inv_type}
@@ -4806,7 +4806,7 @@ const mappedRows = details
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             {/* ── Entry Type (Reversal) — Manual or Reverse ────────────────── */}
             <div>
