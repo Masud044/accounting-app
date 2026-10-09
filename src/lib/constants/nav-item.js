@@ -431,9 +431,10 @@ export const NAV_ITEMS = [
     label: "Voucher Entry",
     ItemIcon: Receipt,
     links: [
+       { to: "/dashboard/home-table", label: "Approval Voucher", Icon: Home, requiredPermission: "HOME_VOUCHER_VIEW" },
        { to: "/dashboard/ap-ar/payable", label: "Vendor Payments (AP)", Icon: Wallet, requiredPermission: "AP_PAYMENT_VIEW" },
     { to: "/dashboard/ap-ar/receivable", label: "Customer Receipts (AR)", Icon: Receipt, requiredPermission: "AR_RECEIPT_VIEW" },
-      { to: "/dashboard/home-table", label: "Home Voucher", Icon: Home, requiredPermission: "HOME_VOUCHER_VIEW" },
+     
       { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home, requiredPermission: "RECEIVE_VOUCHER_VIEW" },
       { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText, requiredPermission: "PAYMENT_VOUCHER_VIEW" },
       { to: "/dashboard/journal-voucher", label: "Journal Voucher", Icon: Plus, requiredPermission: "JOURNAL_VOUCHER_VIEW" },
@@ -455,7 +456,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/project-profile", label: "Project Management", Icon: FileText, requiredPermission: "PROJECT_PROFILE_VIEW" },
       { to: "/dashboard/agenda", label: "Agenda Management", Icon: FileText, requiredPermission: "AGENDA_MANAGEMENT_VIEW" },
       { to: "/dashboard/ledger-period", label: "Ledger Period Calendar", Icon: FileText, requiredPermission: "LEDGER_PERIOD_CALENDAR_VIEW" },
-      { to: "/dashboard/chicken-shed", label: "Chicken Shed", Icon: Warehouse, requiredPermission: "CHICKEN_SHED_VIEW" },
+     
     ],
   },
   {
@@ -475,7 +476,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/expense-report", label: "Expense Report", Icon: ClipboardList, requiredPermission: "EXPENSE_REPORT_VIEW" },
       { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList, requiredPermission: "INCOME_REPORT_VIEW" },
       { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList, requiredPermission: "SALE_REPORT_VIEW" },
-      { to: "/dashboard/general-ledger", label: "General Ledger", Icon: FileText, requiredPermission: "GENERAL_LEDGER_VIEW" },
+      { to: "/dashboard/general-ledger", label: "General Ledger Report", Icon: FileText, requiredPermission: "GENERAL_LEDGER_VIEW" },
       { to: "/dashboard/trail-balance", label: "Trail Balance", Icon: FileText, requiredPermission: "TRAIL_BALANCE_VIEW" },
       { to: "/dashboard/cash-flow", label: "Cash Flow Statement", Icon: FileText, requiredPermission: "CASH_FLOW_VIEW" },
       { to: "/dashboard/project-profile-report", label: "Project Profile Report", Icon: FileText, requiredPermission: "PROJECT_PROFILE_REPORT_VIEW" },
@@ -511,6 +512,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/departments", label: "Departments", Icon: IconBuilding, requiredPermission: "DEPARTMENT_VIEW" },
       { to: "/dashboard/employees", label: "Employees", Icon: IconUsers, requiredPermission: "EMPLOYEE_VIEW" },
       { to: "/dashboard/meeting-rooms", label: "Meeting Rooms", Icon: IconDoorEnter, requiredPermission: "MEETING_ROOM_VIEW" },
+       { to: "/dashboard/chicken-shed", label: "Chicken Shed", Icon: Warehouse, requiredPermission: "CHICKEN_SHED_VIEW" },
     ],
   },
 

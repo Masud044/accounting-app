@@ -1,23 +1,11 @@
-
-import img from"../assets/bwa.png"
 import FarmStatsCards from "./farmstate-card";
 
 export default function WelcomePage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
-      <img
-                src={img}
-                alt="Bangladesh Welfare Agro"
-                
-                className="object-contain"
-              />
-
-            <div>
-              <FarmStatsCards></FarmStatsCards>
-            </div>
-           
-     
-      
+    <div className="min-h-screen bg-neutral-100">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <FarmStatsCards />
+      </div>
     </div>
   );
 }
