@@ -561,13 +561,12 @@ export default function FarmStatsCards() {
     );
   }
 
-  const overallRatio = Number(data.eggRatio ?? 0);
-  const overallTone = ratioTone(overallRatio);
+ 
 
   return (
     <div className="space-y-8">
       {/* ── Overview: Cow, Fish, Total Chicken, Overall Egg Ratio ── */}
-      <Section title="Farm Overview" cols={4}>
+      <Section title="Farm Overview" cols={2}>
         <StatCard
           label="Number of Cow"
           value={fmt(data.totalCows)}
@@ -590,30 +589,7 @@ export default function FarmStatsCards() {
           Icon={Fish}
           path="/dashboard/fish-project"
         />
-        <StatCard
-          label="Total Chicken"
-          value={fmt(data.totalChicken)}
-          caption={`All sheds (${sheds.length})`}
-          accent="bg-orange-500"
-          iconBg="bg-orange-100"
-          iconColor="text-orange-500"
-          valueColor="text-orange-500"
-          Icon={ChickenIcon}
-          path="/dashboard/chicken-project"
-        />
-        <StatCard
-          label="Overall Egg Ratio"
-          value={`${overallRatio}%`}
-          caption="All sheds combined"
-          accent={overallTone.bar}
-          iconBg="bg-amber-100"
-          iconColor="text-amber-600"
-          valueColor={overallTone.text}
-          Icon={Egg}
-          path="/dashboard/chicken-project"
-        >
-          <RatioBar ratio={overallRatio} />
-        </StatCard>
+       
       </Section>
 
       {/* ── Chicken per shed ── */}
