@@ -1,3 +1,4 @@
+
 // import { useEffect } from "react";
 // import { useForm } from "react-hook-form";
 // import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,12 +24,17 @@
 // import { Egg } from "lucide-react";
 // import { Spinner } from "@/components/ui/spinner";
 // import { useUpdateEggProduction } from "./queries";
+// import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 // const formSchema = z.object({
 //   productionDate: z.string().min(1, "Production date is required"),
 //   qty:            z.coerce.number({ invalid_type_error: "Quantity must be a number" })
 //                     .min(0, "Quantity cannot be negative"),
-//   updatedBy:      z.string().max(100).optional(),
+//   rejectQty:      z.coerce.number({ invalid_type_error: "Reject quantity must be a number" })
+//                     .min(0, "Reject quantity cannot be negative")
+//                     .optional(),
+//   remarks:        z.string().max(50, "Remarks max 50 characters").optional(),
+//  updatedBy:      z.coerce.string().max(100).optional(), 
 // });
 
 // // Helper: Oracle date → input[type=date] value (YYYY-MM-DD)
@@ -56,10 +62,11 @@
 
 // export default function UpdateEggProductionSheet({ open, onOpenChange, showConfirmation, record }) {
 //   const updateMutation = useUpdateEggProduction();
+//   const userId = useAuthUserId();
 
 //   const form = useForm({
 //     resolver: zodResolver(formSchema),
-//     defaultValues: { productionDate: "", qty: "", updatedBy: "" },
+//     defaultValues: { productionDate: "", qty: "", rejectQty: "", remarks: "", updatedBy: "" },
 //   });
 
 //   const { formState: { isDirty } } = form;
@@ -69,7 +76,9 @@
 //     form.reset({
 //       productionDate: toDateInputValue(record.PRODUCTION_DATE),
 //       qty:            record.QTY ?? "",
-//       updatedBy:      record.UPDATED_BY ?? "",
+//       rejectQty:      record.REJECT_QTY ?? "",
+//       remarks:        record.REMARKS ?? "",
+//       updatedBy:      userId,
 //     });
 //   }
 // }, [open, record?.ID]); // ✅ open হলেই reset হবে
@@ -81,7 +90,9 @@
 //         data: {
 //           productionDate: data.productionDate,
 //           qty:            data.qty,
-//           updatedBy:      data.updatedBy || null,
+//           rejectQty:      data.rejectQty || 0,
+//           remarks:        data.remarks || null,
+//          updatedBy:      userId,
 //         },
 //       });
 //       toast.success("Egg production record updated successfully!");
@@ -159,6 +170,39 @@
 //                 </FormItem>
 //               )} />
 
+//               {/* Reject Quantity */}
+//               <FormField control={form.control} name="rejectQty" render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Reject Quantity</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       type="number"
+//                       min="0"
+//                       placeholder="Enter reject count"
+//                       disabled={isSubmitting}
+//                       {...field}
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )} />
+
+//               {/* Remarks */}
+//               <FormField control={form.control} name="remarks" render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Remarks</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       maxLength={50}
+//                       placeholder="Optional remarks"
+//                       disabled={isSubmitting}
+//                       {...field}
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )} />
+
 //               {/* Updated By */}
 //               {/* <FormField control={form.control} name="updatedBy" render={({ field }) => (
 //                 <FormItem>
@@ -188,7 +232,7 @@
 //   );
 // }
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -212,18 +256,19 @@ import {
 } from "@/components/ui/form";
 import { Egg } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useUpdateEggProduction } from "./queries";
+import { useUpdateEggProduction, useAllEggProductions } from "./queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const formSchema = z.object({
   productionDate: z.string().min(1, "Production date is required"),
+  shed:           z.string().trim().min(1, "Shed is required").max(30, "Shed max 30 characters"),
   qty:            z.coerce.number({ invalid_type_error: "Quantity must be a number" })
                     .min(0, "Quantity cannot be negative"),
   rejectQty:      z.coerce.number({ invalid_type_error: "Reject quantity must be a number" })
                     .min(0, "Reject quantity cannot be negative")
                     .optional(),
   remarks:        z.string().max(50, "Remarks max 50 characters").optional(),
- updatedBy:      z.coerce.string().max(100).optional(), 
+  updatedBy:      z.coerce.string().max(100).optional(),
 });
 
 // Helper: Oracle date → input[type=date] value (YYYY-MM-DD)
@@ -253,24 +298,33 @@ export default function UpdateEggProductionSheet({ open, onOpenChange, showConfi
   const updateMutation = useUpdateEggProduction();
   const userId = useAuthUserId();
 
+  // Existing sheds (from already-loaded records) → datalist suggestions
+  const { data: allRecords = [] } = useAllEggProductions();
+  const shedOptions = useMemo(
+    () => [...new Set(allRecords.map((r) => r.SHED).filter(Boolean))].sort(),
+    [allRecords]
+  );
+
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: { productionDate: "", qty: "", rejectQty: "", remarks: "", updatedBy: "" },
+    defaultValues: { productionDate: "", shed: "", qty: "", rejectQty: "", remarks: "", updatedBy: "" },
   });
 
   const { formState: { isDirty } } = form;
 
   useEffect(() => {
-  if (open && record) {
-    form.reset({
-      productionDate: toDateInputValue(record.PRODUCTION_DATE),
-      qty:            record.QTY ?? "",
-      rejectQty:      record.REJECT_QTY ?? "",
-      remarks:        record.REMARKS ?? "",
-      updatedBy:      userId,
-    });
-  }
-}, [open, record?.ID]); // ✅ open হলেই reset হবে
+    if (open && record) {
+      form.reset({
+        productionDate: toDateInputValue(record.PRODUCTION_DATE),
+        shed:           record.SHED ?? "",
+        qty:            record.QTY ?? "",
+        rejectQty:      record.REJECT_QTY ?? "",
+        remarks:        record.REMARKS ?? "",
+        updatedBy:      userId,
+      });
+    }
+  }, [open, record?.ID]); // ✅ open হলেই reset হবে
+
   const onSubmit = async (data) => {
     if (!record?.ID) { toast.error("Record ID is missing."); return; }
     try {
@@ -278,10 +332,11 @@ export default function UpdateEggProductionSheet({ open, onOpenChange, showConfi
         id: record.ID,
         data: {
           productionDate: data.productionDate,
+          shed:           data.shed.trim(),
           qty:            data.qty,
           rejectQty:      data.rejectQty || 0,
           remarks:        data.remarks || null,
-         updatedBy:      userId,
+          updatedBy:      userId,
         },
       });
       toast.success("Egg production record updated successfully!");
@@ -338,6 +393,29 @@ export default function UpdateEggProductionSheet({ open, onOpenChange, showConfi
                   <FormControl>
                     <Input type="date" disabled={isSubmitting} {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Shed (free text + suggestions) */}
+              <FormField control={form.control} name="shed" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Shed <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      list="egg-update-shed-options"
+                      maxLength={30}
+                      placeholder="e.g. S-1"
+                      autoComplete="off"
+                      disabled={isSubmitting}
+                      {...field}
+                    />
+                  </FormControl>
+                  <datalist id="egg-update-shed-options">
+                    {shedOptions.map((s) => (
+                      <option key={s} value={s} />
+                    ))}
+                  </datalist>
                   <FormMessage />
                 </FormItem>
               )} />
