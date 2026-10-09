@@ -1406,7 +1406,7 @@ type: "MANUAL",   // ← notun
   </select>
 </div>
 
-              <div>
+              {/* <div>
                 <label className={fieldLabel}>Type</label>
                 <select
                   value={form.inv_type}
@@ -1421,7 +1421,7 @@ type: "MANUAL",   // ← notun
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
 
               <div>
                 <label className={fieldLabel}>Receive Code</label>
