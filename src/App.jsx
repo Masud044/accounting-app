@@ -795,6 +795,12 @@ import CreateInvoicePage from "./features/sale-invoice/create-sale-invoice-sheet
 import EditInvoicePage from "./features/sale-invoice/edit-sale-invoice-sheet";
 import FarmBudgetReportIndex from "./features/budget-report/index";
 import FarmBudgetReportPage from "./features/budget-report/budget-report-page";
+import VendorPayments from "./features/ap-ar/pages/VendorPayments";
+import CustomerReceipts from "./features/ap-ar/pages/CustomerReceipts";
+import ChartOfAccounts from "./features/ap-ar/pages/ChartOfAccounts";
+import GeneralLedger from "./features/ap-ar/pages/GeneralLedger";
+import Reports from "./features/ap-ar/pages/Reports";
+import JournalS from "./features/ap-ar/pages/JournalAp";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1557,6 +1563,71 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+   {/* ap-ar merged project */}
+
+   {/* AP / AR */}
+<Route
+  path="ap-ar/payable"
+  element={
+    <ProtectedRoute anyPermission="AP_PAYMENT_VIEW">
+      <VendorPayments />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="ap-ar/receivable"
+  element={
+    <ProtectedRoute anyPermission="AR_RECEIPT_VIEW">
+      <CustomerReceipts />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="ap-ar/chart-of-accounts"
+  element={
+    <ProtectedRoute anyPermission="AP_AR_CHART_OF_ACCOUNT_VIEW">
+      <ChartOfAccounts />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="ap-ar/journal/:module"
+  element={
+    <ProtectedRoute anyPermission={["AP_JOURNAL_VIEW", "AR_JOURNAL_VIEW"]}>
+      <JournalS/>
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="ap-ar/general-ledger"
+  element={
+    <ProtectedRoute anyPermission="AP_AR_GENERAL_LEDGER_VIEW">
+      <GeneralLedger />
+    </ProtectedRoute>
+  }
+/>
+{/* <Route
+  path="ap-ar/account-ledger"
+  element={
+    <ProtectedRoute anyPermission="AP_AR_ACCOUNT_LEDGER_VIEW">
+      <ApArAccountLedgerPage />
+    </ProtectedRoute>
+  }
+/> */}
+<Route
+  path="ap-ar/reports"
+  element={
+    <ProtectedRoute anyPermission="AP_AR_REPORT_VIEW">
+      <Reports />
+    </ProtectedRoute>
+  }
+/>
+
+
+
+
+
               {/* Inventory report — daily-expense/daily-income/ledger/cash-book
                   nav-item.js e ache kintu App.jsx e in ei list-e route hishebe nai —
                   jodi dorkar hoy, ei charta o eikhane add korte hobe */}

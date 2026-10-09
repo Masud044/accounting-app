@@ -71,6 +71,16 @@ export const MODULE_OPTIONS = [
     { value: "Department", label: "Department" },
      { value: "Meeting Room", label: "Meeting Room" },
 
+       // AP / AR
+  { value: "AP Payment", label: "Vendor Payments (AP)" },
+  { value: "AR Receipt", label: "Customer Receipts (AR)" },
+  { value: "AP AR Chart of Account", label: "AP AR Chart of Account" },
+  { value: "AP Journal", label: "AP Journal" },
+  { value: "AR Journal", label: "AR Journal" },
+  { value: "AP AR General Ledger", label: "AP AR General Ledger" },
+  
+  { value: "AP AR Report", label: "AP AR Report" },
+
   // User Management
   { value: "User Management", label: "User Management" },
   { value: "Module", label: "Module" },

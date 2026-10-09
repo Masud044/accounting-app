@@ -1,3 +1,4 @@
+
 // import { useEffect } from "react";
 // import { useForm } from "react-hook-form";
 // import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,22 +24,30 @@
 // import { Egg } from "lucide-react";
 // import { Spinner } from "@/components/ui/spinner";
 // import { useCreateEggProduction } from "./queries";
+// import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 // const formSchema = z.object({
 //   productionDate: z.string().min(1, "Production date is required"),
 //   qty:            z.coerce.number({ invalid_type_error: "Quantity must be a number" })
 //                     .min(0, "Quantity cannot be negative"),
+//   rejectQty:      z.coerce.number({ invalid_type_error: "Reject quantity must be a number" })
+//                     .min(0, "Reject quantity cannot be negative")
+//                     .optional(),
+//   remarks:        z.string().max(50, "Remarks max 50 characters").optional(),
 //   creationBy:     z.string().max(100).optional(),
 // });
 
 // const defaultValues = {
 //   productionDate: "",
 //   qty:            "",
+//   rejectQty:      "",
+//   remarks:        "",
 //   creationBy:     "",
 // };
 
 // export default function AddEggProductionSheet({ open, onOpenChange, showConfirmation }) {
 //   const createMutation = useCreateEggProduction();
+//   const userId = useAuthUserId();
 
 //   const form = useForm({
 //     resolver: zodResolver(formSchema),
@@ -56,7 +65,9 @@
 //       await createMutation.mutateAsync({
 //         productionDate: data.productionDate,
 //         qty:            data.qty,
-//         creationBy:     data.creationBy || null,
+//         rejectQty:      data.rejectQty || 0,
+//         remarks:        data.remarks || null,
+//         creationBy:     userId,
 //       });
 //       toast.success("Egg production record created successfully!");
 //       form.reset(defaultValues);
@@ -133,6 +144,39 @@
 //                 </FormItem>
 //               )} />
 
+//               {/* Reject Quantity */}
+//               <FormField control={form.control} name="rejectQty" render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Reject Quantity</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       type="number"
+//                       min="0"
+//                       placeholder="Enter reject count"
+//                       disabled={isSubmitting}
+//                       {...field}
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )} />
+
+//               {/* Remarks */}
+//               <FormField control={form.control} name="remarks" render={({ field }) => (
+//                 <FormItem>
+//                   <FormLabel>Remarks</FormLabel>
+//                   <FormControl>
+//                     <Input
+//                       maxLength={50}
+//                       placeholder="Optional remarks"
+//                       disabled={isSubmitting}
+//                       {...field}
+//                     />
+//                   </FormControl>
+//                   <FormMessage />
+//                 </FormItem>
+//               )} />
+
 //               {/* Created By
 //               <FormField control={form.control} name="creationBy" render={({ field }) => (
 //                 <FormItem>
@@ -162,7 +206,7 @@
 //   );
 // }
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -186,11 +230,12 @@ import {
 } from "@/components/ui/form";
 import { Egg } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { useCreateEggProduction } from "./queries";
+import { useCreateEggProduction, useAllEggProductions } from "./queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 
 const formSchema = z.object({
   productionDate: z.string().min(1, "Production date is required"),
+  shed:           z.string().trim().min(1, "Shed is required").max(30, "Shed max 30 characters"),
   qty:            z.coerce.number({ invalid_type_error: "Quantity must be a number" })
                     .min(0, "Quantity cannot be negative"),
   rejectQty:      z.coerce.number({ invalid_type_error: "Reject quantity must be a number" })
@@ -202,6 +247,7 @@ const formSchema = z.object({
 
 const defaultValues = {
   productionDate: "",
+  shed:           "",
   qty:            "",
   rejectQty:      "",
   remarks:        "",
@@ -211,6 +257,13 @@ const defaultValues = {
 export default function AddEggProductionSheet({ open, onOpenChange, showConfirmation }) {
   const createMutation = useCreateEggProduction();
   const userId = useAuthUserId();
+
+  // Existing sheds (from already-loaded records) → datalist suggestions
+  const { data: allRecords = [] } = useAllEggProductions();
+  const shedOptions = useMemo(
+    () => [...new Set(allRecords.map((r) => r.SHED).filter(Boolean))].sort(),
+    [allRecords]
+  );
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -227,6 +280,7 @@ export default function AddEggProductionSheet({ open, onOpenChange, showConfirma
     try {
       await createMutation.mutateAsync({
         productionDate: data.productionDate,
+        shed:           data.shed.trim(),
         qty:            data.qty,
         rejectQty:      data.rejectQty || 0,
         remarks:        data.remarks || null,
@@ -286,6 +340,29 @@ export default function AddEggProductionSheet({ open, onOpenChange, showConfirma
                   <FormControl>
                     <Input type="date" disabled={isSubmitting} {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {/* Shed (free text + suggestions) */}
+              <FormField control={form.control} name="shed" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Shed <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Input
+                      list="egg-add-shed-options"
+                      maxLength={30}
+                      placeholder="e.g. S-1"
+                      autoComplete="off"
+                      disabled={isSubmitting}
+                      {...field}
+                    />
+                  </FormControl>
+                  <datalist id="egg-add-shed-options">
+                    {shedOptions.map((s) => (
+                      <option key={s} value={s} />
+                    ))}
+                  </datalist>
                   <FormMessage />
                 </FormItem>
               )} />

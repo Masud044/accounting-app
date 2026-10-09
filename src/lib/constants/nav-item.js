@@ -402,11 +402,12 @@
 //   },
 // ];
 
+
 import {
   Home, FileText, Plus, Wrench, ClipboardList,
-  LayoutDashboard, Receipt, Factory, Package, BarChart3, Settings
+  LayoutDashboard, Receipt, Factory, Package, BarChart3, Settings, Wallet, ListTree, BookOpen
 } from "lucide-react";
-import { IconUsers, IconDoorEnter, IconBuilding } from "@tabler/icons-react";
+import { IconUsers, IconDoorEnter, IconBuilding,IconReceipt2 } from "@tabler/icons-react";
 
 export const NAV_ITEMS = [
   {
@@ -430,6 +431,8 @@ export const NAV_ITEMS = [
     label: "Voucher Entry",
     ItemIcon: Receipt,
     links: [
+       { to: "/dashboard/ap-ar/payable", label: "Vendor Payments (AP)", Icon: Wallet, requiredPermission: "AP_PAYMENT_VIEW" },
+    { to: "/dashboard/ap-ar/receivable", label: "Customer Receipts (AR)", Icon: Receipt, requiredPermission: "AR_RECEIPT_VIEW" },
       { to: "/dashboard/home-table", label: "Home Voucher", Icon: Home, requiredPermission: "HOME_VOUCHER_VIEW" },
       { to: "/dashboard/receive-voucher", label: "Receive Voucher", Icon: Home, requiredPermission: "RECEIVE_VOUCHER_VIEW" },
       { to: "/dashboard/payment-voucher", label: "Payment Voucher", Icon: FileText, requiredPermission: "PAYMENT_VOUCHER_VIEW" },
@@ -477,6 +480,11 @@ export const NAV_ITEMS = [
       { to: "/dashboard/project-profile-report", label: "Project Profile Report", Icon: FileText, requiredPermission: "PROJECT_PROFILE_REPORT_VIEW" },
       { to: "/dashboard/farm-calendar-report", label: "Project Calendar Report", Icon: FileText, requiredPermission: "FARM_CALENDAR_REPORT_VIEW" },
      { to: "/dashboard/farm-budget-report", label: "Budget Report", Icon: FileText, requiredPermission: "BUDGET_REPORT_VIEW" },
+      { to: "/dashboard/ap-ar/journal/AP", label: "AP Journal", Icon: BookOpen, requiredPermission: "AP_JOURNAL_VIEW" },
+    { to: "/dashboard/ap-ar/journal/AR", label: "AR Journal", Icon: BookOpen, requiredPermission: "AR_JOURNAL_VIEW" },
+    { to: "/dashboard/ap-ar/general-ledger", label: "General Ledger", Icon: FileText, requiredPermission: "AP_AR_GENERAL_LEDGER_VIEW" },
+   
+    { to: "/dashboard/ap-ar/reports", label: "Reports", Icon: BarChart3, requiredPermission: "AP_AR_REPORT_VIEW" },
       
     ],
   },
@@ -504,6 +512,21 @@ export const NAV_ITEMS = [
       { to: "/dashboard/meeting-rooms", label: "Meeting Rooms", Icon: IconDoorEnter, requiredPermission: "MEETING_ROOM_VIEW" },
     ],
   },
+
+//   {
+//   label: "AP / AR",
+//   ItemIcon: IconReceipt2,
+//   links: [
+   
+//     // { to: "/dashboard/ap-ar/chart-of-accounts", label: "Chart of Accounts", Icon: ListTree, requiredPermission: "AP_AR_CHART_OF_ACCOUNT_VIEW" },
+//     { to: "/dashboard/ap-ar/journal/AP", label: "AP Journal", Icon: BookOpen, requiredPermission: "AP_JOURNAL_VIEW" },
+//     { to: "/dashboard/ap-ar/journal/AR", label: "AR Journal", Icon: BookOpen, requiredPermission: "AR_JOURNAL_VIEW" },
+//     { to: "/dashboard/ap-ar/general-ledger", label: "General Ledger", Icon: FileText, requiredPermission: "AP_AR_GENERAL_LEDGER_VIEW" },
+   
+//     { to: "/dashboard/ap-ar/reports", label: "Reports", Icon: BarChart3, requiredPermission: "AP_AR_REPORT_VIEW" },
+//   ],
+// },
+
   {
     label: "User Management",
     ItemIcon: IconUsers,

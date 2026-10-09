@@ -1,0 +1,114 @@
+/* Ported from the PHP SPA (vendor_payments.php / customer_receipts.php) so the
+   Node/React app looks and behaves the same as the original. */
+:root{--bg:#F1F4F4;--panel:#fff;--ink:#12343B;--mute:#5E7378;--line:#D9E2E3;--acc:#0E7C86;--accT:#fff;--soft:#E3F2F3;--warn:#B7791F;--err:#C0392B;--ok:#1E8449;--field:#F7FAFA;
+box-sizing:border-box}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1C1F;--panel:#15272B;--ink:#E4F0F1;--mute:#8FA8AC;--line:#26404551;--acc:#4FC3CD;--accT:#0E1C1F;--soft:#1B3A3F;--warn:#E5B04C;--err:#F08A7D;--ok:#5FD08F;--field:#1A3034}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14.5px/1.5 "Public Sans",system-ui,sans-serif}
+.wrap{max-width:1360px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:24px;margin:0;letter-spacing:-.01em}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:end;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.mono{font-family:"IBM Plex Mono",monospace}
+label{display:block;font-weight:500;font-size:13px;margin-bottom:5px}
+.in,select{width:100%;background:var(--field);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 11px;font:inherit}
+/* On Windows, an unstyled <select> is painted by the native OS combobox
+   widget, which draws its own text color and ignores the `color` above —
+   that's the washed-out grey. appearance:none hands painting back to the
+   browser itself so our CSS color actually applies; the native arrow has to
+   be replaced with our own since appearance:none removes it too. */
+select{-webkit-appearance:none;-moz-appearance:none;appearance:none;forced-color-adjust:none;color:var(--ink)!important;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='11' height='11'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%235E7378' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='11' height='11'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%238FA8AC' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}}
+:root[data-theme="dark"] select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='11' height='11'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%238FA8AC' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+select option{color:var(--ink);background:var(--panel)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.seg button{text-align:left;border:1.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:10px;padding:12px 14px;font:inherit;cursor:pointer}
+.seg button b{display:block}.seg button span{color:var(--mute);font-size:13px}
+.seg button[aria-pressed=true]{border-color:var(--acc);background:var(--soft)}
+.row{display:grid;gap:12px;margin-bottom:12px}.c2{grid-template-columns:1fr 1fr}.c3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:560px){.c2,.c3{grid-template-columns:1fr}}
+.tblw{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{text-align:left;font-weight:500;color:var(--mute);font-size:12.5px;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right}
+.pay-in{width:104px;text-align:right}
+.tag{display:inline-block;font-size:12px;font-weight:500;padding:2px 8px;border-radius:99px;background:var(--soft)}
+.tag.over{color:var(--err)}.tag.part{color:var(--warn)}.tag.paid{color:var(--ok)}
+.line{display:flex;justify-content:space-between;padding:5px 0}
+.line.big{border-top:1px solid var(--line);margin-top:8px;padding-top:12px;font-weight:700;font-size:17px}
+.chk{display:flex;gap:9px;align-items:center;margin:12px 0;padding:11px 12px;background:var(--soft);border-radius:9px}
+.chk input{accent-color:var(--acc);width:17px;height:17px}
+.btn{border:0;background:var(--acc);color:var(--accT);font:700 15px inherit;font-family:inherit;border-radius:9px;padding:12px 18px;cursor:pointer;width:100%;margin-top:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat div{background:var(--field);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.stat span{display:block;color:var(--mute);font-size:12.5px}.stat b{font-size:18px}
+.led{list-style:none;margin:0;padding:0}
+.led li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.led small{display:block;color:var(--mute)}
+.pos{color:var(--ok)}.neg{color:var(--err)}
+h2{font-size:15px;margin:0 0 12px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:9px;max-width:92%;z-index:9}
+.empty{color:var(--mute);padding:14px 0}
+.ghost{border:1px solid var(--line);background:var(--field);color:var(--ink);border-radius:8px;padding:8px 14px;font:500 14px inherit;font-family:inherit;cursor:pointer}
+.addbox{border:1px dashed var(--acc);border-radius:10px;padding:16px;margin-bottom:16px;background:var(--soft)}
+.addbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.addbar b{font-size:15px}
+.btns{display:flex;gap:10px}.btns .btn{width:auto;margin:0}
+small.nt{display:block;color:var(--mute);font-size:12.5px}
+.lnx{border:0;background:none;color:var(--err);font-size:20px;cursor:pointer;line-height:1;padding:4px 8px}
+.in.bad{border-color:var(--err)}
+.jt td.cr{padding-left:26px}
+.jt tr.tot td{font-weight:700}
+.xlink{border:0;background:none;color:var(--err);font-size:12px;cursor:pointer;padding:0;text-decoration:underline}
+.tag.cancelled{color:var(--mute);text-decoration:line-through}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
+.topnav{max-width:1080px;margin:0 auto;padding:14px 16px 0;display:flex;gap:16px;font-size:13px;flex-wrap:wrap}
+.topnav a,.topnav a:visited{color:var(--mute);text-decoration:none}
+.topnav a:hover,.topnav a.active{color:var(--ink)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);margin-left:6px}
+.badge.ap{color:var(--err)}.badge.ar{color:var(--acc)}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:end}
+.filters>div{min-width:140px}
+.acctpick{position:relative}
+.acctpick-inputwrap{position:relative}
+.acctpick-inputwrap .in{padding-right:182px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acctpick-code{position:absolute;right:60px;top:50%;transform:translateY(-50%);color:var(--mute);font-size:12.5px;pointer-events:none;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Previously had no rule at all, so it rendered unstyled and in normal flow
+   (not positioned with the code/chevron) — that stray in-flow button was
+   what actually forced the account name to wrap onto a second line. */
+.acctpick-clear{position:absolute;right:34px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--mute);font-size:17px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:5px}
+.acctpick-clear:hover{color:var(--err);background:var(--soft)}
+.acctpick-chevron{position:absolute;right:0;top:0;bottom:0;width:32px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;border-left:1px solid var(--line);color:var(--mute);cursor:pointer;border-radius:0 8px 8px 0}
+.acctpick-chevron:hover{background:var(--soft);color:var(--ink)}
+.acctpick-chevron svg{transition:transform .15s ease}
+.acctpick-chevron.open svg{transform:rotate(180deg)}
+.acctpick-list{position:absolute;z-index:15;top:calc(100% + 4px);left:0;min-width:100%;width:max-content;max-width:min(420px,90vw);max-height:300px;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+.acctpick-opt{padding:9px 13px;cursor:pointer}
+.acctpick-opt.hi,.acctpick-opt:hover{background:var(--soft)}
+.acctpick-opt + .acctpick-opt{border-top:1px solid var(--line)}
+.acctpick-name{font-size:14px;line-height:1.35}
+.acctpick-subcode{font-size:11.5px;color:var(--mute);margin-top:2px}
+.acctpick-empty,.acctpick-more{padding:10px 13px;color:var(--mute);font-size:13px}
+.acctpick mark{background:var(--soft);color:inherit;font-weight:700;border-radius:3px;padding:0 1px}
+.attbtn{position:relative;display:inline-block}
+.attbtn-trigger{position:relative;border:1px solid var(--line);background:var(--field);color:var(--mute);border-radius:7px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.attbtn-trigger:hover{color:var(--ink);background:var(--soft)}
+.attbtn-badge{position:absolute;top:-6px;right:-6px;background:var(--acc);color:var(--accT);font-size:10px;font-weight:700;border-radius:99px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.attbtn-pop{position:absolute;z-index:16;top:calc(100% + 6px);left:0;width:260px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px}
+.attbtn-title{font-size:12.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px}
+.attbtn-list{list-style:none;margin:0 0 10px;padding:0;max-height:180px;overflow-y:auto}
+.attbtn-list li{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
+.attbtn-link{color:var(--ink);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attbtn-link:hover{text-decoration:underline;color:var(--acc)}
+.attbtn-meta{color:var(--mute);font-size:11px;white-space:nowrap}
+.attbtn-x{border:0;background:none;color:var(--err);font-size:17px;cursor:pointer;line-height:1;padding:0 2px}
+.attbtn-empty{color:var(--mute);font-size:13px;margin-bottom:10px}
+.attbtn-add{width:100%;font-size:13px;padding:7px 10px}
+.attbtn-err{color:var(--err);font-size:12px;margin-top:6px}

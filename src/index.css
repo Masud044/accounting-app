@@ -408,3 +408,112 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+/* //ap-ar */
+
+
+
+
+/* ==========================================================================
+   AP / AR palette (legacy colors). Token gula global, kintu naam `apar-*`,
+   tai shadcn/iTest page e kono impact porbe na.
+   Dark mode app er `.dark` class follow kore.
+   ========================================================================== */
+@theme inline {
+  --color-apar-bg: var(--apar-bg);
+  --color-apar-panel: var(--apar-panel);
+  --color-apar-ink: var(--apar-ink);
+  --color-apar-mute: var(--apar-mute);
+  --color-apar-line: var(--apar-line);
+  --color-apar-acc: var(--apar-acc);
+  --color-apar-acc-fg: var(--apar-acc-fg);
+  --color-apar-soft: var(--apar-soft);
+  --color-apar-warn: var(--apar-warn);
+  --color-apar-err: var(--apar-err);
+  --color-apar-ok: var(--apar-ok);
+  --color-apar-field: var(--apar-field);
+
+  --font-apar: "Public Sans", system-ui, sans-serif;
+  --font-apar-mono: "IBM Plex Mono", monospace;
+}
+
+:root {
+  --apar-bg: #F1F4F4;
+  --apar-panel: #FFFFFF;
+  --apar-ink: #12343B;
+  --apar-mute: #5E7378;
+  --apar-line: #D9E2E3;
+  --apar-acc: #0E7C86;
+  --apar-acc-fg: #FFFFFF;
+  --apar-soft: #E3F2F3;
+  --apar-warn: #B7791F;
+  --apar-err: #C0392B;
+  --apar-ok: #1E8449;
+  --apar-field: #F7FAFA;
+  --apar-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='11' height='11'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%235E7378' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.dark {
+  --apar-bg: #0E1C1F;
+  --apar-panel: #15272B;
+  --apar-ink: #E4F0F1;
+  --apar-mute: #8FA8AC;
+  --apar-line: #26404551;
+  --apar-acc: #4FC3CD;
+  --apar-acc-fg: #0E1C1F;
+  --apar-soft: #1B3A3F;
+  --apar-warn: #E5B04C;
+  --apar-err: #F08A7D;
+  --apar-ok: #5FD08F;
+  --apar-field: #1A3034;
+  --apar-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='11' height='11'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%238FA8AC' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Custom class shudhu ja Tailwind utility diye hoy na / bar bar repeat hoy */
+@layer components {
+  .apar-label {
+    @apply mb-[5px] block text-[13px] font-medium;
+  }
+
+  .apar-input,
+  .apar-select {
+    @apply w-full rounded-lg border border-apar-line bg-apar-field px-[11px] py-[9px] text-apar-ink
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apar-acc
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* Windows e native <select> color ignore kore (washed-out grey).
+     appearance:none dile amader color apply hoy; arrow nijer SVG. */
+  .apar-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    forced-color-adjust: none;
+    color: var(--apar-ink) !important;
+    padding-right: 32px;
+    background-image: var(--apar-chevron);
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+  }
+  .apar-select option {
+    color: var(--apar-ink);
+    background: var(--apar-panel);
+  }
+
+  .apar-btn {
+    @apply cursor-pointer rounded-[9px] bg-apar-acc px-[18px] py-[12px] text-[15px] font-bold text-apar-acc-fg
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apar-acc
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .apar-ghost {
+    @apply cursor-pointer rounded-lg border border-apar-line bg-apar-field px-[14px] py-[8px] text-[14px] font-medium text-apar-ink
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apar-acc
+      disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .apar-h2 {
+    @apply mb-[12px] text-[15px] font-bold;
+  }
+}
