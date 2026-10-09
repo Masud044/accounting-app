@@ -2360,7 +2360,7 @@ export function DashboardHomeTable() {
               <ReceiptText size={16} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-gray-900">Home Voucher</h2>
+              <h2 className="text-sm font-bold text-gray-900">Approval Voucher</h2>
               <p className="text-xs text-gray-400">
                 {filteredData.length} of {apiData.length} — all vouchers
               </p>
