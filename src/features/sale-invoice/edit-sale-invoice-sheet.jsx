@@ -2367,6 +2367,7 @@ export default function EditInvoicePage() {
 
   const receiveVoucherState = {
     customer: customerId,
+    shedId,
     invoiceDate,
     invoiceHid: invoiceData?.HID,
     invoiceNo: invoiceData?.INVOICE_ID ? String(invoiceData.INVOICE_ID) : "",
