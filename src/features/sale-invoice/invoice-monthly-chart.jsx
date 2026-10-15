@@ -25,7 +25,7 @@ const MONTH_LABELS = {
 // export default function InvoiceMonthlyChart() {
 //   const [year, setYear] = useState(currentYear);
 //   const { data: rows = [], isLoading } = useInvoiceMonthlySummary(year);
-export default function InvoiceMonthlyChart({ shedId }) {
+export default function InvoiceMonthlyChart({ shedId, shedLabel }) {
   const [year, setYear] = useState(currentYear);
   const { data: rows = [], isLoading } = useInvoiceMonthlySummary(year, shedId);
 
@@ -39,9 +39,12 @@ export default function InvoiceMonthlyChart({ shedId }) {
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-semibold text-slate-700">
+        {/* <CardTitle className="text-sm font-semibold text-slate-700">
           Sales Invoice — Monthly Total
-        </CardTitle>
+        </CardTitle> */}
+         <CardTitle className="text-sm font-semibold text-slate-700">
+    Sales Invoice, Monthly Total {shedLabel && <>· <span className="text-primary">{shedLabel}</span></>}
+  </CardTitle>
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}

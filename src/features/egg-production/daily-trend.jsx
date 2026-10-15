@@ -43,7 +43,9 @@ const GRID_COLOR = "rgba(128,128,128,0.12)";
 const TEXT_COLOR = "#888";
 
 // export default function DailyTrendChart() {
-export default function DailyTrendChart({ shedId }) {
+export default function DailyTrendChart({ shedId, shedLabel }) {
+
+
 
   
   const [year,  setYear]  = useState(currentYear);
@@ -139,8 +141,9 @@ export default function DailyTrendChart({ shedId }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
         <p className="text-sm font-bold uppercase tracking-wider text-foreground">
-          Daily Egg Production Trend
-        </p>
+  Daily Egg Production Trend
+  {shedLabel && <span className="text-primary"> · {shedLabel}</span>}
+</p>
         <div className="flex items-center gap-2">
           {/* Month selector */}
           <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>

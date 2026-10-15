@@ -27,7 +27,7 @@ const yearOptions = Array.from(
 );
 
 // export default function MonthlyProductionChart() {
-export default function MonthlyProductionChart({ shedId }) {
+export default function MonthlyProductionChart({ shedId, shedLabel }) {
 
   
   const [year, setYear] = useState(currentYear);
@@ -121,8 +121,9 @@ export default function MonthlyProductionChart({ shedId }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Monthly Production
-        </p>
+  Monthly Production
+  {shedLabel && <span className="text-primary"> · {shedLabel}</span>}
+</p>
         <div className="flex items-center gap-2">
           {/* Year selector */}
           <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>

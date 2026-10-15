@@ -48,9 +48,9 @@ const toDayLabel = (isoDate) => {
   return `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })}`;
 };
 
-export default function InvoiceDailyTrendChart({ shedId }) {
+export default function InvoiceDailyTrendChart({ shedId, shedLabel }) {
   const [year,  setYear]  = useState(currentYear);
-  const [month, setMonth] = useState("all"); // default = All
+  const [month, setMonth] = useState("all"); // default = AllDaily Invoice Sale
 
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
@@ -150,9 +150,9 @@ export default function InvoiceDailyTrendChart({ shedId }) {
     <div className="bg-card rounded-md shadow-sm p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-        <p className="text-sm font-semibold text-slate-700">
-          Daily Invoice Sale
-        </p>
+       <p className="text-sm font-semibold text-slate-700">
+    Daily Invoice Sale {shedLabel && <>· <span className="text-primary">{shedLabel}</span></>}
+  </p>
         <div className="flex items-center gap-2">
           {/* Month selector */}
           <Select

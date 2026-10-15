@@ -28,7 +28,7 @@ const yearOptions = Array.from(
 );
 
 // export default function MonthlySummaryChart() {
-export default function MonthlySummaryChart({ shedId }) {
+export default function MonthlySummaryChart({ shedId, shedLabel }) {
 
 
   const [year, setYear] = useState(currentYear);
@@ -173,9 +173,10 @@ export default function MonthlySummaryChart({ shedId }) {
     <div className="bg-card rounded-lg border border-border p-5">
       {/* Header */}
       <div className="flex items-start justify-between mb-2 flex-wrap gap-2">
-        <p className="text-sm font-medium uppercase tracking-widest text-foreground">
-          Monthly production summary
-        </p>
+      <p className="text-sm font-medium uppercase tracking-widest text-foreground">
+  Monthly production summary
+  {shedLabel && <span className="text-primary"> · {shedLabel}</span>}
+</p>
         <div className="flex items-center gap-2">
           <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
             <SelectTrigger className="w-24 h-8 text-sm">
