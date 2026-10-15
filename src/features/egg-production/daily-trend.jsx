@@ -42,14 +42,19 @@ const MONTHS = [
 const GRID_COLOR = "rgba(128,128,128,0.12)";
 const TEXT_COLOR = "#888";
 
-export default function DailyTrendChart() {
+// export default function DailyTrendChart() {
+export default function DailyTrendChart({ shedId }) {
+
+  
   const [year,  setYear]  = useState(currentYear);
   const [month, setMonth] = useState(currentMonth);
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
 
+  // const { data = [], isLoading, isError, error, refetch, isFetching } =
+  //   useDailyTrend(year, month);
   const { data = [], isLoading, isError, error, refetch, isFetching } =
-    useDailyTrend(year, month);
+    useDailyTrend(year, month, shedId);
 
   useEffect(() => {
     if (!canvasRef.current || isLoading || isError || data.length === 0) return;

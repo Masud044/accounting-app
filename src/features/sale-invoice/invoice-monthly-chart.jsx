@@ -22,9 +22,12 @@ const MONTH_LABELS = {
   "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec",
 };
 
-export default function InvoiceMonthlyChart() {
+// export default function InvoiceMonthlyChart() {
+//   const [year, setYear] = useState(currentYear);
+//   const { data: rows = [], isLoading } = useInvoiceMonthlySummary(year);
+export default function InvoiceMonthlyChart({ shedId }) {
   const [year, setYear] = useState(currentYear);
-  const { data: rows = [], isLoading } = useInvoiceMonthlySummary(year);
+  const { data: rows = [], isLoading } = useInvoiceMonthlySummary(year, shedId);
 
   const chartData = rows.map((r) => ({
     month: MONTH_LABELS[r.MONTH?.split("-")[1]] || r.MONTH,

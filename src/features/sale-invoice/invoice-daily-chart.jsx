@@ -48,15 +48,17 @@ const toDayLabel = (isoDate) => {
   return `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" })}`;
 };
 
-export default function InvoiceDailyTrendChart() {
+export default function InvoiceDailyTrendChart({ shedId }) {
   const [year,  setYear]  = useState(currentYear);
   const [month, setMonth] = useState("all"); // default = All
 
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
 
+  // const { data: rawData = [], isLoading, isError, error, refetch, isFetching } =
+  //   useInvoiceDailyTrend(year, month === "all" ? null : month);
   const { data: rawData = [], isLoading, isError, error, refetch, isFetching } =
-    useInvoiceDailyTrend(year, month === "all" ? null : month);
+    useInvoiceDailyTrend(year, month === "all" ? null : month, shedId);
 
   // raw rows -> { DAY_LABEL, AMT }
   const data = rawData.map((r) => ({

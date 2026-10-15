@@ -138,40 +138,92 @@ export const useUpdateEggProduction = () => {
 
 // ─── Add this to your existing queries.js ────────────────────────────────────
 
-export const useMonthlyEggProduction = (year = new Date().getFullYear()) =>
-  useQuery({
-    queryKey: [...eggProductionKeys.all, "monthly", year],
-    queryFn:  () => fetchJSON(`${BASE}/api/egg-production/monthly-summary?year=${year}`),
-    staleTime: 10 * 60 * 1000,
-    gcTime:    15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
-    throwOnError: false,
+// export const useMonthlyEggProduction = (year = new Date().getFullYear()) =>
+//   useQuery({
+//     queryKey: [...eggProductionKeys.all, "monthly", year],
+//     queryFn:  () => fetchJSON(`${BASE}/api/egg-production/monthly-summary?year=${year}`),
+//     staleTime: 10 * 60 * 1000,
+//     gcTime:    15 * 60 * 1000,
+//     refetchOnWindowFocus: false,
+//     retry: 2,
+//     retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+//     throwOnError: false,
+//   });
+
+
+//   // ─── Add these 2 hooks to your existing queries.js ───────────────────────────
+
+// // Hook for Chart 1 — Monthly summary (total + avg daily)
+// export const useMonthlySummary = (year = new Date().getFullYear()) =>
+//   useQuery({
+//     queryKey: [...eggProductionKeys.all, "monthly-summary", year],
+//     queryFn:  () => fetchJSON(`${BASE}/api/egg-production/monthly-summary-avg?year=${year}`),
+//     staleTime: 10 * 60 * 1000,
+//     gcTime:    15 * 60 * 1000,
+//     refetchOnWindowFocus: false,
+//     retry: 2,
+//     retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+//     throwOnError: false,
+//   });
+
+// // Hook for Chart 2 — Daily trend for a specific month
+// export const useDailyTrend = (year = new Date().getFullYear(), month = new Date().getMonth() + 1) =>
+//   useQuery({
+//     queryKey: [...eggProductionKeys.all, "daily-trend", year, month],
+//     queryFn:  () =>
+//       fetchJSON(`${BASE}/api/egg-production/daily-trend?year=${year}&month=${month}`),
+//     staleTime: 5 * 60 * 1000,
+//     gcTime:    10 * 60 * 1000,
+//     refetchOnWindowFocus: false,
+//     retry: 2,
+//     retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+//     throwOnError: false,
+//   });
+
+// helper: URL query string banay, shedId thakle add kore
+const buildQS = (obj) => {
+  const p = new URLSearchParams();
+  Object.entries(obj).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") p.set(k, v);
   });
+  return p.toString();
+};
 
-
-  // ─── Add these 2 hooks to your existing queries.js ───────────────────────────
-
-// Hook for Chart 1 — Monthly summary (total + avg daily)
-export const useMonthlySummary = (year = new Date().getFullYear()) =>
+export const useMonthlyEggProduction = (year = new Date().getFullYear(), shedId) =>
   useQuery({
-    queryKey: [...eggProductionKeys.all, "monthly-summary", year],
-    queryFn:  () => fetchJSON(`${BASE}/api/egg-production/monthly-summary-avg?year=${year}`),
-    staleTime: 10 * 60 * 1000,
-    gcTime:    15 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
-    throwOnError: false,
-  });
-
-// Hook for Chart 2 — Daily trend for a specific month
-export const useDailyTrend = (year = new Date().getFullYear(), month = new Date().getMonth() + 1) =>
-  useQuery({
-    queryKey: [...eggProductionKeys.all, "daily-trend", year, month],
+    queryKey: [...eggProductionKeys.all, "monthly", year, shedId],
     queryFn:  () =>
-      fetchJSON(`${BASE}/api/egg-production/daily-trend?year=${year}&month=${month}`),
+      fetchJSON(`${BASE}/api/egg-production/monthly-summary?${buildQS({ year, shedId })}`),
+    staleTime: 10 * 60 * 1000,
+    gcTime:    15 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+    throwOnError: false,
+  });
+
+export const useMonthlySummary = (year = new Date().getFullYear(), shedId) =>
+  useQuery({
+    queryKey: [...eggProductionKeys.all, "monthly-summary", year, shedId],
+    queryFn:  () =>
+      fetchJSON(`${BASE}/api/egg-production/monthly-summary-avg?${buildQS({ year, shedId })}`),
+    staleTime: 10 * 60 * 1000,
+    gcTime:    15 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: (i) => Math.min(1000 * 2 ** i, 30000),
+    throwOnError: false,
+  });
+
+export const useDailyTrend = (
+  year = new Date().getFullYear(),
+  month = new Date().getMonth() + 1,
+  shedId
+) =>
+  useQuery({
+    queryKey: [...eggProductionKeys.all, "daily-trend", year, month, shedId],
+    queryFn:  () =>
+      fetchJSON(`${BASE}/api/egg-production/daily-trend?${buildQS({ year, month, shedId })}`),
     staleTime: 5 * 60 * 1000,
     gcTime:    10 * 60 * 1000,
     refetchOnWindowFocus: false,

@@ -26,13 +26,18 @@ const yearOptions = Array.from(
   (_, i) => currentYear + i
 );
 
-export default function MonthlyProductionChart() {
+// export default function MonthlyProductionChart() {
+export default function MonthlyProductionChart({ shedId }) {
+
+  
   const [year, setYear] = useState(currentYear);
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
 
+  // const { data = [], isLoading, isError, error, refetch, isFetching } =
+  //   useMonthlyEggProduction(year);
   const { data = [], isLoading, isError, error, refetch, isFetching } =
-    useMonthlyEggProduction(year);
+    useMonthlyEggProduction(year, shedId);
 
   // ── Build / update chart ──────────────────────────────────────────────────
   useEffect(() => {
