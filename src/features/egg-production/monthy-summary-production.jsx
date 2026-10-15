@@ -27,13 +27,18 @@ const yearOptions = Array.from(
   (_, i) => currentYear + i
 );
 
-export default function MonthlySummaryChart() {
+// export default function MonthlySummaryChart() {
+export default function MonthlySummaryChart({ shedId }) {
+
+
   const [year, setYear] = useState(currentYear);
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
 
-  const { data = [], isLoading, isError, error, refetch, isFetching } =
-    useMonthlySummary(year);
+  // const { data = [], isLoading, isError, error, refetch, isFetching } =
+  //   useMonthlySummary(year);
+    const { data = [], isLoading, isError, error, refetch, isFetching } =
+    useMonthlySummary(year, shedId);
 
   useEffect(() => {
     if (!canvasRef.current || isLoading || isError || data.length === 0) return;

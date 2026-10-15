@@ -110,11 +110,50 @@ export const useUpdateInvoice = (hid) => {
 };
 
 
+// export const useInvoiceDashboard = (filters) =>
+//   useQuery({
+//     queryKey: [...invoiceKeys.all, "dashboard", filters],
+//     queryFn: () => {
+//       const params = new URLSearchParams();
+//       if (filters.date) params.set("date", filters.date);
+//       else {
+//         if (filters.month) params.set("month", filters.month);
+//         if (filters.year)  params.set("year", filters.year);
+//       }
+//       return fetchJSON(`${BASE}/api/sal-invoice/dashboard/breakdown?${params}`);
+//     },
+//     staleTime: 2 * 60 * 1000,
+//   });
+
+// export const useInvoiceMonthlySummary = (year) =>
+//   useQuery({
+//     queryKey: [...invoiceKeys.all, "monthly-summary", year],
+//     queryFn: () => {
+//       const params = year ? `?year=${year}` : "";
+//       return fetchJSON(`${BASE}/api/sal-invoice/dashboard/monthly-summary${params}`);
+//     },
+//     staleTime: 5 * 60 * 1000,
+//   });
+
+//   export const useInvoiceDailyTrend = (year, month) =>
+//   useQuery({
+//     queryKey: [...invoiceKeys.all, "daily-trend", year, month],
+//     queryFn: () => {
+//       const params = new URLSearchParams();
+//       if (month) params.set("month", month);
+//       if (year)  params.set("year", year);
+//       return fetchJSON(`${BASE}/api/sal-invoice/dashboard/daily-summary?${params}`);
+//     },
+//     staleTime: 2 * 60 * 1000,
+//   });
+
+
 export const useInvoiceDashboard = (filters) =>
   useQuery({
-    queryKey: [...invoiceKeys.all, "dashboard", filters],
+    queryKey: [...invoiceKeys.all, "dashboard", filters], // filters-e shedId thakle key-te-o jabe
     queryFn: () => {
       const params = new URLSearchParams();
+      if (filters.shedId) params.set("shedId", filters.shedId);
       if (filters.date) params.set("date", filters.date);
       else {
         if (filters.month) params.set("month", filters.month);
@@ -125,28 +164,30 @@ export const useInvoiceDashboard = (filters) =>
     staleTime: 2 * 60 * 1000,
   });
 
-export const useInvoiceMonthlySummary = (year) =>
+export const useInvoiceMonthlySummary = (year, shedId) =>
   useQuery({
-    queryKey: [...invoiceKeys.all, "monthly-summary", year],
+    queryKey: [...invoiceKeys.all, "monthly-summary", year, shedId],
     queryFn: () => {
-      const params = year ? `?year=${year}` : "";
-      return fetchJSON(`${BASE}/api/sal-invoice/dashboard/monthly-summary${params}`);
+      const params = new URLSearchParams();
+      if (year)   params.set("year", year);
+      if (shedId) params.set("shedId", shedId);
+      return fetchJSON(`${BASE}/api/sal-invoice/dashboard/monthly-summary?${params}`);
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  export const useInvoiceDailyTrend = (year, month) =>
+export const useInvoiceDailyTrend = (year, month, shedId) =>
   useQuery({
-    queryKey: [...invoiceKeys.all, "daily-trend", year, month],
+    queryKey: [...invoiceKeys.all, "daily-trend", year, month, shedId],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (month) params.set("month", month);
-      if (year)  params.set("year", year);
+      if (month)  params.set("month", month);
+      if (year)   params.set("year", year);
+      if (shedId) params.set("shedId", shedId);
       return fetchJSON(`${BASE}/api/sal-invoice/dashboard/daily-summary?${params}`);
     },
     staleTime: 2 * 60 * 1000,
   });
-
   export const useLockInvoiceForReceive = () => {
   const qc = useQueryClient();
   return useMutation({

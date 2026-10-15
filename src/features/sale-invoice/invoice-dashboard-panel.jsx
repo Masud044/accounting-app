@@ -313,7 +313,8 @@ const columns = [
   },
 ];
 
-export default function InvoiceDashboardPanel() {
+// export default function InvoiceDashboardPanel() {
+export default function InvoiceDashboardPanel({ shedId, shedLabel }) {
   const [filters, setFilters] = useState({
   month: currentMonth,
   year:  currentYear,
@@ -321,7 +322,8 @@ export default function InvoiceDashboardPanel() {
 });
   const [sorting, setSorting] = useState([]);
 
-  const { data, isLoading } = useInvoiceDashboard(filters);
+  // const { data, isLoading } = useInvoiceDashboard(filters);
+  const { data, isLoading } = useInvoiceDashboard({ ...filters, shedId });
   const rows  = data?.rows  ?? [];
   const total = data?.total ?? 0;
 
@@ -357,9 +359,14 @@ export default function InvoiceDashboardPanel() {
     return "All time";
   };
 
+  // const handleExport = () => {
+  //   exportToExcel(rows, `Sales_Invoice_Details_${filterLabel().replace(/\s+/g, "_")}.xlsx`);
+  // };
+
   const handleExport = () => {
-    exportToExcel(rows, `Sales_Invoice_Details_${filterLabel().replace(/\s+/g, "_")}.xlsx`);
-  };
+  const shedPart = shedLabel ? `${shedLabel}_` : "";
+  exportToExcel(rows, `Sales_Invoice_${shedPart}${filterLabel().replace(/\s+/g, "_")}.xlsx`);
+};
 
   return (
     <div className="bg-card rounded-md shadow-sm p-4 border-t-2 border-primary/20">
