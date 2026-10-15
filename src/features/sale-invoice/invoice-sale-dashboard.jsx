@@ -1,3 +1,791 @@
+// // // import { useMemo, useState } from "react";
+// // // import {
+// // //   AreaChart, Area, BarChart, Bar, LineChart, Line,
+// // //   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+// // // } from "recharts";
+// // // import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+// // // import { Spinner } from "@/components/ui/spinner";
+// // // import { FileText, Package, Tag } from "lucide-react";
+// // // import { useInvoices } from "@/features/sale-invoice/queries";
+// // // import { IconCoinTaka } from "@tabler/icons-react";
+// // // import InvoiceDashboardPanel from "./invoice-dashboard-panel";
+// // // import InvoiceMonthlyChart from "./invoice-monthly-chart";
+// // // import InvoiceDailyTrendChart from "./invoice-daily-chart";
+// // // import { SectionContainer } from "@/components/SectionContainer";
+
+// // // const currentYear = new Date().getFullYear();
+
+// // // // ── shared filter options ────────────────────────────────────────────────
+// // // const MONTHS = [
+// // //   { label: "All", value: "" },
+// // //   { label: "January", value: 1 },  { label: "February", value: 2 },
+// // //   { label: "March", value: 3 },    { label: "April", value: 4 },
+// // //   { label: "May", value: 5 },      { label: "June", value: 6 },
+// // //   { label: "July", value: 7 },     { label: "August", value: 8 },
+// // //   { label: "September", value: 9 },{ label: "October", value: 10 },
+// // //   { label: "November", value: 11 },{ label: "December", value: 12 },
+// // // ];
+
+// // // // year dropdown শুধু 2026 থেকে 2030 পর্যন্ত
+// // // const YEARS = [2026, 2027, 2028, 2029, 2030].map((y) => ({ label: String(y), value: y }));
+
+// // // const selectClass =
+// // //   "text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 cursor-pointer";
+
+// // // // ── helpers ────────────────────────────────────────────────────────────────
+// // // const fmtMoney = (n) =>
+// // //   `${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+// // // const fmtAxisDate = (val) => {
+// // //   if (!val) return "";
+// // //   const d = new Date(`${val}T00:00:00`);
+// // //   if (isNaN(d.getTime())) return val;
+// // //   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+// // // };
+
+// // // const fmtTooltipDate = (val) => {
+// // //   const d = new Date(`${val}T00:00:00`);
+// // //   if (isNaN(d.getTime())) return val;
+// // //   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+// // // };
+
+// // // const toRow = (i) => {
+// // //   const qty          = Number(i.TOT_QTY || 0);
+// // //   const amt           = Number(i.TOT_AMT || 0);
+// // //   const productionQty = Number(i.PRODUCTION_QTY || 0);
+// // //   const unitPrice     = qty > 0 ? amt / qty : 0;
+// // //   return {
+// // //     date:          i.INVOICE_DATE,
+// // //     revenue:       amt,
+// // //     salesQty:      qty,
+// // //     productionQty,
+// // //     unitPrice:     Math.round(unitPrice * 100) / 100,
+// // //   };
+// // // };
+
+// // // const filterInvoices = (invoices, filters) =>
+// // //   invoices.filter((i) => {
+// // //     if (!i.INVOICE_DATE) return false;
+// // //     const d = new Date(i.INVOICE_DATE);
+// // //     if (isNaN(d.getTime())) return false;
+// // //     if (filters.year && d.getFullYear() !== filters.year) return false;
+// // //     if (filters.month && d.getMonth() + 1 !== filters.month) return false;
+// // //     return true;
+// // //   });
+
+// // // // ── stat card ──────────────────────────────────────────────────────────────
+// // // function StatCard({ icon: Icon, label, value }) {
+// // //   return (
+// // //     <div className="rounded-lg border border-border bg-card px-4 py-3.5">
+// // //       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+// // //         <Icon className="h-3.5 w-3.5" />
+// // //         {label}
+// // //       </div>
+// // //       <div className="text-2xl font-semibold tracking-tight">{value}</div>
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ── tooltip ────────────────────────────────────────────────────────────────
+// // // function ChartTooltip({ active, payload, label, formatters }) {
+// // //   if (!active || !payload?.length) return null;
+// // //   return (
+// // //     <div className="rounded-md border border-border bg-popover px-3 py-2 shadow-md text-xs">
+// // //       <div className="font-medium mb-1">{fmtTooltipDate(label)}</div>
+// // //       {payload.map((p) => (
+// // //         <div key={p.dataKey} className="flex items-center gap-2 text-muted-foreground">
+// // //           <span className="h-2 w-2 rounded-full shrink-0" style={{ background: p.color }} />
+// // //           <span>{p.name}:</span>
+// // //           <span className="font-medium text-foreground">
+// // //             {(formatters?.[p.dataKey] ?? ((v) => v))(p.value)}
+// // //           </span>
+// // //         </div>
+// // //       ))}
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ── reusable filter row (কার্ডের নিজের হেডারে বসবে) ─────────────────────────
+// // // function CardFilter({ filters, onMonthChange, onYearChange }) {
+// // //   return (
+// // //     <div className="flex items-center gap-1.5">
+// // //       <select value={filters.month} onChange={(e) => onMonthChange(e.target.value)} className={selectClass}>
+// // //         {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+// // //       </select>
+// // //       <select value={filters.year} onChange={(e) => onYearChange(e.target.value)} className={selectClass}>
+// // //         {YEARS.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
+// // //       </select>
+// // //     </div>
+// // //   );
+// // // }
+
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // // ── Card 1: Revenue by invoice date (নিজের filter) ──
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // function RevenueTrendCard({ invoices }) {
+// // //   const [filters, setFilters] = useState({ month: "", year: currentYear });
+// // //   const rows = useMemo(
+// // //     () => [...filterInvoices(invoices, filters)]
+// // //       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
+// // //       .map(toRow),
+// // //     [invoices, filters]
+// // //   );
+
+// // //   return (
+// // //     <Card>
+// // //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+// // //         <CardTitle className="text-sm font-medium text-muted-foreground">
+// // //           Revenue by invoice date
+// // //         </CardTitle>
+// // //         <CardFilter
+// // //           filters={filters}
+// // //           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
+// // //           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
+// // //         />
+// // //       </CardHeader>
+// // //       <CardContent className="pl-0 pr-4">
+// // //         {rows.length === 0 ? (
+// // //           <div className="py-10 text-center text-sm text-muted-foreground">No data for this filter.</div>
+// // //         ) : (
+// // //           <ResponsiveContainer width="100%" height={260}>
+// // //             <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+// // //               <defs>
+// // //                 <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+// // //                   <stop offset="0%" stopColor="#2563eb" stopOpacity={0.25} />
+// // //                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
+// // //                 </linearGradient>
+// // //               </defs>
+// // //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+// // //               <XAxis
+// // //                 dataKey="date" tickFormatter={fmtAxisDate}
+// // //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
+// // //               />
+// // //               <YAxis
+// // //                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+// // //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={48}
+// // //               />
+// // //               <Tooltip content={<ChartTooltip formatters={{ revenue: fmtMoney }} />} />
+// // //               <Area
+// // //                 type="monotone" dataKey="revenue" name="Revenue"
+// // //                 stroke="#2563eb" strokeWidth={2} fill="url(#revFill)"
+// // //                 dot={{ r: 3, fill: "#2563eb", strokeWidth: 0 }}
+// // //                 activeDot={{ r: 5 }}
+// // //               />
+// // //             </AreaChart>
+// // //           </ResponsiveContainer>
+// // //         )}
+// // //       </CardContent>
+// // //     </Card>
+// // //   );
+// // // }
+
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // // ── Card 2: Production vs sales quantity (নিজের filter) ──
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // function ProductionVsSalesCard({ invoices }) {
+// // //   const [filters, setFilters] = useState({ month: "", year: currentYear });
+// // //   const rows = useMemo(
+// // //     () => [...filterInvoices(invoices, filters)]
+// // //       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
+// // //       .map(toRow),
+// // //     [invoices, filters]
+// // //   );
+
+// // //   return (
+// // //     <Card>
+// // //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+// // //         <CardTitle className="text-sm font-medium text-muted-foreground">
+// // //           Production vs sales quantity per invoice
+// // //         </CardTitle>
+// // //         <CardFilter
+// // //           filters={filters}
+// // //           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
+// // //           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
+// // //         />
+// // //       </CardHeader>
+// // //       <CardContent className="pl-0 pr-4">
+// // //         {rows.length === 0 ? (
+// // //           <div className="py-10 text-center text-sm text-muted-foreground">No data for this filter.</div>
+// // //         ) : (
+// // //           <ResponsiveContainer width="100%" height={260}>
+// // //             <BarChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+// // //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+// // //               <XAxis
+// // //                 dataKey="date" tickFormatter={fmtAxisDate}
+// // //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
+// // //               />
+// // //               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={48} />
+// // //               <Tooltip content={<ChartTooltip formatters={{
+// // //                 productionQty: (v) => v.toLocaleString(),
+// // //                 salesQty: (v) => v.toLocaleString(),
+// // //               }} />} />
+// // //               <Legend
+// // //                 iconType="circle" iconSize={8}
+// // //                 wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+// // //               />
+// // //               <Bar dataKey="productionQty" name="Production qty" fill="#2563eb" radius={[3, 3, 0, 0]} />
+// // //               <Bar dataKey="salesQty" name="Sales qty" fill="#10b981" radius={[3, 3, 0, 0]} />
+// // //             </BarChart>
+// // //           </ResponsiveContainer>
+// // //         )}
+// // //       </CardContent>
+// // //     </Card>
+// // //   );
+// // // }
+
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // // ── Card 3: Unit price trend (নিজের filter) ──
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // function UnitPriceTrendCard({ invoices }) {
+// // //   const [filters, setFilters] = useState({ month: "", year: currentYear });
+// // //   const rows = useMemo(
+// // //     () => [...filterInvoices(invoices, filters)]
+// // //       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
+// // //       .map(toRow),
+// // //     [invoices, filters]
+// // //   );
+
+// // //   return (
+// // //     <Card>
+// // //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+// // //         <CardTitle className="text-sm font-medium text-muted-foreground">
+// // //           Unit price trend
+// // //         </CardTitle>
+// // //         <CardFilter
+// // //           filters={filters}
+// // //           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
+// // //           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
+// // //         />
+// // //       </CardHeader>
+// // //       <CardContent className="pl-0 pr-4">
+// // //         {rows.length === 0 ? (
+// // //           <div className="py-10 text-center text-sm text-muted-foreground">No data for this filter.</div>
+// // //         ) : (
+// // //           <ResponsiveContainer width="100%" height={220}>
+// // //             <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+// // //               <defs>
+// // //                 <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
+// // //                   <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
+// // //                   <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+// // //                 </linearGradient>
+// // //               </defs>
+// // //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+// // //               <XAxis
+// // //                 dataKey="date" tickFormatter={fmtAxisDate}
+// // //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
+// // //               />
+// // //               <YAxis
+// // //                 tickFormatter={(v) => `${v}`}
+// // //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={40}
+// // //                 domain={["dataMin - 0.5", "dataMax + 0.5"]}
+// // //               />
+// // //               <Tooltip content={<ChartTooltip formatters={{ unitPrice: (v) => `${v.toFixed(2)}` }} />} />
+// // //               <Line
+// // //                 type="monotone" dataKey="unitPrice" name="Unit price"
+// // //                 stroke="#f59e0b" strokeWidth={2}
+// // //                 dot={{ r: 3, fill: "#f59e0b", strokeWidth: 0 }}
+// // //                 activeDot={{ r: 5 }}
+// // //               />
+// // //             </LineChart>
+// // //           </ResponsiveContainer>
+// // //         )}
+// // //       </CardContent>
+// // //     </Card>
+// // //   );
+// // // }
+
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // // ── Main component ──
+// // // // ══════════════════════════════════════════════════════════════════════════
+// // // export default function InvoiceSalesDashboard() {
+// // //   const { data: invoices = [], isLoading } = useInvoices();
+
+// // //   // ── Stat cards: সবসময় unfiltered — সব invoice-এর উপর ──
+// // //   const totals = useMemo(() => {
+// // //     const validRows = invoices.filter((i) => i.INVOICE_DATE);
+// // //     const totalQty     = validRows.reduce((s, i) => s + Number(i.TOT_QTY || 0), 0);
+// // //     const totalRevenue = validRows.reduce((s, i) => s + Number(i.TOT_AMT || 0), 0);
+// // //     const avgPrice      = totalQty > 0 ? totalRevenue / totalQty : 0;
+// // //     return {
+// // //       invoiceCount: validRows.length,
+// // //       totalQty,
+// // //       totalRevenue,
+// // //       avgPrice,
+// // //     };
+// // //   }, [invoices]);
+
+// // //   if (isLoading) {
+// // //     return (
+// // //       <div className="flex flex-col items-center justify-center py-24">
+// // //         <Spinner className="h-8 w-8 mb-3" />
+// // //         <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+// // //       </div>
+// // //     );
+// // //   }
+
+// // //   if (invoices.length === 0) {
+// // //     return (
+// // //       <div className="flex flex-col items-center justify-center py-24 text-center">
+// // //         <FileText className="h-8 w-8 text-muted-foreground mb-3" />
+// // //         <p className="text-sm font-medium">No invoices yet</p>
+// // //         <p className="text-xs text-muted-foreground mt-1">
+// // //           Create your first invoice to see sales analytics here.
+// // //         </p>
+// // //       </div>
+// // //     );
+// // //   }
+
+// // //   return (
+// // //     <SectionContainer>
+// // //     <div className="space-y-6">
+
+// // //       {/* ── Stat cards — সবসময় unfiltered ── */}
+// // //       <div className="grid grid-cols-2 md:grid-cols-4 mt-4 gap-3">
+// // //         <StatCard icon={FileText} label="Invoices" value={totals.invoiceCount} />
+// // //         <StatCard icon={Package} label="Total qty sold" value={totals.totalQty.toLocaleString()} />
+// // //         <StatCard icon={IconCoinTaka} label="Total revenue" value={fmtMoney(totals.totalRevenue)} />
+// // //         <StatCard icon={Tag} label="Avg price" value={`${totals.avgPrice.toFixed(2)}`} />
+// // //       </div>
+
+// // //       {/* ── Chart cards — প্রতিটার নিজস্ব filter ── */}
+// // //       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+// // //         <RevenueTrendCard invoices={invoices} />
+// // //         <ProductionVsSalesCard invoices={invoices} />
+// // //         <UnitPriceTrendCard invoices={invoices} />
+// // //       </div>
+
+// // //       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+// // //         <InvoiceDashboardPanel  />
+// // //         <InvoiceMonthlyChart />
+// // //         <InvoiceDailyTrendChart  />
+// // //       </div>
+// // //     </div>
+// // //     </SectionContainer>
+// // //   );
+// // // }
+
+// // import { useMemo, useState } from "react";
+// // import {
+// //   AreaChart, Area, BarChart, Bar, LineChart, Line,
+// //   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+// // } from "recharts";
+// // import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+// // import { Spinner } from "@/components/ui/spinner";
+// // import { FileText, Package, Tag } from "lucide-react";
+// // import { useInvoices } from "@/features/sale-invoice/queries";
+// // import { IconCoinTaka } from "@tabler/icons-react";
+// // import InvoiceDashboardPanel from "./invoice-dashboard-panel";
+// // import InvoiceMonthlyChart from "./invoice-monthly-chart";
+// // import InvoiceDailyTrendChart from "./invoice-daily-chart";
+// // import { SectionContainer } from "@/components/SectionContainer";
+
+// // const currentYear = new Date().getFullYear();
+
+// // // ── Shed list: CHICKEN_SHED.ID er sathe milaiyo ──────────────────────────
+// // const SHEDS = [
+// //   { id: 1, label: "Shed-1" },
+// //   { id: 2, label: "Shed-2" },
+// // ];
+
+// // // ── shared filter options ────────────────────────────────────────────────
+// // const MONTHS = [
+// //   { label: "All", value: "" },
+// //   { label: "January", value: 1 },  { label: "February", value: 2 },
+// //   { label: "March", value: 3 },    { label: "April", value: 4 },
+// //   { label: "May", value: 5 },      { label: "June", value: 6 },
+// //   { label: "July", value: 7 },     { label: "August", value: 8 },
+// //   { label: "September", value: 9 },{ label: "October", value: 10 },
+// //   { label: "November", value: 11 },{ label: "December", value: 12 },
+// // ];
+
+// // // year dropdown শুধু 2026 থেকে 2030 পর্যন্ত
+// // const YEARS = [2026, 2027, 2028, 2029, 2030].map((y) => ({ label: String(y), value: y }));
+
+// // const selectClass =
+// //   "text-xs border border-slate-200 rounded-md px-2 py-1 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 cursor-pointer";
+
+// // // ── helpers ────────────────────────────────────────────────────────────────
+// // const fmtMoney = (n) =>
+// //   `${Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+// // const fmtAxisDate = (val) => {
+// //   if (!val) return "";
+// //   const d = new Date(`${val}T00:00:00`);
+// //   if (isNaN(d.getTime())) return val;
+// //   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+// // };
+
+// // const fmtTooltipDate = (val) => {
+// //   const d = new Date(`${val}T00:00:00`);
+// //   if (isNaN(d.getTime())) return val;
+// //   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+// // };
+
+// // const toRow = (i) => {
+// //   const qty           = Number(i.TOT_QTY || 0);
+// //   const amt           = Number(i.TOT_AMT || 0);
+// //   const productionQty = Number(i.PRODUCTION_QTY || 0);
+// //   const unitPrice     = qty > 0 ? amt / qty : 0;
+// //   return {
+// //     date:          i.INVOICE_DATE,
+// //     revenue:       amt,
+// //     salesQty:      qty,
+// //     productionQty,
+// //     unitPrice:     Math.round(unitPrice * 100) / 100,
+// //   };
+// // };
+
+// // const filterInvoices = (invoices, filters) =>
+// //   invoices.filter((i) => {
+// //     if (!i.INVOICE_DATE) return false;
+// //     const d = new Date(i.INVOICE_DATE);
+// //     if (isNaN(d.getTime())) return false;
+// //     if (filters.year && d.getFullYear() !== filters.year) return false;
+// //     if (filters.month && d.getMonth() + 1 !== filters.month) return false;
+// //     return true;
+// //   });
+
+// // // ── stat card ──────────────────────────────────────────────────────────────
+// // function StatCard({ icon: Icon, label, value }) {
+// //   return (
+// //     <div className="rounded-lg border border-border bg-card px-4 py-3.5">
+// //       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+// //         <Icon className="h-3.5 w-3.5" />
+// //         {label}
+// //       </div>
+// //       <div className="text-2xl font-semibold tracking-tight">{value}</div>
+// //     </div>
+// //   );
+// // }
+
+// // // ── tooltip ────────────────────────────────────────────────────────────────
+// // function ChartTooltip({ active, payload, label, formatters }) {
+// //   if (!active || !payload?.length) return null;
+// //   return (
+// //     <div className="rounded-md border border-border bg-popover px-3 py-2 shadow-md text-xs">
+// //       <div className="font-medium mb-1">{fmtTooltipDate(label)}</div>
+// //       {payload.map((p) => (
+// //         <div key={p.dataKey} className="flex items-center gap-2 text-muted-foreground">
+// //           <span className="h-2 w-2 rounded-full shrink-0" style={{ background: p.color }} />
+// //           <span>{p.name}:</span>
+// //           <span className="font-medium text-foreground">
+// //             {(formatters?.[p.dataKey] ?? ((v) => v))(p.value)}
+// //           </span>
+// //         </div>
+// //       ))}
+// //     </div>
+// //   );
+// // }
+
+// // // ── reusable filter row (কার্ডের নিজের হেডারে বসবে) ─────────────────────────
+// // function CardFilter({ filters, onMonthChange, onYearChange }) {
+// //   return (
+// //     <div className="flex items-center gap-1.5">
+// //       <select value={filters.month} onChange={(e) => onMonthChange(e.target.value)} className={selectClass}>
+// //         {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+// //       </select>
+// //       <select value={filters.year} onChange={(e) => onYearChange(e.target.value)} className={selectClass}>
+// //         {YEARS.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
+// //       </select>
+// //     </div>
+// //   );
+// // }
+
+// // // ══════════════════════════════════════════════════════════════════════════
+// // // ── Card 1: Revenue by invoice date (নিজের filter) ──
+// // // ══════════════════════════════════════════════════════════════════════════
+// // function RevenueTrendCard({ invoices }) {
+// //   const [filters, setFilters] = useState({ month: "", year: currentYear });
+// //   const rows = useMemo(
+// //     () => [...filterInvoices(invoices, filters)]
+// //       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
+// //       .map(toRow),
+// //     [invoices, filters]
+// //   );
+
+// //   return (
+// //     <Card>
+// //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+// //         <CardTitle className="text-sm font-medium text-muted-foreground">
+// //           Revenue by invoice date
+// //         </CardTitle>
+// //         <CardFilter
+// //           filters={filters}
+// //           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
+// //           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
+// //         />
+// //       </CardHeader>
+// //       <CardContent className="pl-0 pr-4">
+// //         {rows.length === 0 ? (
+// //           <div className="py-10 text-center text-sm text-muted-foreground">No data for this filter.</div>
+// //         ) : (
+// //           <ResponsiveContainer width="100%" height={260}>
+// //             <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+// //               <defs>
+// //                 <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+// //                   <stop offset="0%" stopColor="#2563eb" stopOpacity={0.25} />
+// //                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
+// //                 </linearGradient>
+// //               </defs>
+// //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+// //               <XAxis
+// //                 dataKey="date" tickFormatter={fmtAxisDate}
+// //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
+// //               />
+// //               <YAxis
+// //                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+// //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={48}
+// //               />
+// //               <Tooltip content={<ChartTooltip formatters={{ revenue: fmtMoney }} />} />
+// //               <Area
+// //                 type="monotone" dataKey="revenue" name="Revenue"
+// //                 stroke="#2563eb" strokeWidth={2} fill="url(#revFill)"
+// //                 dot={{ r: 3, fill: "#2563eb", strokeWidth: 0 }}
+// //                 activeDot={{ r: 5 }}
+// //               />
+// //             </AreaChart>
+// //           </ResponsiveContainer>
+// //         )}
+// //       </CardContent>
+// //     </Card>
+// //   );
+// // }
+
+// // // ══════════════════════════════════════════════════════════════════════════
+// // // ── Card 2: Production vs sales quantity (নিজের filter) ──
+// // // ══════════════════════════════════════════════════════════════════════════
+// // function ProductionVsSalesCard({ invoices }) {
+// //   const [filters, setFilters] = useState({ month: "", year: currentYear });
+// //   const rows = useMemo(
+// //     () => [...filterInvoices(invoices, filters)]
+// //       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
+// //       .map(toRow),
+// //     [invoices, filters]
+// //   );
+
+// //   return (
+// //     <Card>
+// //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+// //         <CardTitle className="text-sm font-medium text-muted-foreground">
+// //           Production vs sales quantity per invoice
+// //         </CardTitle>
+// //         <CardFilter
+// //           filters={filters}
+// //           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
+// //           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
+// //         />
+// //       </CardHeader>
+// //       <CardContent className="pl-0 pr-4">
+// //         {rows.length === 0 ? (
+// //           <div className="py-10 text-center text-sm text-muted-foreground">No data for this filter.</div>
+// //         ) : (
+// //           <ResponsiveContainer width="100%" height={260}>
+// //             <BarChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+// //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+// //               <XAxis
+// //                 dataKey="date" tickFormatter={fmtAxisDate}
+// //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
+// //               />
+// //               <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={48} />
+// //               <Tooltip content={<ChartTooltip formatters={{
+// //                 productionQty: (v) => v.toLocaleString(),
+// //                 salesQty: (v) => v.toLocaleString(),
+// //               }} />} />
+// //               <Legend
+// //                 iconType="circle" iconSize={8}
+// //                 wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+// //               />
+// //               <Bar dataKey="productionQty" name="Production qty" fill="#2563eb" radius={[3, 3, 0, 0]} />
+// //               <Bar dataKey="salesQty" name="Sales qty" fill="#10b981" radius={[3, 3, 0, 0]} />
+// //             </BarChart>
+// //           </ResponsiveContainer>
+// //         )}
+// //       </CardContent>
+// //     </Card>
+// //   );
+// // }
+
+// // // ══════════════════════════════════════════════════════════════════════════
+// // // ── Card 3: Unit price trend (নিজের filter) ──
+// // // ══════════════════════════════════════════════════════════════════════════
+// // function UnitPriceTrendCard({ invoices }) {
+// //   const [filters, setFilters] = useState({ month: "", year: currentYear });
+// //   const rows = useMemo(
+// //     () => [...filterInvoices(invoices, filters)]
+// //       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
+// //       .map(toRow),
+// //     [invoices, filters]
+// //   );
+
+// //   return (
+// //     <Card>
+// //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
+// //         <CardTitle className="text-sm font-medium text-muted-foreground">
+// //           Unit price trend
+// //         </CardTitle>
+// //         <CardFilter
+// //           filters={filters}
+// //           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
+// //           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
+// //         />
+// //       </CardHeader>
+// //       <CardContent className="pl-0 pr-4">
+// //         {rows.length === 0 ? (
+// //           <div className="py-10 text-center text-sm text-muted-foreground">No data for this filter.</div>
+// //         ) : (
+// //           <ResponsiveContainer width="100%" height={220}>
+// //             <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+// //               <defs>
+// //                 <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
+// //                   <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
+// //                   <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+// //                 </linearGradient>
+// //               </defs>
+// //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+// //               <XAxis
+// //                 dataKey="date" tickFormatter={fmtAxisDate}
+// //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false}
+// //               />
+// //               <YAxis
+// //                 tickFormatter={(v) => `${v}`}
+// //                 tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={40}
+// //                 domain={["dataMin - 0.5", "dataMax + 0.5"]}
+// //               />
+// //               <Tooltip content={<ChartTooltip formatters={{ unitPrice: (v) => `${v.toFixed(2)}` }} />} />
+// //               <Line
+// //                 type="monotone" dataKey="unitPrice" name="Unit price"
+// //                 stroke="#f59e0b" strokeWidth={2}
+// //                 dot={{ r: 3, fill: "#f59e0b", strokeWidth: 0 }}
+// //                 activeDot={{ r: 5 }}
+// //               />
+// //             </LineChart>
+// //           </ResponsiveContainer>
+// //         )}
+// //       </CardContent>
+// //     </Card>
+// //   );
+// // }
+
+// // // ══════════════════════════════════════════════════════════════════════════
+// // // ── Ekta shed-er puro dashboard ──
+// // // ══════════════════════════════════════════════════════════════════════════
+// // function ShedDashboard({ shedId, label, allInvoices }) {
+// //   // ei shed-er invoice gulo
+// //   const invoices = useMemo(
+// //     () => allInvoices.filter((i) => Number(i.SHED_ID) === shedId),
+// //     [allInvoices, shedId]
+// //   );
+
+// //   // Stat cards: ei shed-er shob invoice-er upor (unfiltered by date)
+// //   const totals = useMemo(() => {
+// //     const validRows    = invoices.filter((i) => i.INVOICE_DATE);
+// //     const totalQty     = validRows.reduce((s, i) => s + Number(i.TOT_QTY || 0), 0);
+// //     const totalRevenue = validRows.reduce((s, i) => s + Number(i.TOT_AMT || 0), 0);
+// //     const avgPrice     = totalQty > 0 ? totalRevenue / totalQty : 0;
+// //     return { invoiceCount: validRows.length, totalQty, totalRevenue, avgPrice };
+// //   }, [invoices]);
+
+// //   if (invoices.length === 0) {
+// //     return (
+// //       <div className="flex flex-col items-center justify-center py-24 text-center">
+// //         <FileText className="h-8 w-8 text-muted-foreground mb-3" />
+// //         <p className="text-sm font-medium">No invoices for {label}</p>
+// //         <p className="text-xs text-muted-foreground mt-1">
+// //           Create an invoice with this shed to see analytics here.
+// //         </p>
+// //       </div>
+// //     );
+// //   }
+
+// //   return (
+// //     <div className="space-y-6">
+// //       {/* ── Stat cards — ei shed-er unfiltered ── */}
+// //       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+// //         <StatCard icon={FileText} label="Invoices" value={totals.invoiceCount} />
+// //         <StatCard icon={Package} label="Total qty sold" value={totals.totalQty.toLocaleString()} />
+// //         <StatCard icon={IconCoinTaka} label="Total revenue" value={fmtMoney(totals.totalRevenue)} />
+// //         <StatCard icon={Tag} label="Avg price" value={totals.avgPrice.toFixed(2)} />
+// //       </div>
+
+// //       {/* ── Chart cards — client-side filter ── */}
+// //       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+// //         <RevenueTrendCard invoices={invoices} />
+// //         <ProductionVsSalesCard invoices={invoices} />
+// //         <UnitPriceTrendCard invoices={invoices} />
+// //       </div>
+
+// //       {/* ── Server-side shedId filter ── */}
+// //       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+// //         <InvoiceDashboardPanel shedId={shedId} shedLabel={label} />
+// //         <InvoiceMonthlyChart shedId={shedId} />
+// //         <InvoiceDailyTrendChart shedId={shedId} />
+// //       </div>
+// //     </div>
+// //   );
+// // }
+
+// // // ══════════════════════════════════════════════════════════════════════════
+// // // ── Main: Shed-1 / Shed-2 switch ──
+// // // ══════════════════════════════════════════════════════════════════════════
+// // export default function InvoiceSalesDashboard() {
+// //   const { data: invoices = [], isLoading } = useInvoices();
+// //   const [activeShed, setActiveShed] = useState(SHEDS[0].id);
+
+// //   if (isLoading) {
+// //     return (
+// //       <div className="flex flex-col items-center justify-center py-24">
+// //         <Spinner className="h-8 w-8 mb-3" />
+// //         <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (invoices.length === 0) {
+// //     return (
+// //       <div className="flex flex-col items-center justify-center py-24 text-center">
+// //         <FileText className="h-8 w-8 text-muted-foreground mb-3" />
+// //         <p className="text-sm font-medium">No invoices yet</p>
+// //         <p className="text-xs text-muted-foreground mt-1">
+// //           Create your first invoice to see sales analytics here.
+// //         </p>
+// //       </div>
+// //     );
+// //   }
+
+// //   const active = SHEDS.find((s) => s.id === activeShed);
+
+// //   return (
+// //     <SectionContainer>
+// //       <div className="space-y-4 mt-4">
+// //         {/* Shed switch */}
+// //         <div className="inline-flex rounded-md border border-border bg-card p-1 gap-1">
+// //           {SHEDS.map((s) => (
+// //             <button
+// //               key={s.id}
+// //               onClick={() => setActiveShed(s.id)}
+// //               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+// //                 activeShed === s.id
+// //                   ? "bg-primary text-primary-foreground"
+// //                   : "text-muted-foreground hover:bg-muted"
+// //               }`}
+// //             >
+// //               {s.label}
+// //             </button>
+// //           ))}
+// //         </div>
+
+// //         {/* key thakar karone shed bodlale chart filter state reset hobe */}
+// //         <ShedDashboard
+// //           key={active.id}
+// //           shedId={active.id}
+// //           label={active.label}
+// //           allInvoices={invoices}
+// //         />
+// //       </div>
+// //     </SectionContainer>
+// //   );
+// // }
+
 // import { useMemo, useState } from "react";
 // import {
 //   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -15,6 +803,12 @@
 
 // const currentYear = new Date().getFullYear();
 
+// // ── Shed list: CHICKEN_SHED.ID er sathe milaiyo ──────────────────────────
+// const SHEDS = [
+//   { id: 1, label: "Shed-1" },
+//   { id: 2, label: "Shed-2" },
+// ];
+
 // // ── shared filter options ────────────────────────────────────────────────
 // const MONTHS = [
 //   { label: "All", value: "" },
@@ -26,7 +820,6 @@
 //   { label: "November", value: 11 },{ label: "December", value: 12 },
 // ];
 
-// // year dropdown শুধু 2026 থেকে 2030 পর্যন্ত
 // const YEARS = [2026, 2027, 2028, 2029, 2030].map((y) => ({ label: String(y), value: y }));
 
 // const selectClass =
@@ -50,7 +843,7 @@
 // };
 
 // const toRow = (i) => {
-//   const qty          = Number(i.TOT_QTY || 0);
+//   const qty           = Number(i.TOT_QTY || 0);
 //   const amt           = Number(i.TOT_AMT || 0);
 //   const productionQty = Number(i.PRODUCTION_QTY || 0);
 //   const unitPrice     = qty > 0 ? amt / qty : 0;
@@ -73,6 +866,14 @@
 //     return true;
 //   });
 
+// const calcTotals = (invoices) => {
+//   const validRows    = invoices.filter((i) => i.INVOICE_DATE);
+//   const totalQty     = validRows.reduce((s, i) => s + Number(i.TOT_QTY || 0), 0);
+//   const totalRevenue = validRows.reduce((s, i) => s + Number(i.TOT_AMT || 0), 0);
+//   const avgPrice     = totalQty > 0 ? totalRevenue / totalQty : 0;
+//   return { invoiceCount: validRows.length, totalQty, totalRevenue, avgPrice };
+// };
+
 // // ── stat card ──────────────────────────────────────────────────────────────
 // function StatCard({ icon: Icon, label, value }) {
 //   return (
@@ -82,6 +883,22 @@
 //         {label}
 //       </div>
 //       <div className="text-2xl font-semibold tracking-tight">{value}</div>
+//     </div>
+//   );
+// }
+
+// // ── Shed-er stat block (heading + 4 card) ──────────────────────────────────
+// function ShedStats({ label, invoices }) {
+//   const totals = useMemo(() => calcTotals(invoices), [invoices]);
+//   return (
+//     <div>
+//       <p className="text-sm font-semibold text-primary mb-2">{label}</p>
+//       <div className="grid grid-cols-2 gap-3">
+//         <StatCard icon={FileText} label="Invoices" value={totals.invoiceCount} />
+//         <StatCard icon={Package} label="Total qty sold" value={totals.totalQty.toLocaleString()} />
+//         <StatCard icon={IconCoinTaka} label="Total revenue" value={fmtMoney(totals.totalRevenue)} />
+//         <StatCard icon={Tag} label="Avg price" value={totals.avgPrice.toFixed(2)} />
+//       </div>
 //     </div>
 //   );
 // }
@@ -105,7 +922,7 @@
 //   );
 // }
 
-// // ── reusable filter row (কার্ডের নিজের হেডারে বসবে) ─────────────────────────
+// // ── reusable filter row ────────────────────────────────────────────────────
 // function CardFilter({ filters, onMonthChange, onYearChange }) {
 //   return (
 //     <div className="flex items-center gap-1.5">
@@ -119,10 +936,8 @@
 //   );
 // }
 
-// // ══════════════════════════════════════════════════════════════════════════
-// // ── Card 1: Revenue by invoice date (নিজের filter) ──
-// // ══════════════════════════════════════════════════════════════════════════
-// function RevenueTrendCard({ invoices }) {
+// // ── shared hook: filter + sort + map ───────────────────────────────────────
+// function useChartRows(invoices) {
 //   const [filters, setFilters] = useState({ month: "", year: currentYear });
 //   const rows = useMemo(
 //     () => [...filterInvoices(invoices, filters)]
@@ -130,18 +945,26 @@
 //       .map(toRow),
 //     [invoices, filters]
 //   );
+//   const onMonthChange = (v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }));
+//   const onYearChange  = (v) => setFilters((p) => ({ ...p, year: Number(v) }));
+//   return { filters, rows, onMonthChange, onYearChange };
+// }
+
+// // ══════════════════════════════════════════════════════════════════════════
+// // ── Card 1: Revenue by invoice date ──
+// // ══════════════════════════════════════════════════════════════════════════
+// function RevenueTrendCard({ invoices, label }) {
+//   const { filters, rows, onMonthChange, onYearChange } = useChartRows(invoices);
+//   // gradient id unique rakhte hobe, na hole 2 ta chart-er id clash korbe
+//   const gradId = `revFill-${label}`;
 
 //   return (
 //     <Card>
 //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
 //         <CardTitle className="text-sm font-medium text-muted-foreground">
-//           Revenue by invoice date
+//           Revenue by invoice date · <span className="text-primary">{label}</span>
 //         </CardTitle>
-//         <CardFilter
-//           filters={filters}
-//           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
-//           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
-//         />
+//         <CardFilter filters={filters} onMonthChange={onMonthChange} onYearChange={onYearChange} />
 //       </CardHeader>
 //       <CardContent className="pl-0 pr-4">
 //         {rows.length === 0 ? (
@@ -150,7 +973,7 @@
 //           <ResponsiveContainer width="100%" height={260}>
 //             <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
 //               <defs>
-//                 <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+//                 <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
 //                   <stop offset="0%" stopColor="#2563eb" stopOpacity={0.25} />
 //                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
 //                 </linearGradient>
@@ -167,7 +990,7 @@
 //               <Tooltip content={<ChartTooltip formatters={{ revenue: fmtMoney }} />} />
 //               <Area
 //                 type="monotone" dataKey="revenue" name="Revenue"
-//                 stroke="#2563eb" strokeWidth={2} fill="url(#revFill)"
+//                 stroke="#2563eb" strokeWidth={2} fill={`url(#${gradId})`}
 //                 dot={{ r: 3, fill: "#2563eb", strokeWidth: 0 }}
 //                 activeDot={{ r: 5 }}
 //               />
@@ -180,28 +1003,18 @@
 // }
 
 // // ══════════════════════════════════════════════════════════════════════════
-// // ── Card 2: Production vs sales quantity (নিজের filter) ──
+// // ── Card 2: Production vs sales quantity ──
 // // ══════════════════════════════════════════════════════════════════════════
-// function ProductionVsSalesCard({ invoices }) {
-//   const [filters, setFilters] = useState({ month: "", year: currentYear });
-//   const rows = useMemo(
-//     () => [...filterInvoices(invoices, filters)]
-//       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
-//       .map(toRow),
-//     [invoices, filters]
-//   );
+// function ProductionVsSalesCard({ invoices, label }) {
+//   const { filters, rows, onMonthChange, onYearChange } = useChartRows(invoices);
 
 //   return (
 //     <Card>
 //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
 //         <CardTitle className="text-sm font-medium text-muted-foreground">
-//           Production vs sales quantity per invoice
+//           Production vs sales qty · <span className="text-primary">{label}</span>
 //         </CardTitle>
-//         <CardFilter
-//           filters={filters}
-//           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
-//           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
-//         />
+//         <CardFilter filters={filters} onMonthChange={onMonthChange} onYearChange={onYearChange} />
 //       </CardHeader>
 //       <CardContent className="pl-0 pr-4">
 //         {rows.length === 0 ? (
@@ -234,28 +1047,18 @@
 // }
 
 // // ══════════════════════════════════════════════════════════════════════════
-// // ── Card 3: Unit price trend (নিজের filter) ──
+// // ── Card 3: Unit price trend ──
 // // ══════════════════════════════════════════════════════════════════════════
-// function UnitPriceTrendCard({ invoices }) {
-//   const [filters, setFilters] = useState({ month: "", year: currentYear });
-//   const rows = useMemo(
-//     () => [...filterInvoices(invoices, filters)]
-//       .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
-//       .map(toRow),
-//     [invoices, filters]
-//   );
+// function UnitPriceTrendCard({ invoices, label }) {
+//   const { filters, rows, onMonthChange, onYearChange } = useChartRows(invoices);
 
 //   return (
 //     <Card>
 //       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
 //         <CardTitle className="text-sm font-medium text-muted-foreground">
-//           Unit price trend
+//           Unit price trend · <span className="text-primary">{label}</span>
 //         </CardTitle>
-//         <CardFilter
-//           filters={filters}
-//           onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
-//           onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
-//         />
+//         <CardFilter filters={filters} onMonthChange={onMonthChange} onYearChange={onYearChange} />
 //       </CardHeader>
 //       <CardContent className="pl-0 pr-4">
 //         {rows.length === 0 ? (
@@ -263,12 +1066,6 @@
 //         ) : (
 //           <ResponsiveContainer width="100%" height={220}>
 //             <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-//               <defs>
-//                 <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
-//                   <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
-//                   <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
-//                 </linearGradient>
-//               </defs>
 //               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
 //               <XAxis
 //                 dataKey="date" tickFormatter={fmtAxisDate}
@@ -294,25 +1091,25 @@
 //   );
 // }
 
+// // ── 2-column row: bam e S-1, dane S-2 ──────────────────────────────────────
+// function PairRow({ children }) {
+//   return <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">{children}</div>;
+// }
+
 // // ══════════════════════════════════════════════════════════════════════════
 // // ── Main component ──
 // // ══════════════════════════════════════════════════════════════════════════
 // export default function InvoiceSalesDashboard() {
-//   const { data: invoices = [], isLoading } = useInvoices();
+//   const { data: allInvoices = [], isLoading } = useInvoices();
 
-//   // ── Stat cards: সবসময় unfiltered — সব invoice-এর উপর ──
-//   const totals = useMemo(() => {
-//     const validRows = invoices.filter((i) => i.INVOICE_DATE);
-//     const totalQty     = validRows.reduce((s, i) => s + Number(i.TOT_QTY || 0), 0);
-//     const totalRevenue = validRows.reduce((s, i) => s + Number(i.TOT_AMT || 0), 0);
-//     const avgPrice      = totalQty > 0 ? totalRevenue / totalQty : 0;
-//     return {
-//       invoiceCount: validRows.length,
-//       totalQty,
-//       totalRevenue,
-//       avgPrice,
-//     };
-//   }, [invoices]);
+//   // shed wise invoice split: { 1: [...], 2: [...] }
+//   const byShed = useMemo(() => {
+//     const map = {};
+//     SHEDS.forEach((s) => {
+//       map[s.id] = allInvoices.filter((i) => Number(i.SHED_ID) === s.id);
+//     });
+//     return map;
+//   }, [allInvoices]);
 
 //   if (isLoading) {
 //     return (
@@ -323,7 +1120,7 @@
 //     );
 //   }
 
-//   if (invoices.length === 0) {
+//   if (allInvoices.length === 0) {
 //     return (
 //       <div className="flex flex-col items-center justify-center py-24 text-center">
 //         <FileText className="h-8 w-8 text-muted-foreground mb-3" />
@@ -337,29 +1134,58 @@
 
 //   return (
 //     <SectionContainer>
-//     <div className="space-y-6">
+//       <div className="space-y-4 mt-4">
 
-//       {/* ── Stat cards — সবসময় unfiltered ── */}
-//       <div className="grid grid-cols-2 md:grid-cols-4 mt-4 gap-3">
-//         <StatCard icon={FileText} label="Invoices" value={totals.invoiceCount} />
-//         <StatCard icon={Package} label="Total qty sold" value={totals.totalQty.toLocaleString()} />
-//         <StatCard icon={IconCoinTaka} label="Total revenue" value={fmtMoney(totals.totalRevenue)} />
-//         <StatCard icon={Tag} label="Avg price" value={`${totals.avgPrice.toFixed(2)}`} />
-//       </div>
+//         {/* ── Stat cards: S-1 | S-2 ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <ShedStats key={s.id} label={s.label} invoices={byShed[s.id]} />
+//           ))}
+//         </PairRow>
 
-//       {/* ── Chart cards — প্রতিটার নিজস্ব filter ── */}
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-//         <RevenueTrendCard invoices={invoices} />
-//         <ProductionVsSalesCard invoices={invoices} />
-//         <UnitPriceTrendCard invoices={invoices} />
-//       </div>
+//         {/* ── Revenue: S-1 | S-2 ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <RevenueTrendCard key={s.id} label={s.label} invoices={byShed[s.id]} />
+//           ))}
+//         </PairRow>
 
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-//         <InvoiceDashboardPanel  />
-//         <InvoiceMonthlyChart />
-//         <InvoiceDailyTrendChart  />
+//         {/* ── Production vs Sales: S-1 | S-2 ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <ProductionVsSalesCard key={s.id} label={s.label} invoices={byShed[s.id]} />
+//           ))}
+//         </PairRow>
+
+//         {/* ── Unit price: S-1 | S-2 ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <UnitPriceTrendCard key={s.id} label={s.label} invoices={byShed[s.id]} />
+//           ))}
+//         </PairRow>
+
+//         {/* ── Invoice details table: S-1 | S-2 (server-side shedId) ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <InvoiceDashboardPanel key={s.id} shedId={s.id} shedLabel={s.label} />
+//           ))}
+//         </PairRow>
+
+//         {/* ── Monthly total: S-1 | S-2 ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <InvoiceMonthlyChart key={s.id} shedId={s.id} shedLabel={s.label} />
+//           ))}
+//         </PairRow>
+
+//         {/* ── Daily trend: S-1 | S-2 ── */}
+//         <PairRow>
+//           {SHEDS.map((s) => (
+//             <InvoiceDailyTrendChart key={s.id} shedId={s.id} shedLabel={s.label} />
+//           ))}
+//         </PairRow>
+
 //       </div>
-//     </div>
 //     </SectionContainer>
 //   );
 // }
@@ -371,9 +1197,8 @@ import {
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { FileText, Package, Tag } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useInvoices } from "@/features/sale-invoice/queries";
-import { IconCoinTaka } from "@tabler/icons-react";
 import InvoiceDashboardPanel from "./invoice-dashboard-panel";
 import InvoiceMonthlyChart from "./invoice-monthly-chart";
 import InvoiceDailyTrendChart from "./invoice-daily-chart";
@@ -398,7 +1223,6 @@ const MONTHS = [
   { label: "November", value: 11 },{ label: "December", value: 12 },
 ];
 
-// year dropdown শুধু 2026 থেকে 2030 পর্যন্ত
 const YEARS = [2026, 2027, 2028, 2029, 2030].map((y) => ({ label: String(y), value: y }));
 
 const selectClass =
@@ -445,19 +1269,6 @@ const filterInvoices = (invoices, filters) =>
     return true;
   });
 
-// ── stat card ──────────────────────────────────────────────────────────────
-function StatCard({ icon: Icon, label, value }) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3.5">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
-        <Icon className="h-3.5 w-3.5" />
-        {label}
-      </div>
-      <div className="text-2xl font-semibold tracking-tight">{value}</div>
-    </div>
-  );
-}
-
 // ── tooltip ────────────────────────────────────────────────────────────────
 function ChartTooltip({ active, payload, label, formatters }) {
   if (!active || !payload?.length) return null;
@@ -477,7 +1288,7 @@ function ChartTooltip({ active, payload, label, formatters }) {
   );
 }
 
-// ── reusable filter row (কার্ডের নিজের হেডারে বসবে) ─────────────────────────
+// ── reusable filter row ────────────────────────────────────────────────────
 function CardFilter({ filters, onMonthChange, onYearChange }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -491,10 +1302,8 @@ function CardFilter({ filters, onMonthChange, onYearChange }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// ── Card 1: Revenue by invoice date (নিজের filter) ──
-// ══════════════════════════════════════════════════════════════════════════
-function RevenueTrendCard({ invoices }) {
+// ── shared hook: filter + sort + map ───────────────────────────────────────
+function useChartRows(invoices) {
   const [filters, setFilters] = useState({ month: "", year: currentYear });
   const rows = useMemo(
     () => [...filterInvoices(invoices, filters)]
@@ -502,18 +1311,26 @@ function RevenueTrendCard({ invoices }) {
       .map(toRow),
     [invoices, filters]
   );
+  const onMonthChange = (v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }));
+  const onYearChange  = (v) => setFilters((p) => ({ ...p, year: Number(v) }));
+  return { filters, rows, onMonthChange, onYearChange };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ── Card 1: Revenue by invoice date ──
+// ══════════════════════════════════════════════════════════════════════════
+function RevenueTrendCard({ invoices, label }) {
+  const { filters, rows, onMonthChange, onYearChange } = useChartRows(invoices);
+  // gradient id unique, na hole 2 ta chart-er id clash korbe
+  const gradId = `revFill-${label}`;
 
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          Revenue by invoice date
+          Revenue by invoice date · <span className="text-primary">{label}</span>
         </CardTitle>
-        <CardFilter
-          filters={filters}
-          onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
-          onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
-        />
+        <CardFilter filters={filters} onMonthChange={onMonthChange} onYearChange={onYearChange} />
       </CardHeader>
       <CardContent className="pl-0 pr-4">
         {rows.length === 0 ? (
@@ -522,7 +1339,7 @@ function RevenueTrendCard({ invoices }) {
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#2563eb" stopOpacity={0.25} />
                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0} />
                 </linearGradient>
@@ -539,7 +1356,7 @@ function RevenueTrendCard({ invoices }) {
               <Tooltip content={<ChartTooltip formatters={{ revenue: fmtMoney }} />} />
               <Area
                 type="monotone" dataKey="revenue" name="Revenue"
-                stroke="#2563eb" strokeWidth={2} fill="url(#revFill)"
+                stroke="#2563eb" strokeWidth={2} fill={`url(#${gradId})`}
                 dot={{ r: 3, fill: "#2563eb", strokeWidth: 0 }}
                 activeDot={{ r: 5 }}
               />
@@ -552,28 +1369,18 @@ function RevenueTrendCard({ invoices }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// ── Card 2: Production vs sales quantity (নিজের filter) ──
+// ── Card 2: Production vs sales quantity ──
 // ══════════════════════════════════════════════════════════════════════════
-function ProductionVsSalesCard({ invoices }) {
-  const [filters, setFilters] = useState({ month: "", year: currentYear });
-  const rows = useMemo(
-    () => [...filterInvoices(invoices, filters)]
-      .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
-      .map(toRow),
-    [invoices, filters]
-  );
+function ProductionVsSalesCard({ invoices, label }) {
+  const { filters, rows, onMonthChange, onYearChange } = useChartRows(invoices);
 
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          Production vs sales quantity per invoice
+          Production vs sales qty · <span className="text-primary">{label}</span>
         </CardTitle>
-        <CardFilter
-          filters={filters}
-          onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
-          onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
-        />
+        <CardFilter filters={filters} onMonthChange={onMonthChange} onYearChange={onYearChange} />
       </CardHeader>
       <CardContent className="pl-0 pr-4">
         {rows.length === 0 ? (
@@ -606,28 +1413,18 @@ function ProductionVsSalesCard({ invoices }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// ── Card 3: Unit price trend (নিজের filter) ──
+// ── Card 3: Unit price trend ──
 // ══════════════════════════════════════════════════════════════════════════
-function UnitPriceTrendCard({ invoices }) {
-  const [filters, setFilters] = useState({ month: "", year: currentYear });
-  const rows = useMemo(
-    () => [...filterInvoices(invoices, filters)]
-      .sort((a, b) => new Date(a.INVOICE_DATE) - new Date(b.INVOICE_DATE))
-      .map(toRow),
-    [invoices, filters]
-  );
+function UnitPriceTrendCard({ invoices, label }) {
+  const { filters, rows, onMonthChange, onYearChange } = useChartRows(invoices);
 
   return (
     <Card>
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
-          Unit price trend
+          Unit price trend · <span className="text-primary">{label}</span>
         </CardTitle>
-        <CardFilter
-          filters={filters}
-          onMonthChange={(v) => setFilters((p) => ({ ...p, month: v ? Number(v) : "" }))}
-          onYearChange={(v) => setFilters((p) => ({ ...p, year: Number(v) }))}
-        />
+        <CardFilter filters={filters} onMonthChange={onMonthChange} onYearChange={onYearChange} />
       </CardHeader>
       <CardContent className="pl-0 pr-4">
         {rows.length === 0 ? (
@@ -635,12 +1432,6 @@ function UnitPriceTrendCard({ invoices }) {
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="priceFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
-                </linearGradient>
-              </defs>
               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="date" tickFormatter={fmtAxisDate}
@@ -666,70 +1457,25 @@ function UnitPriceTrendCard({ invoices }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// ── Ekta shed-er puro dashboard ──
-// ══════════════════════════════════════════════════════════════════════════
-function ShedDashboard({ shedId, label, allInvoices }) {
-  // ei shed-er invoice gulo
-  const invoices = useMemo(
-    () => allInvoices.filter((i) => Number(i.SHED_ID) === shedId),
-    [allInvoices, shedId]
-  );
-
-  // Stat cards: ei shed-er shob invoice-er upor (unfiltered by date)
-  const totals = useMemo(() => {
-    const validRows    = invoices.filter((i) => i.INVOICE_DATE);
-    const totalQty     = validRows.reduce((s, i) => s + Number(i.TOT_QTY || 0), 0);
-    const totalRevenue = validRows.reduce((s, i) => s + Number(i.TOT_AMT || 0), 0);
-    const avgPrice     = totalQty > 0 ? totalRevenue / totalQty : 0;
-    return { invoiceCount: validRows.length, totalQty, totalRevenue, avgPrice };
-  }, [invoices]);
-
-  if (invoices.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <FileText className="h-8 w-8 text-muted-foreground mb-3" />
-        <p className="text-sm font-medium">No invoices for {label}</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Create an invoice with this shed to see analytics here.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* ── Stat cards — ei shed-er unfiltered ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={FileText} label="Invoices" value={totals.invoiceCount} />
-        <StatCard icon={Package} label="Total qty sold" value={totals.totalQty.toLocaleString()} />
-        <StatCard icon={IconCoinTaka} label="Total revenue" value={fmtMoney(totals.totalRevenue)} />
-        <StatCard icon={Tag} label="Avg price" value={totals.avgPrice.toFixed(2)} />
-      </div>
-
-      {/* ── Chart cards — client-side filter ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <RevenueTrendCard invoices={invoices} />
-        <ProductionVsSalesCard invoices={invoices} />
-        <UnitPriceTrendCard invoices={invoices} />
-      </div>
-
-      {/* ── Server-side shedId filter ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <InvoiceDashboardPanel shedId={shedId} shedLabel={label} />
-        <InvoiceMonthlyChart shedId={shedId} />
-        <InvoiceDailyTrendChart shedId={shedId} />
-      </div>
-    </div>
-  );
+// ── 2-column row: bam e S-1, dane S-2 ──────────────────────────────────────
+function PairRow({ children }) {
+  return <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">{children}</div>;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// ── Main: Shed-1 / Shed-2 switch ──
+// ── Main component ──
 // ══════════════════════════════════════════════════════════════════════════
 export default function InvoiceSalesDashboard() {
-  const { data: invoices = [], isLoading } = useInvoices();
-  const [activeShed, setActiveShed] = useState(SHEDS[0].id);
+  const { data: allInvoices = [], isLoading } = useInvoices();
+
+  // shed wise invoice split: { 1: [...], 2: [...] }
+  const byShed = useMemo(() => {
+    const map = {};
+    SHEDS.forEach((s) => {
+      map[s.id] = allInvoices.filter((i) => Number(i.SHED_ID) === s.id);
+    });
+    return map;
+  }, [allInvoices]);
 
   if (isLoading) {
     return (
@@ -740,7 +1486,7 @@ export default function InvoiceSalesDashboard() {
     );
   }
 
-  if (invoices.length === 0) {
+  if (allInvoices.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <FileText className="h-8 w-8 text-muted-foreground mb-3" />
@@ -752,35 +1498,52 @@ export default function InvoiceSalesDashboard() {
     );
   }
 
-  const active = SHEDS.find((s) => s.id === activeShed);
-
   return (
     <SectionContainer>
       <div className="space-y-4 mt-4">
-        {/* Shed switch */}
-        <div className="inline-flex rounded-md border border-border bg-card p-1 gap-1">
-          {SHEDS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setActiveShed(s.id)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                activeShed === s.id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
 
-        {/* key thakar karone shed bodlale chart filter state reset hobe */}
-        <ShedDashboard
-          key={active.id}
-          shedId={active.id}
-          label={active.label}
-          allInvoices={invoices}
-        />
+        {/* ── Revenue: S-1 | S-2 ── */}
+        <PairRow>
+          {SHEDS.map((s) => (
+            <RevenueTrendCard key={s.id} label={s.label} invoices={byShed[s.id]} />
+          ))}
+        </PairRow>
+
+        {/* ── Production vs Sales: S-1 | S-2 ── */}
+        <PairRow>
+          {SHEDS.map((s) => (
+            <ProductionVsSalesCard key={s.id} label={s.label} invoices={byShed[s.id]} />
+          ))}
+        </PairRow>
+
+        {/* ── Unit price: S-1 | S-2 ── */}
+        <PairRow>
+          {SHEDS.map((s) => (
+            <UnitPriceTrendCard key={s.id} label={s.label} invoices={byShed[s.id]} />
+          ))}
+        </PairRow>
+
+        {/* ── Invoice details table: S-1 | S-2 (server-side shedId) ── */}
+        <PairRow>
+          {SHEDS.map((s) => (
+            <InvoiceDashboardPanel key={s.id} shedId={s.id} shedLabel={s.label} />
+          ))}
+        </PairRow>
+
+        {/* ── Monthly total: S-1 | S-2 ── */}
+        <PairRow>
+          {SHEDS.map((s) => (
+            <InvoiceMonthlyChart key={s.id} shedId={s.id} shedLabel={s.label} />
+          ))}
+        </PairRow>
+
+        {/* ── Daily trend: S-1 | S-2 ── */}
+        <PairRow>
+          {SHEDS.map((s) => (
+            <InvoiceDailyTrendChart key={s.id} shedId={s.id} shedLabel={s.label} />
+          ))}
+        </PairRow>
+
       </div>
     </SectionContainer>
   );
