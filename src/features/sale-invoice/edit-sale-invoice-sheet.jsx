@@ -2180,8 +2180,8 @@ export default function EditInvoicePage() {
         components,
         date: toInputDate(invoiceData.INVOICE_DATE),
         description: components.length > 1
-          ? `Egg sale - ${components.length} production dates`
-          : "Egg sale - daily production",
+          ? "Egg-Sales (Shade-1)"
+          : "Egg-Sales (Shade-2)",
         qty: totalQty,
         saleQty: totalSaleQty || totalQty,
         unitPrice: rawLines[0]?.PRICE ?? "",
@@ -2238,8 +2238,8 @@ export default function EditInvoicePage() {
           saleQty: totalQty,
           description:
             newComponents.length > 1
-              ? `Egg sale - ${newComponents.length} production dates`
-              : "Egg sale - daily production",
+              ? "Egg-Sales (Shade-1)"
+              : "Egg-Sales (Shade-2)",
         }];
       }
       const totalQty = chosen.reduce((s, p) => s + Number(p.QTY || 0), 0);
@@ -2248,8 +2248,8 @@ export default function EditInvoicePage() {
         date: today(),
         description:
           chosen.length > 1
-            ? `Egg sale - ${chosen.length} production dates`
-            : "Egg sale - daily production",
+            ? "Egg-Sales (Shade-1)"
+            : "Egg-Sales (Shade-2)",
         qty: totalQty,
         saleQty: totalQty,
         unitPrice: "",
@@ -2276,8 +2276,8 @@ export default function EditInvoicePage() {
         qty: totalQty,
         description:
           newComponents.length > 1
-            ? `Egg sale - ${newComponents.length} production dates`
-            : "Egg sale - daily production",
+            ? "Egg-Sales (Shade-1)"
+            : "Egg-Sales (Shade-2)",
       }];
     });
   };
