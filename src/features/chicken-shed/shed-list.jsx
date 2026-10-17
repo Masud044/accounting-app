@@ -110,9 +110,9 @@ export default function ChickenShedList() {
     if (confirmed) {
       try {
         await deleteMutation.mutateAsync(record.ID);
-        toast.success("Shed deleted successfully!");
+        toast.success("Shade deleted successfully!");
       } catch (err) {
-        toast.error(err?.message || "Failed to delete shed. Please try again.");
+        toast.error(err?.message || "Failed to delete shade. Please try again.");
       }
     }
   };
@@ -120,7 +120,7 @@ export default function ChickenShedList() {
   const columns = [
     {
       accessorKey: "SHED_CODE",
-      header: ({ column }) => <SortableHeader column={column} label="Shed Code" />,
+      header: ({ column }) => <SortableHeader column={column} label="Shade Code" />,
       cell: ({ row }) => (
         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("SHED_CODE") || "—"}</div>
       ),
@@ -201,7 +201,7 @@ export default function ChickenShedList() {
             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-amber-50 text-amber-600">
               <Warehouse size={16} />
             </div>
-            <h1 className="text-sm font-bold text-gray-900">Chicken Sheds</h1>
+            <h1 className="text-sm font-bold text-gray-900">Chicken Shades</h1>
           </div>
           {canCreate && (
             <Button disabled className="bg-amber-600"><IconCircleDashedPlus className="mr-1" />Add Shed</Button>
@@ -210,7 +210,7 @@ export default function ChickenShedList() {
         <div className="rounded-lg bg-white border border-gray-200 shadow-sm">
           <div className="flex flex-col items-center justify-center py-16">
             <Spinner className="h-10 w-10 mb-4 text-amber-600" />
-            <p className="text-sm text-gray-500">Loading sheds...</p>
+            <p className="text-sm text-gray-500">Loading shade...</p>
           </div>
         </div>
       </div>
@@ -226,7 +226,7 @@ export default function ChickenShedList() {
             <div className="flex items-center justify-center w-8 h-8 rounded-md bg-amber-50 text-amber-600">
               <Warehouse size={16} />
             </div>
-            <h1 className="text-sm font-bold text-gray-900">Chicken Sheds</h1>
+            <h1 className="text-sm font-bold text-gray-900">Chicken Shades</h1>
           </div>
           {canCreate && (
             <Button onClick={() => setIsAddSheetOpen(true)} className="bg-amber-600 hover:bg-amber-700">
@@ -263,8 +263,8 @@ export default function ChickenShedList() {
               <Warehouse size={16} />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-gray-900">Chicken Sheds</h1>
-              <p className="text-xs text-gray-400">{records.length} sheds</p>
+              <h1 className="text-sm font-bold text-gray-900">Chicken Shade</h1>
+              <p className="text-xs text-gray-400">{records.length} Shade</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -279,7 +279,7 @@ export default function ChickenShedList() {
             </Button>
             {canCreate && (
               <Button onClick={() => setIsAddSheetOpen(true)}>
-                <IconCircleDashedPlus className="mr-1" />Add Shed
+                <IconCircleDashedPlus className="mr-1" />Add Shade
               </Button>
             )}
           </div>
@@ -293,7 +293,7 @@ export default function ChickenShedList() {
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search sheds..."
+                  placeholder="Search shades..."
                   value={globalFilter ?? ""}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   className="h-9 pl-9 bg-white border-gray-200 focus-visible:ring-1 focus-visible:ring-amber-300"

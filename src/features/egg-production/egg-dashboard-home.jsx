@@ -74,8 +74,8 @@ import DailyTrendChart from "./daily-trend";
 
 // CHICKEN_SHED.ID er sathe milaiyo
 const SHEDS = [
-  { id: 1, label: "Shed-1" },
-  { id: 2, label: "Shed-2" },
+  { id: 1, label: "Shade-1" },
+  { id: 2, label: "Shade-2" },
 ];
 
 // 2-column row: bam e S-1, dane S-2

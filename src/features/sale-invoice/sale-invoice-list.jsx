@@ -1055,7 +1055,7 @@ export default function InvoiceList() {
     },
     {
       accessorKey: "SHED_CODE",
-      header: ({ column }) => <SortableHeader column={column} label="Shed" />,
+      header: ({ column }) => <SortableHeader column={column} label="Shade" />,
       cell: ({ row }) => (
         <div className="ml-3 text-sm font-medium text-gray-800">{row.getValue("SHED_CODE") || "—"}</div>
       ),

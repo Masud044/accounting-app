@@ -26,7 +26,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useUpdateChickenShed } from "./queries";
 
 const formSchema = z.object({
-  shedCode: z.string().trim().min(1, "Shed code is required").max(10, "Shed code max 10 characters"),
+  shedCode: z.string().trim().min(1, "Shed code is required").max(10, "Shade code max 10 characters"),
 });
 
 const emptyValues = { shedCode: "" };
@@ -48,17 +48,17 @@ export default function UpdateChickenShedSheet({ open, onOpenChange, showConfirm
   }, [open, record?.ID]);
 
   const onSubmit = async (data) => {
-    if (!record?.ID) { toast.error("Shed ID is missing."); return; }
+    if (!record?.ID) { toast.error("Shade ID is missing."); return; }
     try {
       await updateMutation.mutateAsync({
         id: record.ID,
         data: { shed_code: data.shedCode.trim() },
       });
-      toast.success("Shed updated successfully!");
+      toast.success("Shade updated successfully!");
       form.reset(emptyValues);
       onOpenChange(false);
     } catch (err) {
-      toast.error(err?.message || "Failed to update shed. Please try again.");
+      toast.error(err?.message || "Failed to update shade. Please try again.");
     }
   };
 
@@ -88,8 +88,8 @@ export default function UpdateChickenShedSheet({ open, onOpenChange, showConfirm
               <Warehouse className="h-5 w-5 text-primary" />
             </div>
             <div className="text-left">
-              <DialogTitle>Update Shed</DialogTitle>
-              <DialogDescription>Editing shed #{record?.ID}</DialogDescription>
+              <DialogTitle>Update Shade</DialogTitle>
+              <DialogDescription>Editing Shade #{record?.ID}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -98,7 +98,7 @@ export default function UpdateChickenShedSheet({ open, onOpenChange, showConfirm
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField control={form.control} name="shedCode" render={({ field }) => (
               <FormItem>
-                <FormLabel>Shed Code <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>Shade Code <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     maxLength={10}
@@ -119,7 +119,7 @@ export default function UpdateChickenShedSheet({ open, onOpenChange, showConfirm
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Updating...</> : "Update Shed"}
+                {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Updating...</> : "Update Shade"}
               </Button>
             </DialogFooter>
           </form>
