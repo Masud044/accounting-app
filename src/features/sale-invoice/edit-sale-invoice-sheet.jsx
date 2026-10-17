@@ -2434,11 +2434,11 @@ export default function EditInvoicePage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-gray-500">
-                  Shed <span className="text-destructive">*</span>
+                  Shade <span className="text-destructive">*</span>
                 </Label>
                 <Select value={shedId} onValueChange={handleShedChange} disabled={isReadOnly}>
                   <SelectTrigger className="h-9 w-full bg-white border-gray-200">
-                    <SelectValue placeholder="Select shed" />
+                    <SelectValue placeholder="Select Shade" />
                   </SelectTrigger>
                   <SelectContent>
                     {sheds.map((s) => (

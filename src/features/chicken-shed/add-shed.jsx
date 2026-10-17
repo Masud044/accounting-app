@@ -26,7 +26,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCreateChickenShed } from "./queries";
 
 const formSchema = z.object({
-  shedCode: z.string().trim().min(1, "Shed code is required").max(10, "Shed code max 10 characters"),
+  shedCode: z.string().trim().min(1, "Shade code is required").max(10, "Shade code max 10 characters"),
 });
 
 const defaultValues = { shedCode: "" };
@@ -48,11 +48,11 @@ export default function AddChickenShedSheet({ open, onOpenChange, showConfirmati
   const onSubmit = async (data) => {
     try {
       await createMutation.mutateAsync({ shed_code: data.shedCode.trim() });
-      toast.success("Shed created successfully!");
+      toast.success("Shade created successfully!");
       form.reset(defaultValues);
       onOpenChange(false);
     } catch (err) {
-      toast.error(err?.message || "Failed to create shed. Please try again.");
+      toast.error(err?.message || "Failed to create Shade. Please try again.");
     }
   };
 
@@ -82,8 +82,8 @@ export default function AddChickenShedSheet({ open, onOpenChange, showConfirmati
               <Warehouse className="h-5 w-5 text-primary" />
             </div>
             <div className="text-left">
-              <DialogTitle>Add Shed</DialogTitle>
-              <DialogDescription>Create a new chicken shed</DialogDescription>
+              <DialogTitle>Add Shade</DialogTitle>
+              <DialogDescription>Create a new chicken Shade</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -92,7 +92,7 @@ export default function AddChickenShedSheet({ open, onOpenChange, showConfirmati
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField control={form.control} name="shedCode" render={({ field }) => (
               <FormItem>
-                <FormLabel>Shed Code <span className="text-destructive">*</span></FormLabel>
+                <FormLabel>Shade Code <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
                   <Input
                     maxLength={10}
@@ -113,7 +113,7 @@ export default function AddChickenShedSheet({ open, onOpenChange, showConfirmati
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Creating...</> : "Create Shed"}
+                {isSubmitting ? <><Spinner className="mr-2 h-4 w-4" />Creating...</> : "Create Shade"}
               </Button>
             </DialogFooter>
           </form>
