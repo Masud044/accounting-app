@@ -802,6 +802,8 @@ import GeneralLedger from "./features/ap-ar/pages/GeneralLedger";
 import Reports from "./features/ap-ar/pages/Reports";
 import JournalS from "./features/ap-ar/pages/JournalAp";
 import ChickenShedPage from "./features/chicken-shed";
+import ChickenMortalityPage from "./features/chicken-mortality";
+import ChickenMortalityReasonPage from "./features/chicken-reason";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1630,6 +1632,24 @@ function App() {
   element={
     <ProtectedRoute anyPermission="AP_AR_REPORT_VIEW">
       <Reports />
+    </ProtectedRoute>
+  }
+/>
+
+
+<Route
+  path="chicken-project/:id/mortality/:detailId"
+  element={
+    <ProtectedRoute anyPermission="CHICKEN_PROJECT_VIEW">
+      <ChickenMortalityPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="chicken-mortality-reason"
+  element={
+    <ProtectedRoute anyPermission="CHICKEN_MORTALITY_REASON_VIEW">
+      <ChickenMortalityReasonPage />
     </ProtectedRoute>
   }
 />

@@ -512,7 +512,9 @@ export const NAV_ITEMS = [
       { to: "/dashboard/departments", label: "Departments", Icon: IconBuilding, requiredPermission: "DEPARTMENT_VIEW" },
       { to: "/dashboard/employees", label: "Employees", Icon: IconUsers, requiredPermission: "EMPLOYEE_VIEW" },
       { to: "/dashboard/meeting-rooms", label: "Meeting Rooms", Icon: IconDoorEnter, requiredPermission: "MEETING_ROOM_VIEW" },
-       { to: "/dashboard/chicken-shed", label: "Chicken Shade", Icon: Warehouse, requiredPermission: "CHICKEN_SHED_VIEW" },
+      
+      { to: "/dashboard/chicken-shed", label: "Chicken Shade", Icon: Warehouse, requiredPermission: "CHICKEN_SHED_VIEW" },
+    { to: "/dashboard/chicken-mortality-reason", label: "Chicken Mortality Reason", Icon: ClipboardList, requiredPermission: "CHICKEN_MORTALITY_REASON_VIEW" },
     ],
   },
 
