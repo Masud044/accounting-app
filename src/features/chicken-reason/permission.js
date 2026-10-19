@@ -1,0 +1,7 @@
+// Module "Chicken Mortality Reason" create korle ei permission code gula banbe
+export const MORTALITY_REASON_PERMS = {
+  VIEW:   "CHICKEN_MORTALITY_REASON_VIEW",
+  CREATE: "CHICKEN_MORTALITY_REASON_CREATE",
+  EDIT:   "CHICKEN_MORTALITY_REASON_EDIT",
+  DELETE: "CHICKEN_MORTALITY_REASON_DELETE",
+};

@@ -31,6 +31,7 @@ export const MODULE_OPTIONS = [
   { value: "Purchase Recognition", label: "Purchase Recognition" },
   { value: "Chicken", label: "Chicken" },
   { value: "Chicken Shed", label: "Chicken Shed" },
+ 
   { value: "Cow", label: "Cow" },
   { value: "Fish", label: "Fish" },
   { value: "Farm calendar", label: "Farm calendar" },
@@ -71,6 +72,7 @@ export const MODULE_OPTIONS = [
    { value: "Employee", label: "Employee" },
     { value: "Department", label: "Department" },
      { value: "Meeting Room", label: "Meeting Room" },
+      { value: "Chicken Mortality Reason", label: "Chicken Mortality Reason" },
 
        // AP / AR
   { value: "AP Payment", label: "Vendor Payments (AP)" },
