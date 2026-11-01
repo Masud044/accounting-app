@@ -1,16 +1,45 @@
-# React + Vite
+Agro Farm ERP and Accounting System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack ERP and accounting web application for managing farm operations and finances in one place: projects, production tracking, invoicing, vouchers, journals and financial reports, with role-based access and approval workflows.
 
-Currently, two official plugins are available:
+Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Accounting
 
-## React Compiler
+Payment vouchers, receive vouchers and journal entries
+Ledger period / fiscal year management
+Financial reports: cash flow statement, income statement and expense statement
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Sales and Purchase
 
-## Expanding the ESLint configuration
+Sale invoices with PDF invoice generation
+Purchase recognition with an approval workflow (approve, then post to inventory and payment)
+Linked receive vouchers against invoices
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Farm Operations
+
+Farm project management with phases, activities and financial projections
+Farm budget (header and detail)
+Cow, chicken, fish and egg production modules
+Farm calendar and inventory sheet
+
+Management
+
+Meeting / agenda management with participants, minutes and action items
+Dashboard with expense and income panels and date-filtered stats
+
+Security and Access
+
+Role-Based Access Control (RBAC) for modules and actions
+Audit trail fields on records (entry by, updated by, updated date)
+
+HR Integration
+
+Hikvision attendance device data stored through the device API and shown in the HR dashboard
+Tech Stack
+Layer	Technology
+Frontend	React (Vite), TanStack Query, TanStack Table, react-hook-form, Zod, shadcn/ui, Tailwind CSS
+Backend	Node.js, Express.js
+Database	Oracle Database (node-oracledb)
+Auth	JWT, RBAC
+Other	PDF generation for invoices, Hikvision device API
