@@ -1,45 +1,50 @@
-Agro Farm ERP and Accounting System
+# Agro Farm ERP and Accounting System
 
-A full-stack ERP and accounting web application for managing farm operations and finances in one place: projects, production tracking, invoicing, vouchers, journals and financial reports, with role-based access and approval workflows.
+## Overview
 
-Features
+A full-stack ERP and accounting web application for managing farm operations and finances in one place. The system includes project management, production tracking, invoicing, accounting vouchers, financial reports, and role-based access control.
 
-Accounting
+## Features
 
-Payment vouchers, receive vouchers and journal entries
-Ledger period / fiscal year management
-Financial reports: cash flow statement, income statement and expense statement
+- Payment, receive vouchers and journal entries
+- Financial reports and ledger management
+- Sales and purchase invoice management
+- PDF invoice generation
+- Farm project and budget management
+- Cow, chicken, fish and egg production tracking
+- Inventory and farm calendar
+- Meeting and agenda management
+- Dashboard with income and expense statistics
+- User Authentication
+- Role-Based Access Control (RBAC)
+- Audit trail and approval workflows
+- Hikvision attendance device integration
 
-Sales and Purchase
+## Tech Stack
 
-Sale invoices with PDF invoice generation
-Purchase recognition with an approval workflow (approve, then post to inventory and payment)
-Linked receive vouchers against invoices
+### Frontend
+- React (Vite)
+- TanStack Query
+- TanStack Table
+- React Hook Form
+- Zod
+- shadcn/ui
+- Tailwind CSS
 
-Farm Operations
+### Backend
+- Node.js
+- Express.js
 
-Farm project management with phases, activities and financial projections
-Farm budget (header and detail)
-Cow, chicken, fish and egg production modules
-Farm calendar and inventory sheet
+### Database
+- Oracle Database
+- node-oracledb
 
-Management
+### Other
+- JWT Authentication
+- Role-Based Access Control (RBAC)
+- PDF Generation
+- Hikvision Device API
 
-Meeting / agenda management with participants, minutes and action items
-Dashboard with expense and income panels and date-filtered stats
 
-Security and Access
 
-Role-Based Access Control (RBAC) for modules and actions
-Audit trail fields on records (entry by, updated by, updated date)
-
-HR Integration
-
-Hikvision attendance device data stored through the device API and shown in the HR dashboard
-Tech Stack
-Layer	Technology
-Frontend	React (Vite), TanStack Query, TanStack Table, react-hook-form, Zod, shadcn/ui, Tailwind CSS
-Backend	Node.js, Express.js
-Database	Oracle Database (node-oracledb)
-Auth	JWT, RBAC
-Other	PDF generation for invoices, Hikvision device API
+```
