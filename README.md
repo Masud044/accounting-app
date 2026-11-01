@@ -43,7 +43,7 @@ A full-stack ERP and accounting web application for managing farm operations and
 - JWT Authentication
 - Role-Based Access Control (RBAC)
 - PDF Generation
-- Hikvision Device API
+
 
 
 
