@@ -18,7 +18,6 @@ A full-stack ERP and accounting web application for managing farm operations and
 - User Authentication
 - Role-Based Access Control (RBAC)
 - Audit trail and approval workflows
-- Hikvision attendance device integration
 
 ## Tech Stack
 
