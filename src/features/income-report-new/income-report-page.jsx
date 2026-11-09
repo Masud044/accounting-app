@@ -196,9 +196,7 @@ export default function IncomeReportPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              exportCsv(data.details, data.filters.from, data.filters.to)
-            }
+           onClick={() => exportCsv(data)}
           >
             <IconDownload className="size-4" />
             Export CSV
@@ -237,10 +235,9 @@ export default function IncomeReportPage() {
             <EmptyMedia variant="icon">
               <IconReportMoney />
             </EmptyMedia>
-            <EmptyTitle>Kono income paoa jai nai</EmptyTitle>
+            <EmptyTitle>income empty</EmptyTitle>
             <EmptyDescription>
-              Ei date range ba head-e kono income voucher nai. Date bodle abar
-              try koro.
+              please again another date
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
