@@ -804,6 +804,8 @@ import JournalS from "./features/ap-ar/pages/JournalAp";
 import ChickenShedPage from "./features/chicken-shed";
 import ChickenMortalityPage from "./features/chicken-mortality";
 import ChickenMortalityReasonPage from "./features/chicken-reason";
+import IncomeReportPage from "./features/income-report-new/income-report-page";
+import ExpenseReportPage from "./features/expense-report-new/expense-report-page";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1650,6 +1652,26 @@ function App() {
   element={
     <ProtectedRoute anyPermission="CHICKEN_MORTALITY_REASON_VIEW">
       <ChickenMortalityReasonPage />
+    </ProtectedRoute>
+  }
+/>
+
+{/* income gl report */}
+
+<Route
+  path="income-gl-report"
+  element={
+    <ProtectedRoute anyPermission="INCOME_GL_REPORT_VIEW">
+      <IncomeReportPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="expense-gl-report"
+  element={
+    <ProtectedRoute anyPermission="EXPENSE_GL_REPORT_VIEW">
+      <ExpenseReportPage />
     </ProtectedRoute>
   }
 />
