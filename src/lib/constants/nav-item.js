@@ -473,6 +473,8 @@ export const NAV_ITEMS = [
     ItemIcon: BarChart3,
     links: [
       { to: "/dashboard/income-expense-voucher-report", label: "Income Expense Voucher", Icon: FileText, requiredPermission: "INCOME_EXPENSE_VOUCHER_REPORT_VIEW" },
+      { to: "/dashboard/income-gl-report", label: "Income GL Report", Icon: ClipboardList, requiredPermission: "INCOME_GL_REPORT_VIEW" },
+      { to: "/dashboard/expense-gl-report", label: "Expense GL Report", Icon: ClipboardList, requiredPermission: "EXPENSE_GL_REPORT_VIEW" },
       { to: "/dashboard/expense-report", label: "Expense Report", Icon: ClipboardList, requiredPermission: "EXPENSE_REPORT_VIEW" },
       { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList, requiredPermission: "INCOME_REPORT_VIEW" },
       { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList, requiredPermission: "SALE_REPORT_VIEW" },
@@ -487,6 +489,8 @@ export const NAV_ITEMS = [
     { to: "/dashboard/ap-ar/general-ledger", label: "General Ledger", Icon: FileText, requiredPermission: "AP_AR_GENERAL_LEDGER_VIEW" },
    
     { to: "/dashboard/ap-ar/reports", label: "Reports", Icon: BarChart3, requiredPermission: "AP_AR_REPORT_VIEW" },
+
+
       
     ],
   },
