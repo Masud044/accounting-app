@@ -475,6 +475,7 @@ export const NAV_ITEMS = [
       { to: "/dashboard/income-expense-voucher-report", label: "Income Expense Voucher", Icon: FileText, requiredPermission: "INCOME_EXPENSE_VOUCHER_REPORT_VIEW" },
       { to: "/dashboard/income-gl-report", label: "Income GL Report", Icon: ClipboardList, requiredPermission: "INCOME_GL_REPORT_VIEW" },
       { to: "/dashboard/expense-gl-report", label: "Expense GL Report", Icon: ClipboardList, requiredPermission: "EXPENSE_GL_REPORT_VIEW" },
+      { to: "/dashboard/balance-sheet-report", label: "Balance Sheet Report", Icon: FileText, requiredPermission: "BALANCE_SHEET_REPORT_VIEW" },
       { to: "/dashboard/expense-report", label: "Expense Report", Icon: ClipboardList, requiredPermission: "EXPENSE_REPORT_VIEW" },
       { to: "/dashboard/income-report", label: "Income Report", Icon: ClipboardList, requiredPermission: "INCOME_REPORT_VIEW" },
       { to: "/dashboard/sale-report", label: "Sale Expense Report", Icon: ClipboardList, requiredPermission: "SALE_REPORT_VIEW" },
