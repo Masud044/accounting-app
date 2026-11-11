@@ -58,6 +58,7 @@ export const MODULE_OPTIONS = [
     { value: "Budget-Report", label: "Farm Budget Report" },
       { value: "Income GL Report", label: "Income GL Report" },
       { value: "Expense GL Report", label: "Expense GL Report" },
+      { value: "Balance Sheet Report", label: "Balance Sheet Report" },
 
   // Inventory Report
   { value: "Daily Expense Report", label: "Daily Expense Report" },

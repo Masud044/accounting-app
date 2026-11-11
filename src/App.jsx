@@ -806,6 +806,7 @@ import ChickenMortalityPage from "./features/chicken-mortality";
 import ChickenMortalityReasonPage from "./features/chicken-reason";
 import IncomeReportPage from "./features/income-report-new/income-report-page";
 import ExpenseReportPage from "./features/expense-report-new/expense-report-page";
+import BalanceSheetPage from "./features/balance-report/balance-report-page";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1672,6 +1673,15 @@ function App() {
   element={
     <ProtectedRoute anyPermission="EXPENSE_GL_REPORT_VIEW">
       <ExpenseReportPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="balance-sheet-report"
+  element={
+    <ProtectedRoute anyPermission="BALANCE_SHEET_REPORT_VIEW">
+      <BalanceSheetPage />
     </ProtectedRoute>
   }
 />
