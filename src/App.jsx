@@ -732,7 +732,7 @@ import PaymentEdit from "./features/main-entry/pages/PaymentEdit";
 import CashTransferCreate from "./features/main-entry/pages/CashTransferCreate";
 import SaleExpenseReportPage from "./features/account-report/sale-report";
 import EggProductionPage from "./features/egg-production";
-import { DashboardHomeTable } from "./features/main-entry/components/DashboardHomeTable";
+// import { DashboardHomeTable } from "./features/main-entry/components/DashboardHomeTable";
 import GRN from "./features/grn-master";
 import InvoicePage from "./features/sale-invoice/sale-invoice-page";
 import RecognitionPage from "./features/purchase-recognition/recognition-page";
@@ -807,6 +807,7 @@ import ChickenMortalityReasonPage from "./features/chicken-reason";
 import IncomeReportPage from "./features/income-report-new/income-report-page";
 import ExpenseReportPage from "./features/expense-report-new/expense-report-page";
 import BalanceSheetPage from "./features/balance-report/balance-report-page";
+import { DashboardHomeTableTwo } from "./features/main-entry/components/DashboardHomeTableTwo";
 
 // ── Dashboard Index — permission অনুযায়ী redirect (fully permission-based) ──
 const DashboardIndex = () => {
@@ -1313,7 +1314,7 @@ function App() {
                 path="home-table"
                 element={
                   <ProtectedRoute anyPermission="HOME_VOUCHER_VIEW">
-                    <DashboardHomeTable />
+                    <DashboardHomeTableTwo/>
                   </ProtectedRoute>
                 }
               />
