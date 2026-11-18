@@ -5106,7 +5106,12 @@ function InvoiceFormView({ f }) {
   );
 }
 
-/* ---------- everything created under one advance (eye icon in "Advance payments") ---------- */
+
+
+/* ---------- everything created under one advance (eye icon in "Advance payments") ----------
+   VendorPayments.jsx er niche ager `downloadAdvanceCsv`, `TONE`, `AdvSection`, `AdvanceDetailDialog`
+   delete kore eta boshao. Baki constant (TH, THN, TD, TDN, TAG, MONO, TBLW, TABLE ...) ager file-er-i. */
+
 function downloadAdvanceCsv(d) {
   const rows = [];
   const add = (...c) => rows.push(c.map(csvCell).join(','));
@@ -5117,18 +5122,27 @@ function downloadAdvanceCsv(d) {
   add('Advance amount', d.summary.total); add('Applied to invoices', d.summary.applied);
   add('Refunded', d.summary.refunded); add('Balance', d.summary.balance);
   add();
-  add('Applied to invoices');
-  add('Invoice', 'Invoice date', 'Description', 'Applied via', 'Invoice total', 'From this advance', 'Invoice balance', 'Status');
-  d.applied.forEach((a) => add(a.invNo, a.invDate, a.note, a.payNo ? `Payment ${a.payNo}` : 'Invoice creation', a.invTotal, a.amount, a.invBalance, a.invStatus));
-  add();
-  add('Refunds');
-  add('Refund', 'Date', 'Bank', 'Method', 'Reference', 'Amount', 'Status');
-  d.refunds.forEach((r) => add(r.no, r.date, r.bankName || r.bank, r.method, r.ref, r.amount, r.status));
-  add();
-  add('Journal entries');
-  add('Journal no', 'Date', 'Type', 'Description', 'Account', 'Account name', 'Debit', 'Credit');
-  d.journal.entries.forEach((e) => e.lines.forEach((l) => add(e.journalNo, e.date, e.kind, e.description, l.account, l.accountName, l.debit || '', l.credit || '')));
-  add('', '', '', '', '', 'Total', d.journal.totalDebit, d.journal.totalCredit);
+  add('Transactions');
+  d.rows.forEach((r) => {
+    add();
+    add(r.date, r.journalNo, r.type + (r.reversal ? ' (Reversal)' : ''), r.description, r.amount);
+    const x = r.detail;
+    if (x?.kind === 'advance') {
+      x.fields.forEach((f) => add('', f.label, f.value));
+      x.lines.forEach((l) => add('', `Line ${l.lineNo}`, l.desc, l.amount));
+    } else if (x?.invoice) {
+      add('', 'Invoice', x.invoice.no, x.invoice.note);
+      add('', 'Invoice date', x.invoice.date, 'Due', x.invoice.due);
+      if (x.kind === 'invoice') x.invoice.lines.forEach((l) => add('', l.account, l.accountName, l.desc, l.amount));
+      add('', 'Invoice total', x.invoice.total, 'From this advance', x.invoice.fromAdvance, 'Balance', x.invoice.balance);
+    } else if (x?.kind === 'payment') {
+      x.items.forEach((i) => add('', i.invNo, 'from this advance', i.amount));
+    } else if (x?.kind === 'refund') {
+      add('', 'Refunded to', x.refund.bankName || x.refund.bank, x.refund.method, x.refund.ref, x.refund.status);
+    }
+    add('', 'Account', 'Account name', 'Debit', 'Credit');
+    r.lines.forEach((l) => add('', l.account, l.accountName, l.debit || '', l.credit || ''));
+  });
   const blob = new Blob(['\uFEFF' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -5136,20 +5150,126 @@ function downloadAdvanceCsv(d) {
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-const TONE = { info: '', ok: 'text-apar-ok', warn: 'text-apar-warn', err: 'text-apar-err' };
-
-function AdvSection({ n, title, hint, children }) {
+/* plain label/value pairs (no input-box look) */
+function Kv({ items }) {
   return (
-    <section className="mb-[20px]">
-      <h3 className="text-[14px] font-bold"><span className="mr-[6px] text-apar-mute">{n}.</span>{title}</h3>
-      <p className="mb-[8px] text-[12.5px] text-apar-mute">{hint}</p>
-      {children}
-    </section>
+    <div className="mb-[10px] grid grid-cols-2 gap-x-[20px] gap-y-[6px] min-[561px]:grid-cols-4">
+      {items.map(([k, v]) => (
+        <div key={k}>
+          <span className="block text-[12px] text-apar-mute">{k}</span>
+          <span className="text-[13.5px]">{v || '-'}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MiniTable({ cols, rows, footer }) {
+  return (
+    <div className={TBLW}>
+      <table className={TABLE_SM}>
+        <thead><tr>{cols.map((c) => <th key={c.key} className={c.num ? THN : TH}>{c.label}</th>)}</tr></thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>{cols.map((c) => <td key={c.key} className={c.num ? `${TDN} ${MONO}` : TD}>{c.money ? money(r[c.key]) : r[c.key]}</td>)}</tr>
+          ))}
+        </tbody>
+        {footer && (
+          <tfoot><tr>
+            <td colSpan={cols.length - 1} className={TFN}>{footer.label}</td>
+            <td className={`${TFN} ${MONO}`}>{money(footer.value)}</td>
+          </tr></tfoot>
+        )}
+      </table>
+    </div>
+  );
+}
+
+function RowDetail({ r }) {
+  const x = r.detail;
+  const dr = r.lines.reduce((t, l) => t + l.debit, 0), cr = r.lines.reduce((t, l) => t + l.credit, 0);
+  return (
+    <div className="px-[6px] py-[12px]">
+      {x?.kind === 'advance' && (
+        <>
+          <Kv items={x.fields.map((f) => [f.label, f.value])} />
+          <MiniTable
+            cols={[{ key: 'lineNo', label: '#' }, { key: 'desc', label: 'Description' }, { key: 'amount', label: 'Amount', num: true, money: true }]}
+            rows={x.lines} footer={{ label: 'Total advance', value: x.total }}
+          />
+        </>
+      )}
+
+      {(x?.kind === 'invoice' || x?.kind === 'apply') && (
+        <>
+          <Kv items={[
+            ['Invoice', x.invoice.no], ['Invoice date', x.invoice.date], ['Due date', x.invoice.due], ['Status', x.invoice.status],
+            ['Description', x.invoice.note],
+          ]} />
+          {x.kind === 'invoice' ? (
+            <MiniTable
+              cols={[
+                { key: 'account', label: 'Account' }, { key: 'desc', label: 'Description' },
+                { key: 'amount', label: 'Amount', num: true, money: true },
+              ]}
+              rows={x.invoice.lines.map((l) => ({ ...l, account: `${l.account}${l.accountName ? ' · ' + l.accountName : ''}` }))}
+              footer={{ label: 'Invoice total', value: x.invoice.total }}
+            />
+          ) : (
+            <div className="ml-auto max-w-[360px]">
+              <div className={LINE}><span>Invoice total</span><span className={MONO}>{money(x.invoice.total)}</span></div>
+              <div className={LINE}><span>From this advance</span><span className={`${MONO} text-apar-ok`}>{money(x.invoice.fromAdvance)}</span></div>
+              <div className={LINE}><span>Invoice balance</span><span className={MONO}>{money(x.invoice.balance)}</span></div>
+            </div>
+          )}
+        </>
+      )}
+
+      {x?.kind === 'payment' && (
+        <>
+          <Kv items={[['Payment', x.payNo]]} />
+          <MiniTable
+            cols={[{ key: 'invNo', label: 'Invoice' }, { key: 'note', label: 'Description' }, { key: 'amount', label: 'From this advance', num: true, money: true }]}
+            rows={x.items}
+          />
+        </>
+      )}
+
+      {x?.kind === 'refund' && (
+        <Kv items={[
+          ['Refund', x.refund.no], ['Refunded to', `${x.refund.bank}${x.refund.bankName ? ' · ' + x.refund.bankName : ''}`],
+          ['Method', x.refund.method], ['Reference', x.refund.ref], ['Remarks', x.refund.remarks],
+          ['Status', x.refund.status],
+        ]} />
+      )}
+
+      <b className="mb-[4px] mt-[6px] block text-[13px]">Journal entry</b>
+      <div className={TBLW}>
+        <table className={TABLE_SM}>
+          <thead><tr><th className={TH}>Account</th><th className={THN}>Debit</th><th className={THN}>Credit</th></tr></thead>
+          <tbody>
+            {r.lines.map((l, i) => (
+              <tr key={i}>
+                <td className={l.credit > 0 ? TD_CR : TD}>{l.account}{l.accountName ? ` · ${l.accountName}` : ''}</td>
+                <td className={`${TDN} ${MONO}`}>{l.debit ? money(l.debit) : ''}</td>
+                <td className={`${TDN} ${MONO}`}>{l.credit ? money(l.credit) : ''}</td>
+              </tr>
+            ))}
+            <tr className="font-bold">
+              <td className={TD}>Total</td>
+              <td className={`${TDN} ${MONO}`}>{money(dr)}</td>
+              <td className={`${TDN} ${MONO}`}>{money(cr)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
 function AdvanceDetailDialog({ advId, onClose }) {
   const [st, setSt] = useState({ loading: true, error: '', data: null });
+  const [open, setOpen] = useState({});
 
   useEffect(() => {
     let off = false;
@@ -5160,6 +5280,7 @@ function AdvanceDetailDialog({ advId, onClose }) {
         if (off) return;
         if (!res.ok) { setSt({ loading: false, error: res.data?.error || 'Failed to load details', data: null }); return; }
         setSt({ loading: false, error: '', data: res.data });
+        setOpen({});
       } catch (e) {
         if (!off) setSt({ loading: false, error: e.message || 'Failed to load details', data: null });
       }
@@ -5174,8 +5295,12 @@ function AdvanceDetailDialog({ advId, onClose }) {
   }, [onClose]);
 
   const d = st.data;
-  const refundTotalActive = d ? d.refunds.filter((r) => r.status !== 'Cancelled').reduce((t, r) => t + Number(r.amount), 0) : 0;
-  const RO = 'rounded-[9px] border border-apar-line bg-apar-field px-[12px] py-[9px]';
+  const rows = d ? d.rows : [];
+  const allOpen = rows.length > 0 && rows.every((r) => open[r.journalId]);
+  const setAll = (v) => { const o = {}; rows.forEach((r) => { o[r.journalId] = v; }); setOpen(o); };
+  const toggle = (jid) => setOpen((p) => ({ ...p, [jid]: !p[jid] }));
+  // print: sob row khule dao, tarpor print
+  const doPrint = () => { setAll(true); setTimeout(() => window.print(), 60); };
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/40 p-[16px]" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -5204,7 +5329,7 @@ function AdvanceDetailDialog({ advId, onClose }) {
           </div>
           <div className="flex flex-wrap items-center justify-end gap-[8px]">
             {d && <span className={TAG}>{d.status}</span>}
-            <button type="button" className="apar-ghost no-print" disabled={!d} onClick={() => window.print()}>Print</button>
+            <button type="button" className="apar-ghost no-print" disabled={!d} onClick={doPrint}>Print</button>
             <button type="button" className="apar-ghost no-print" disabled={!d} onClick={() => downloadAdvanceCsv(d)}>Excel</button>
             <button type="button" className="apar-ghost no-print" onClick={onClose}>Close</button>
           </div>
@@ -5215,145 +5340,56 @@ function AdvanceDetailDialog({ advId, onClose }) {
 
         {d && (
           <>
-            {/* 1. transaction history */}
-            <AdvSection n="1" title="Transaction history" hint="Chronological record of every transaction posted against this advance.">
-              <ul>
-                {d.story.map((s, i) => (
-                  <li key={i} className={`${LI} justify-start`}>
-                    <span className={`${MONO} w-[92px] shrink-0 text-apar-mute`}>{s.date}</span>
-                    <span className={TONE[s.tone]}>{s.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </AdvSection>
+            <div className="mb-[16px] grid grid-cols-2 gap-[10px] min-[561px]:grid-cols-4">
+              <div className={STAT_BOX}><span className={STAT_LABEL}>Advance amount</span><b className={MONO}>{money(d.summary.total)}</b></div>
+              <div className={STAT_BOX}><span className={STAT_LABEL}>Applied to invoices</span><b className={MONO}>{money(d.summary.applied)}</b></div>
+              <div className={STAT_BOX}><span className={STAT_LABEL}>Refunded</span><b className={MONO}>{money(d.summary.refunded)}</b></div>
+              <div className={STAT_BOX}><span className={STAT_LABEL}>Remaining balance</span><b className={`${MONO} text-apar-ok`}>{money(d.summary.balance)}</b></div>
+            </div>
 
-            {/* 2. summary */}
-            <AdvSection n="2" title="Summary" hint="Overview of the advance amount, the portion applied to invoices, refunds issued, and the remaining balance.">
-              <div className="ml-auto max-w-[380px]">
-                <div className={LINE}><span>Advance amount</span><span className={MONO}>{money(d.summary.total)}</span></div>
-                <div className={LINE}><span>Applied to invoices</span><span className={`${MONO} text-apar-err`}>-{money(d.summary.applied)}</span></div>
-                <div className={LINE}><span>Refunded (excluding cancelled refunds)</span><span className={`${MONO} text-apar-err`}>-{money(d.summary.refunded)}</span></div>
-                <div className={LINE_BIG}><span>Remaining balance</span><span className={`${MONO} text-apar-ok`}>{money(d.summary.balance)}</span></div>
-              </div>
-            </AdvSection>
+            <div className={ADDBAR}>
+              <b className="text-[15px]">Transactions</b>
+              <button type="button" className="apar-ghost no-print" onClick={() => setAll(!allOpen)}>{allOpen ? 'Collapse all' : 'Expand all'}</button>
+            </div>
 
-            {/* 3. advance info + lines */}
-            <AdvSection n="3" title="Advance details" hint="Payment source, method, reference, and the purpose of the advance.">
-              <div className={ROW3}>
-                <div><label className="apar-label">Paid from account</label><div className={RO}>{d.info.bank}</div></div>
-                <div><label className="apar-label">Method</label><div className={RO}>{d.info.method}</div></div>
-                <div><label className="apar-label">Reference</label><div className={RO}>{d.info.ref}</div></div>
-              </div>
-              <div className={TBLW}>
-                <table className={TABLE_SM}>
-                  <thead><tr><th className={TH}>#</th><th className={TH}>Description</th><th className={THN}>Amount</th></tr></thead>
-                  <tbody>
-                    {d.lines.map((l) => (
-                      <tr key={l.lineNo}><td className={TD}>{l.lineNo}</td><td className={TD}>{l.desc}</td><td className={`${TDN} ${MONO}`}>{money(l.amount)}</td></tr>
-                    ))}
-                  </tbody>
-                  <tfoot><tr><td colSpan={2} className={TFN}>Total advance</td><td className={`${TFN} ${MONO}`}>{money(d.summary.total)}</td></tr></tfoot>
-                </table>
-              </div>
-            </AdvSection>
-
-            {/* 4. applied to invoices */}
-            <AdvSection n="4" title="Applied to invoices" hint="Invoices settled using this advance, showing the amount drawn from it and the outstanding balance of each invoice.">
-              <div className={TBLW}>
-                <table className={TABLE}>
-                  <thead>
-                    <tr>
-                      <th className={TH}>Invoice</th><th className={TH}>Applied via</th>
-                      <th className={THN}>Invoice total</th><th className={THN}>From this advance</th>
-                      <th className={THN}>Invoice balance</th><th className={TH}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {d.applied.length ? d.applied.map((a) => (
-                      <tr key={a.id}>
-                        <td className={TD}><span className={MONO}>{a.invNo}</span><small className={`${NT} text-apar-mute`}>{a.invDate}{a.note ? ` · ${a.note}` : ''}</small></td>
-                        <td className={TD}>{a.payNo ? `Payment ${a.payNo}` : 'Invoice creation'}</td>
-                        <td className={`${TDN} ${MONO}`}>{money(a.invTotal)}</td>
-                        <td className={`${TDN} ${MONO} text-apar-ok`}>{money(a.amount)}</td>
-                        <td className={`${TDN} ${MONO}`}>{money(a.invBalance)}</td>
-                        <td className={TD}><span className={TAG}>{a.invStatus}</span></td>
-                      </tr>
-                    )) : <tr><td colSpan={6} className={TD_EMPTY}>This advance has not been applied to any invoice.</td></tr>}
-                  </tbody>
-                  {d.applied.length > 0 && (
-                    <tfoot><tr><td colSpan={3} className={TFN}>Total applied</td><td className={`${TFN} ${MONO}`}>{money(d.summary.applied)}</td><td colSpan={2}></td></tr></tfoot>
-                  )}
-                </table>
-              </div>
-            </AdvSection>
-
-            {/* 5. refunds */}
-            <AdvSection n="5" title="Refunds" hint="Amounts returned by the vendor to the bank. Cancelled refunds are highlighted in red, and their amount is restored to the advance balance.">
-              <div className={TBLW}>
-                <table className={TABLE}>
-                  <thead>
-                    <tr>
-                      <th className={TH}>Refund</th><th className={TH}>Date</th><th className={TH}>Refunded to</th>
-                      <th className={TH}>Method</th><th className={THN}>Amount</th><th className={TH}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {d.refunds.length ? d.refunds.map((r) => {
-                      const c = r.status === 'Cancelled';
-                      return (
-                        <tr key={r.id} className={c ? 'text-apar-err' : ''}>
-                          <td className={TD}><span className={MONO}>{r.no}</span>{r.remarks && <small className={`${NT} text-apar-mute`}>{r.remarks}</small>}</td>
+            <div className={TBLW}>
+              <table className={TABLE}>
+                <thead>
+                  <tr>
+                    <th className={TH}>Date</th><th className={TH}>Voucher</th><th className={TH}>Type</th>
+                    <th className={TH}>Description</th><th className={THN}>Amount</th><th className={`${TH} w-[28px]`}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.length ? rows.map((r) => {
+                    const isOpen = !!open[r.journalId];
+                    return (
+                      <FragmentRow key={r.journalId}>
+                        <tr className="cursor-pointer hover:bg-apar-soft" onClick={() => toggle(r.journalId)}>
                           <td className={TD}>{r.date}</td>
-                          <td className={TD}>{r.bank}{r.bankName ? ` · ${r.bankName}` : ''}</td>
-                          <td className={TD}>{r.method || '-'}{r.ref ? ` · ${r.ref}` : ''}</td>
-                          <td className={`${TDN} ${MONO} ${c ? 'line-through' : ''}`}>{money(r.amount)}</td>
-                          <td className={TD}><span className={`${TAG} ${c ? 'text-apar-err' : 'text-apar-ok'}`}>{c ? `Cancelled ${r.updatedOn || ''}` : 'Active'}</span></td>
+                          <td className={`${TD} ${MONO}`}>{r.journalNo}</td>
+                          <td className={TD}>
+                            <span className={`${TAG} ${r.reversal ? 'text-apar-err' : ''}`}>{r.type}{r.reversal ? ' · Reversal' : ''}</span>
+                          </td>
+                          <td className={`${TD} text-apar-mute`}>{r.description}</td>
+                          <td className={`${TDN} ${MONO}`}>{money(r.amount)}</td>
+                          <td className={`${TD} text-apar-mute`}>{isOpen ? '▾' : '▸'}</td>
                         </tr>
-                      );
-                    }) : <tr><td colSpan={6} className={TD_EMPTY}>No refunds have been recorded for this advance.</td></tr>}
-                  </tbody>
-                  {d.refunds.length > 0 && (
-                    <tfoot><tr><td colSpan={4} className={TFN}>Total refunded (excluding cancelled)</td><td className={`${TFN} ${MONO}`}>{money(refundTotalActive)}</td><td></td></tr></tfoot>
-                  )}
-                </table>
-              </div>
-            </AdvSection>
-
-            {/* 6. journals */}
-            <AdvSection n="6" title="Journal entries" hint="Accounting entries posted for this advance, including reversal entries for cancelled transactions.">
-              {d.journal.entries.length === 0 && <div className="text-apar-mute">No journal found.</div>}
-              {d.journal.entries.map((e) => {
-                const dr = e.lines.reduce((t, l) => t + l.debit, 0), cr = e.lines.reduce((t, l) => t + l.credit, 0);
-                return (
-                  <div key={e.journalId} className="mb-[12px]">
-                    <div className="flex flex-wrap items-center gap-[8px] text-[13px]">
-                      <span className={MONO}>{e.journalNo}</span>
-                      <span className="text-apar-mute">{e.date}</span>
-                      <span className={`${TAG} ${e.kind === 'Reversal' ? 'text-apar-err' : ''}`}>{e.kind}</span>
-                      <span>{e.description}</span>
-                    </div>
-                    <div className={TBLW}>
-                      <table className={TABLE_SM}>
-                        <thead><tr><th className={TH}>Account</th><th className={THN}>Debit</th><th className={THN}>Credit</th></tr></thead>
-                        <tbody>
-                          {e.lines.map((l, i) => (
-                            <tr key={i}>
-                              <td className={l.credit > 0 ? TD_CR : TD}>{l.account}{l.accountName ? ` · ${l.accountName}` : ''}</td>
-                              <td className={`${TDN} ${MONO}`}>{l.debit ? money(l.debit) : ''}</td>
-                              <td className={`${TDN} ${MONO}`}>{l.credit ? money(l.credit) : ''}</td>
-                            </tr>
-                          ))}
-                          <tr className="font-bold"><td className={TD}>Total</td><td className={`${TDN} ${MONO}`}>{money(dr)}</td><td className={`${TDN} ${MONO}`}>{money(cr)}</td></tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
-            </AdvSection>
+                        {isOpen && (
+                          <tr><td colSpan={6} className="border-b border-apar-line bg-apar-field p-0"><RowDetail r={r} /></td></tr>
+                        )}
+                      </FragmentRow>
+                    );
+                  }) : <tr><td colSpan={6} className={TD_EMPTY}>No transactions found for this advance.</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </div>
     </div>
   );
 }
+
+// small helper so a data row + its detail row can share one key
+function FragmentRow({ children }) { return <>{children}</>; }
