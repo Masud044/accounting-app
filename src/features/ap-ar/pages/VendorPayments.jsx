@@ -5267,9 +5267,208 @@ function RowDetail({ r }) {
   );
 }
 
+
+/* ---------- advance statement (eye icon in "Advance payments") ----------
+   VendorPayments.jsx er niche, ager paste kora advance-er shob code (statementRows, footerTotals,
+   downloadAdvanceExcel, AdvanceDetailDialog, FragmentRow ...) delete kore eta boshao.
+   Excel er jonno ekbar:  npm i exceljs   (frontend folder e)
+   Kono expand nai, kono color fill nai. Advance-er under jotogulo invoice thakuk, shob dekhabe. */
+
+/* Block 1: advance -> (invoice -> advance applied rows -> total applied -> invoice balance) per invoice -> refunds */
+function detailRows(d) {
+  const rows = [{ kind: 'advance', type: 'ADVANCE', ...d.advance }];
+  d.invoices.forEach((inv) => {
+    rows.push({ kind: 'gap' });
+    rows.push({ kind: 'invoice', type: 'INVOICE', date: inv.date, voucher: inv.voucher, description: inv.description, amount: inv.total });
+    rows.push({ kind: 'gap' });
+    inv.applies.forEach((a) => rows.push({ kind: 'apply', type: 'PAYMENT', ...a }));
+    if (inv.applies.length) {
+      rows.push({ kind: 'sub', label: 'Total applied from this advance', amount: inv.applies.reduce((t, a) => t + a.amount, 0) });
+    }
+    rows.push({ kind: 'sub', label: `Balance (${inv.no})`, amount: inv.balance, strong: true });
+  });
+  if (d.refunds.length) rows.push({ kind: 'gap' });
+  d.refunds.forEach((r) => rows.push({ kind: 'refund', type: 'REFUND', ...r }));
+  return rows;
+}
+
+/* Block 2: advance + every invoice (+ refunds), then Balance = advance - invoices - refunds */
+function summaryRows(d) {
+  const rows = [{ kind: 'advance', type: 'ADVANCE', ...d.advance }];
+  d.invoices.forEach((inv) => rows.push({ kind: 'invoice', type: 'INVOICE', date: inv.date, voucher: inv.voucher, description: inv.description, amount: inv.total }));
+  d.refunds.forEach((r) => { if (!r.reversal) rows.push({ kind: 'refund', type: 'REFUND', ...r }); });
+  return rows;
+}
+
+function footerTotals(d) {
+  const invTotal = round2(d.invoices.reduce((t, i) => t + i.total, 0));
+  // an active refund and its reversal cancel out: only count what is really refunded
+  const refunded = d.summary.refunded;
+  const remaining = round2(d.summary.total - invTotal - refunded);
+  return { invTotal, refunded, remaining, mismatch: Math.abs(remaining - d.summary.balance) > 0.005 };
+}
+
+/* ---------- .xlsx export (exceljs), same two blocks, no colors ---------- */
+async function downloadAdvanceExcel(d) {
+  const ExcelJS = (await import('exceljs')).default;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Advance statement', {
+    views: [{ showGridLines: false }],
+    pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+  });
+  ws.columns = [{ width: 13 }, { width: 15 }, { width: 14 }, { width: 62 }, { width: 19 }];
+
+  const thin = { style: 'thin', color: { argb: 'FF9AA3A0' } };
+  const box = { top: thin, left: thin, bottom: thin, right: thin };
+  const MONEY = '"৳"#,##0.00';
+  const BLACK = { argb: 'FF000000' };
+
+  const heading = (text) => {
+    const r = ws.addRow([text]);
+    ws.mergeCells(`A${r.number}:E${r.number}`);
+    r.getCell(1).font = { bold: true, size: 12 };
+  };
+  const header = () => {
+    const r = ws.addRow(['Date', 'Voucher', 'Type', 'Description', 'Amount']);
+    r.height = 22;
+    for (let i = 1; i <= 5; i++) {
+      const c = r.getCell(i);
+      c.font = { bold: true };
+      c.border = { top: { style: 'medium', color: BLACK }, bottom: { style: 'medium', color: BLACK } };
+      c.alignment = { vertical: 'middle', horizontal: i === 5 ? 'right' : 'left' };
+    }
+  };
+  const dataRow = (r) => {
+    if (r.kind === 'gap') { ws.addRow([]).height = 8; return; }
+    if (r.kind === 'sub') {
+      const row = ws.addRow([r.label, '', '', '', r.amount]);
+      ws.mergeCells(`A${row.number}:D${row.number}`);
+      row.getCell(1).alignment = { horizontal: 'right' };
+      row.getCell(1).font = { italic: !r.strong, bold: !!r.strong };
+      row.getCell(5).numFmt = MONEY;
+      row.getCell(5).alignment = { horizontal: 'right' };
+      row.getCell(5).font = { bold: true };
+      for (let i = 1; i <= 5; i++) row.getCell(i).border = box;
+      return;
+    }
+    const row = ws.addRow([r.date, r.voucher, r.type + (r.reversal ? ' (Reversal)' : ''), r.description, r.amount]);
+    row.height = 20;
+    const bold = r.kind === 'advance' || r.kind === 'invoice';
+    for (let i = 1; i <= 5; i++) {
+      const c = row.getCell(i);
+      c.border = box;
+      c.font = { bold };
+      c.alignment = { vertical: 'middle', horizontal: i === 5 ? 'right' : 'left', indent: i === 4 && r.kind === 'apply' ? 2 : 0 };
+    }
+    row.getCell(2).font = { name: 'Consolas', bold };
+    row.getCell(5).numFmt = MONEY;
+  };
+
+  // ---- title ----
+  ws.mergeCells('A1:E1');
+  ws.getCell('A1').value = 'Farm Welfare Agro Limited';
+  ws.getCell('A1').font = { bold: true, size: 16 };
+  ws.mergeCells('A2:E2');
+  ws.getCell('A2').value = `Advance Statement · ${d.no}`;
+  ws.getCell('A2').font = { bold: true, size: 12 };
+  ws.addRow([]);
+  [
+    ['Vendor', d.supplierName], ['Status', d.status], ['Paid from', d.info.bank],
+    ['Method', d.info.method], ['Reference', d.info.ref], ['Printed on', new Date().toISOString().slice(0, 10)],
+  ].forEach(([k, v]) => {
+    const r = ws.addRow([k, v]);
+    ws.mergeCells(`B${r.number}:E${r.number}`);
+    r.getCell(1).font = { bold: true };
+    r.getCell(2).alignment = { horizontal: 'left' };
+  });
+  ws.addRow([]);
+
+  // ---- block 1: details ----
+  heading('Details');
+  header();
+  detailRows(d).forEach(dataRow);
+  ws.addRow([]);
+  ws.addRow([]);
+
+  // ---- block 2: summary ----
+  heading('Summary');
+  header();
+  summaryRows(d).forEach(dataRow);
+  const ft = footerTotals(d);
+  const bal = ws.addRow(['', '', '', 'Balance', ft.remaining]);
+  bal.height = 24;
+  bal.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+  bal.getCell(4).font = { bold: true, size: 12 };
+  bal.getCell(5).numFmt = MONEY;
+  bal.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+  bal.getCell(5).font = { bold: true, size: 12 };
+  for (let i = 4; i <= 5; i++) bal.getCell(i).border = { top: { style: 'thin', color: BLACK }, bottom: { style: 'double', color: BLACK } };
+  if (ft.mismatch) {
+    const r = ws.addRow([`Some invoices were only partly paid from this advance, so the actual advance balance is ${money(d.summary.balance)}.`]);
+    ws.mergeCells(`A${r.number}:E${r.number}`);
+    r.getCell(1).font = { italic: true, size: 10 };
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Advance_${d.no}.xlsx`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* one statement table (used for both blocks) */
+function StatementTable({ rows, balance }) {
+  return (
+    <div className={TBLW}>
+      <table className={TABLE}>
+        <thead>
+          <tr>
+            <th className={TH}>Date</th><th className={TH}>Voucher</th><th className={TH}>Type</th>
+            <th className={TH}>Description</th><th className={THN}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => {
+            if (r.kind === 'gap') return <tr key={i} aria-hidden="true"><td colSpan={5} className="h-[10px]"></td></tr>;
+            if (r.kind === 'sub') {
+              return (
+                <tr key={i}>
+                  <td colSpan={4} className={`${TDN} text-[13px] ${r.strong ? 'font-bold' : 'italic text-apar-mute'}`}>{r.label}</td>
+                  <td className={`${TDN} ${MONO} font-bold`}>{money(r.amount)}</td>
+                </tr>
+              );
+            }
+            const strong = r.kind === 'advance' || r.kind === 'invoice';
+            return (
+              <tr key={i} className={strong ? 'font-semibold' : ''}>
+                <td className={TD}>{r.date}</td>
+                <td className={`${TD} ${MONO}`}>{r.voucher}</td>
+                <td className={TD}><span className={TAG}>{r.type}{r.reversal ? ' · Reversal' : ''}</span></td>
+                <td className={`${r.kind === 'apply' ? TD_CR : TD} ${strong ? '' : 'text-apar-mute'}`}>{r.description}</td>
+                <td className={`${TDN} ${MONO}`}>{money(r.amount)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+        {balance !== undefined && (
+          <tfoot>
+            <tr>
+              <td colSpan={4} className={`${TFN} text-[15px]`}>Balance</td>
+              <td className={`${TFN} ${MONO} text-[16px]`}>{money(balance)}</td>
+            </tr>
+          </tfoot>
+        )}
+      </table>
+    </div>
+  );
+}
+
 function AdvanceDetailDialog({ advId, onClose }) {
   const [st, setSt] = useState({ loading: true, error: '', data: null });
-  const [open, setOpen] = useState({});
+
+  // check: browser console e eta dekhale notun code cholche
+  useEffect(() => { console.log('Advance statement v3 (Details + Summary) loaded'); }, []);
 
   useEffect(() => {
     let off = false;
@@ -5280,7 +5479,6 @@ function AdvanceDetailDialog({ advId, onClose }) {
         if (off) return;
         if (!res.ok) { setSt({ loading: false, error: res.data?.error || 'Failed to load details', data: null }); return; }
         setSt({ loading: false, error: '', data: res.data });
-        setOpen({});
       } catch (e) {
         if (!off) setSt({ loading: false, error: e.message || 'Failed to load details', data: null });
       }
@@ -5295,12 +5493,12 @@ function AdvanceDetailDialog({ advId, onClose }) {
   }, [onClose]);
 
   const d = st.data;
-  const rows = d ? d.rows : [];
-  const allOpen = rows.length > 0 && rows.every((r) => open[r.journalId]);
-  const setAll = (v) => { const o = {}; rows.forEach((r) => { o[r.journalId] = v; }); setOpen(o); };
-  const toggle = (jid) => setOpen((p) => ({ ...p, [jid]: !p[jid] }));
-  // print: sob row khule dao, tarpor print
-  const doPrint = () => { setAll(true); setTimeout(() => window.print(), 60); };
+  const ft = d ? footerTotals(d) : null;
+
+  const exportExcel = async () => {
+    try { await downloadAdvanceExcel(d); }
+    catch (e) { window.alert(`Excel export failed: ${e.message || e}\n\nIf it says exceljs is missing, run: npm i exceljs`); }
+  };
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/40 p-[16px]" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -5319,18 +5517,18 @@ function AdvanceDetailDialog({ advId, onClose }) {
       <div id="adv-print" className="max-h-[90vh] w-full max-w-[900px] overflow-auto rounded-xl border border-apar-line bg-apar-panel p-[20px]">
         <div className="tx-only-print mb-[10px] border-b border-apar-line pb-[8px]">
           <div className="text-[16px] font-bold">Farm Welfare Agro Limited</div>
-          <div className="text-[12px]">Advance details · printed {new Date().toISOString().slice(0, 10)}</div>
+          <div className="text-[12px]">Advance statement · printed {new Date().toISOString().slice(0, 10)}</div>
         </div>
 
         <div className="mb-[14px] flex items-start justify-between gap-[10px]">
           <div>
-            <h2 className="apar-h2">{d ? `Advance ${d.no}` : 'Advance details'}</h2>
-            {d && <div className="text-[13px] text-apar-mute">{d.supplierName} · {d.date}</div>}
+            <h2 className="apar-h2">{d ? `Advance statement ${d.no}` : 'Advance statement'}</h2>
+            {d && <div className="text-[13px] text-apar-mute">{d.supplierName} · {d.info.bank} · {d.info.method}{d.info.ref !== '-' ? ` · ${d.info.ref}` : ''}</div>}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-[8px]">
             {d && <span className={TAG}>{d.status}</span>}
-            <button type="button" className="apar-ghost no-print" disabled={!d} onClick={doPrint}>Print</button>
-            <button type="button" className="apar-ghost no-print" disabled={!d} onClick={() => downloadAdvanceCsv(d)}>Excel</button>
+            <button type="button" className="apar-ghost no-print" disabled={!d} onClick={() => window.print()}>Print</button>
+            <button type="button" className="apar-ghost no-print" disabled={!d} onClick={exportExcel}>Excel</button>
             <button type="button" className="apar-ghost no-print" onClick={onClose}>Close</button>
           </div>
         </div>
@@ -5340,56 +5538,20 @@ function AdvanceDetailDialog({ advId, onClose }) {
 
         {d && (
           <>
-            <div className="mb-[16px] grid grid-cols-2 gap-[10px] min-[561px]:grid-cols-4">
-              <div className={STAT_BOX}><span className={STAT_LABEL}>Advance amount</span><b className={MONO}>{money(d.summary.total)}</b></div>
-              <div className={STAT_BOX}><span className={STAT_LABEL}>Applied to invoices</span><b className={MONO}>{money(d.summary.applied)}</b></div>
-              <div className={STAT_BOX}><span className={STAT_LABEL}>Refunded</span><b className={MONO}>{money(d.summary.refunded)}</b></div>
-              <div className={STAT_BOX}><span className={STAT_LABEL}>Remaining balance</span><b className={`${MONO} text-apar-ok`}>{money(d.summary.balance)}</b></div>
-            </div>
+            <b className="mb-[6px] block text-[15px]">Details</b>
+            <StatementTable rows={detailRows(d)} />
+            {!d.invoices.length && <div className="py-[8px] text-[13px] text-apar-mute">This advance has not been applied to any invoice yet.</div>}
 
-            <div className={ADDBAR}>
-              <b className="text-[15px]">Transactions</b>
-              <button type="button" className="apar-ghost no-print" onClick={() => setAll(!allOpen)}>{allOpen ? 'Collapse all' : 'Expand all'}</button>
-            </div>
-
-            <div className={TBLW}>
-              <table className={TABLE}>
-                <thead>
-                  <tr>
-                    <th className={TH}>Date</th><th className={TH}>Voucher</th><th className={TH}>Type</th>
-                    <th className={TH}>Description</th><th className={THN}>Amount</th><th className={`${TH} w-[28px]`}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.length ? rows.map((r) => {
-                    const isOpen = !!open[r.journalId];
-                    return (
-                      <FragmentRow key={r.journalId}>
-                        <tr className="cursor-pointer hover:bg-apar-soft" onClick={() => toggle(r.journalId)}>
-                          <td className={TD}>{r.date}</td>
-                          <td className={`${TD} ${MONO}`}>{r.journalNo}</td>
-                          <td className={TD}>
-                            <span className={`${TAG} ${r.reversal ? 'text-apar-err' : ''}`}>{r.type}{r.reversal ? ' · Reversal' : ''}</span>
-                          </td>
-                          <td className={`${TD} text-apar-mute`}>{r.description}</td>
-                          <td className={`${TDN} ${MONO}`}>{money(r.amount)}</td>
-                          <td className={`${TD} text-apar-mute`}>{isOpen ? '▾' : '▸'}</td>
-                        </tr>
-                        {isOpen && (
-                          <tr><td colSpan={6} className="border-b border-apar-line bg-apar-field p-0"><RowDetail r={r} /></td></tr>
-                        )}
-                      </FragmentRow>
-                    );
-                  }) : <tr><td colSpan={6} className={TD_EMPTY}>No transactions found for this advance.</td></tr>}
-                </tbody>
-              </table>
-            </div>
+            <b className="mb-[6px] mt-[26px] block text-[15px]">Summary</b>
+            <StatementTable rows={summaryRows(d)} balance={ft.remaining} />
+            {ft.mismatch && (
+              <div className="mt-[6px] text-[12px] text-apar-mute">
+                Some invoices were only partly paid from this advance, so the actual advance balance is {money(d.summary.balance)}.
+              </div>
+            )}
           </>
         )}
       </div>
     </div>
   );
 }
-
-// small helper so a data row + its detail row can share one key
-function FragmentRow({ children }) { return <>{children}</>; }
