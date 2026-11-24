@@ -1110,6 +1110,8 @@ import BillUploadPanelEdit from "@/components/shared/edit-bill-upload-panel";
 import { useCreateSupplier } from "@/features/supplier/queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 import { usePeriodStatusForDate } from "@/features/ledger-period-calendar/queries";
+import { paymentEditGuide } from "../payment-guide/payment-guide";
+import { PaymentGuideSheet } from "../payment-guide/payment-guide-sheet";
 
 const url = import.meta.env.VITE_API_BASE_URL;
 
@@ -1585,6 +1587,7 @@ const mappedRows = details
             <p className="text-sm text-slate-500 mt-0.5">Voucher #{form.invoiceNo || voucherId}</p>
           </div>
           <div className="flex items-center gap-2">
+            <PaymentGuideSheet guide={paymentEditGuide} />
             <Button
               variant="outline"
               className="border-slate-200 text-slate-700 hover:bg-slate-50"

@@ -2104,6 +2104,8 @@ import { useCreateSupplier } from "@/features/supplier/queries";
 import { useAuthUserId } from "@/hooks/use-auth-helper-id";
 import { useValidatedGlDate } from "@/hooks/use-validated-gl-date";
 import { PeriodMessage } from "@/components/shared/period-message";
+import { PaymentGuideSheet } from "../payment-guide/payment-guide-sheet";
+import { paymentCreateGuide } from "../payment-guide/payment-guide";
 
 const url = import.meta.env.VITE_API_BASE_URL;
 
@@ -2539,6 +2541,7 @@ const PaymentCreate = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <PaymentGuideSheet guide={paymentCreateGuide} />
               <Button
                 variant="outline"
                 className="border-slate-200 text-slate-700 hover:bg-slate-50"
