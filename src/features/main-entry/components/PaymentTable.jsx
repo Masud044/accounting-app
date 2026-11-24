@@ -2946,6 +2946,11 @@ import axios from "axios";
 import { useHasPermission } from "@/hooks/use-permission";
 import { AttachmentIndicator } from "./attachment-indicator";
 import { EntryTypeBadge } from "./entry-type-badge";
+import { PaymentGuideSheet } from "../payment-guide/payment-guide-sheet";
+import { paymentListGuide } from "../payment-guide/payment-guide";
+
+
+
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -3110,6 +3115,14 @@ export default function PaymentTable() {
   const canEdit = useHasPermission("PAYMENT_VOUCHER_EDIT");
   const canDownload = useHasPermission("PAYMENT_VOUCHER_DOWNLOAD");
   const canDelete = useHasPermission("PAYMENT_VOUCHER_DELETE");
+
+  const guidePermissions = {
+  PAYMENT_VOUCHER_CREATE: canCreate,
+  PAYMENT_VOUCHER_EDIT: canEdit,
+  PAYMENT_VOUCHER_DOWNLOAD: canDownload,
+};
+
+
 
   const queryClient = useQueryClient();
 
@@ -3790,14 +3803,27 @@ export default function PaymentTable() {
               </div>
             </div>
 
-            {canCreate && (
+            {/* {canCreate && (
               <Link to="/dashboard/payment-create">
                 <Button>
                   <PlusIcon size={16} className="mr-2" />
                   Add New Payment
                 </Button>
               </Link>
-            )}
+            )} */}
+
+            <div className="flex items-center gap-2">
+  <PaymentGuideSheet guide={paymentListGuide} can={guidePermissions} />
+
+  {canCreate && (
+    <Link to="/dashboard/payment-create">
+      <Button>
+        <PlusIcon size={16} className="mr-2" />
+        Add New Payment
+      </Button>
+    </Link>
+  )}
+</div>
           </div>
 
           <div className="space-y-4 p-5">
