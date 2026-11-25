@@ -2799,6 +2799,8 @@ import axios from "axios";
 import { useHasPermission } from "@/hooks/use-permission";
 import { EntryTypeBadge } from "./entry-type-badge";
 import { AttachmentIndicator } from "./attachment-indicator";
+import { journalListGuide } from "../journal-guide/journal-guide";
+import { JournalGuideSheet } from "../journal-guide/journal-guide-sheet";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -2942,6 +2944,13 @@ export default function JournalTable() {
   const canEdit = useHasPermission("JOURNAL_VOUCHER_EDIT");
   const canDownload = useHasPermission("JOURNAL_VOUCHER_DOWNLOAD");
   const canDelete = useHasPermission("JOURNAL_VOUCHER_DELETE");
+
+  const guidePermissions = {
+  JOURNAL_VOUCHER_CREATE: canCreate,
+  JOURNAL_VOUCHER_EDIT: canEdit,
+  JOURNAL_VOUCHER_DOWNLOAD: canDownload,
+  
+};
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["unpostedJournalVouchers"],
@@ -3889,14 +3898,27 @@ export default function JournalTable() {
               </div>
             </div>
 
-            {canCreate && (
+            {/* {canCreate && (
               <Link to="/dashboard/journal-create">
                 <Button>
                   <PlusIcon size={16} className="mr-2" />
                   Add New Journal
                 </Button>
               </Link>
-            )}
+            )} */}
+
+            <div className="flex items-center gap-2">
+  <JournalGuideSheet guide={journalListGuide} can={guidePermissions} />
+
+  {canCreate && (
+    <Link to="/dashboard/journal-create">
+      <Button>
+        <PlusIcon size={16} className="mr-2" />
+        Add New Journal
+      </Button>
+    </Link>
+  )}
+</div>
           </div>
 
           <div className="p-5 space-y-4">
