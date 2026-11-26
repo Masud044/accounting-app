@@ -684,6 +684,8 @@ import { useAllEggProductions, useDeleteEggProduction } from "./queries";
 import { useAllChickenSheds } from "../chicken-shed/queries"; // path adjust korun
 import AddEggProductionSheet from "./add-egg-production-sheet";
 import UpdateEggProductionSheet from "./update-egg-production-sheet";
+import { eggListGuide } from "../guide/egg-production/egg-guide";
+import { EggGuideSheet } from "../guide/egg-production/egg-guide-sheet";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const MONTH_NUM = {
@@ -848,6 +850,12 @@ export default function EggProductionList() {
   const canCreate = useHasPermission("EGG_PRODUCTION_CREATE");
   const canEdit = useHasPermission("EGG_PRODUCTION_EDIT");
   const canDelete = useHasPermission("EGG_PRODUCTION_DELETE");
+
+  const guidePermissions = {
+  EGG_PRODUCTION_CREATE: canCreate,
+  EGG_PRODUCTION_EDIT: canEdit,
+  EGG_PRODUCTION_DELETE: canDelete,
+};
 
   // ── Shed list (CHICKEN_SHED master) — tabs er jonno ──
   const { data: sheds = [] } = useAllChickenSheds();
@@ -1357,6 +1365,7 @@ export default function EggProductionList() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+             <EggGuideSheet guide={eggListGuide} can={guidePermissions} />
             <Button
               variant="outline"
               className="bg-white border-gray-200"

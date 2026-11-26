@@ -533,6 +533,8 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empt
 import { useHasPermission } from "@/hooks/use-permission";
 
 import { useInvoices, useDeleteInvoice } from "./queries";
+import { saleInvoiceListGuide } from "../guide/sale-invoice/sale-invoice-guide";
+import { SaleInvoiceGuideSheet } from "../guide/sale-invoice/sale-invoice-guide-sheet";
 
 // ── Table design constants (table-design skill) ──────────────────────────────
 const PHONE_BREAKPOINT = 800;      // pinned + 3 scrolling cols (~115px each) ≈ 800px
@@ -694,6 +696,12 @@ export default function InvoiceList() {
   const canCreate = useHasPermission("SALE_INVOICE_CREATE");
   const canEdit = useHasPermission("SALE_INVOICE_EDIT");
   const canDelete = useHasPermission("SALE_INVOICE_DELETE");
+
+  const guidePermissions = {
+  SALE_INVOICE_CREATE: canCreate,
+  SALE_INVOICE_EDIT: canEdit,
+  SALE_INVOICE_DELETE: canDelete,
+};
 
   const { data: invoices = [], isLoading, isError, error, refetch, isFetching } = useInvoices();
   const deleteMutation = useDeleteInvoice();
@@ -1204,6 +1212,8 @@ export default function InvoiceList() {
             </div>
 
             <div className="flex items-center gap-2">
+
+              <SaleInvoiceGuideSheet guide={saleInvoiceListGuide} can={guidePermissions} />
               <Button variant="outline" size="icon" className="bg-white border-gray-200" onClick={() => refetch()} disabled={isFetching}>
                 <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                 <span className="sr-only">Refresh</span>
